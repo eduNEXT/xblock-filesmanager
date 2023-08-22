@@ -1,0 +1,9 @@
+/* CSS for FilesManagerXBlock */
+
+.filesmanager_block .count {
+    font-weight: bold;
+}
+
+.filesmanager_block p {
+    cursor: pointer;
+}
