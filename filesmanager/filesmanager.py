@@ -2,10 +2,12 @@
 
 import pkg_resources
 from django.utils import translation
+from django.conf import settings 
 from xblock.core import XBlock
 from xblock.fields import Integer, Scope
 from xblock.fragment import Fragment
 from xblockutils.resources import ResourceLoader
+from xmodule.util.xmodule_django import add_webpack_to_fragment
 
 
 class FilesManagerXBlock(XBlock):
@@ -35,17 +37,24 @@ class FilesManagerXBlock(XBlock):
         """
         if context:
             pass  # TO-DO: do something based on the context.
-        html = self.resource_string("static/html/filesmanager.html")
+        
+        # This won't work
+        html = self.resource_string("static/html/index.html")
         frag = Fragment(html.format(self=self))
         frag.add_css(self.resource_string("static/css/filesmanager.css"))
 
         # Add i18n js
-        statici18n_js_url = self._get_statici18n_js_url()
-        if statici18n_js_url:
-            frag.add_javascript_url(self.runtime.local_resource_url(self, statici18n_js_url))
+        # statici18n_js_url = self._get_statici18n_js_url()
+        # if statici18n_js_url:
+            #frag.add_javascript_url(self.runtime.local_resource_url(self, statici18n_js_url))
+  
+        add_webpack_to_fragment(
+           frag, "FilesManagerXBlock", extension=None, config="webpack_config"
+        )    
 
         frag.add_javascript(self.resource_string("static/js/src/filesmanager.js"))
         frag.initialize_js('FilesManagerXBlock')
+
         return frag
 
     # TO-DO: change this handler to perform your own actions.  You may need more
