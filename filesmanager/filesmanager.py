@@ -35,17 +35,20 @@ class FilesManagerXBlock(XBlock):
         """
         if context:
             pass  # TO-DO: do something based on the context.
-        html = self.resource_string("static/html/filesmanager.html")
+        
+        # This won't work
+        html = self.resource_string("static/html/index.html")
         frag = Fragment(html.format(self=self))
         frag.add_css(self.resource_string("static/css/filesmanager.css"))
 
         # Add i18n js
-        statici18n_js_url = self._get_statici18n_js_url()
-        if statici18n_js_url:
-            frag.add_javascript_url(self.runtime.local_resource_url(self, statici18n_js_url))
+        # statici18n_js_url = self._get_statici18n_js_url()
+        # if statici18n_js_url:
+            #frag.add_javascript_url(self.runtime.local_resource_url(self, statici18n_js_url))
 
-        frag.add_javascript(self.resource_string("static/js/src/filesmanager.js"))
-        frag.initialize_js('FilesManagerXBlock')
+        # frag.add_javascript(self.resource_string("static/js/src/filesmanager.js"))
+        # frag.initialize_js('FilesManagerXBlock')
+
         return frag
 
     # TO-DO: change this handler to perform your own actions.  You may need more

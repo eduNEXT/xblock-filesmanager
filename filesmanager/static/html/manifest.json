@@ -1,0 +1,5 @@
+{
+  "base_url": "/home/john/tutor-v/palm-nightly/env/build/openedx/requirements/xblock-filesmanager/filesmanager/static/html",
+  "main.js": "auto/main.js",
+  "index.html": "auto/index.html"
+}

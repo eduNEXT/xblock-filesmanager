@@ -24,5 +24,7 @@ function FilesManagerXBlock(runtime, element) {
         */
 
         /* Here's where you'd do things on page load. */
+        const root = ReactDOM.createRoot(element);  // or maybe in a child div of element
+        root.render(<h1>Hello, world!</h1>);
     });
 }
