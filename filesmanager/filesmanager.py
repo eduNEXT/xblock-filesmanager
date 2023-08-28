@@ -8,6 +8,9 @@ from xblock.fragment import Fragment
 from xblockutils.resources import ResourceLoader
 
 
+loader = ResourceLoader(__name__)
+
+
 class FilesManagerXBlock(XBlock):
     """
     TO-DO: document what your XBlock does.
@@ -33,8 +36,10 @@ class FilesManagerXBlock(XBlock):
         The primary view of the FilesManagerXBlock, shown to students
         when viewing courses.
         """
-        if context:
-            pass  # TO-DO: do something based on the context.
+        if not context:
+            context = {}
+
+        context['unique_app_id'] = f"react-filesmanager-app-{self.scope_ids.usage_id.block_id}"
 
         in_studio_runtime = hasattr(self.xmodule_runtime, 'is_author_mode')
         if in_studio_runtime:
@@ -43,8 +48,8 @@ class FilesManagerXBlock(XBlock):
             return frag
 
 
-        html = self.resource_string("static/html/no_frame.html")
-        frag = Fragment(html.format(self=self))
+        frag = Fragment()
+        frag.add_content(self.render_template(f"static/html/no_frame.html", context))
         frag.add_css(self.resource_string("static/css/filesmanager.css"))
 
         # Add i18n js
@@ -53,8 +58,9 @@ class FilesManagerXBlock(XBlock):
             #frag.add_javascript_url(self.runtime.local_resource_url(self, statici18n_js_url))
 
         frag.add_javascript(self.resource_string("static/html/main.js"))
-        # frag.initialize_js('FilesManagerXBlock') // Will call initFn:: var initFn = window[$element.data('init')]
 
+        # Will call initFn:: var initFn = window[$element.data('init')]
+        frag.initialize_js('FilesManagerXBlockInit', json_args=context)
         return frag
 
     # TO-DO: change this handler to perform your own actions.  You may need more
@@ -80,6 +86,22 @@ class FilesManagerXBlock(XBlock):
         frag = self.student_view()
         return frag
 
+
+    def render_template(self, template_path, context=None) -> str:
+        """
+        Render a template with the given context. The template is translated
+        according to the user's language.
+
+        Args:
+            template_path (str): The path to the template
+            context(dict, optional): The context to render in the template
+
+        Returns:
+            str: The rendered template
+        """
+        return loader.render_django_template(
+            template_path, context, i18n_service=None
+        )
 
     # TO-DO: change this to create the scenarios you'd like to see in the
     # workbench while developing your XBlock.
