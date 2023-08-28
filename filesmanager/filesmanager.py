@@ -35,9 +35,15 @@ class FilesManagerXBlock(XBlock):
         """
         if context:
             pass  # TO-DO: do something based on the context.
-        
-        # This won't work
-        html = self.resource_string("static/html/index.html")
+
+        in_studio_runtime = hasattr(self.xmodule_runtime, 'is_author_mode')
+        if in_studio_runtime:
+            html = self.resource_string("static/html/frame.html")
+            frag = Fragment(html.format(self=self))
+            return frag
+
+
+        html = self.resource_string("static/html/no_frame.html")
         frag = Fragment(html.format(self=self))
         frag.add_css(self.resource_string("static/css/filesmanager.css"))
 
@@ -46,8 +52,8 @@ class FilesManagerXBlock(XBlock):
         # if statici18n_js_url:
             #frag.add_javascript_url(self.runtime.local_resource_url(self, statici18n_js_url))
 
-        # frag.add_javascript(self.resource_string("static/js/src/filesmanager.js"))
-        # frag.initialize_js('FilesManagerXBlock')
+        frag.add_javascript(self.resource_string("static/html/main.js"))
+        # frag.initialize_js('FilesManagerXBlock') // Will call initFn:: var initFn = window[$element.data('init')]
 
         return frag
 
@@ -65,6 +71,15 @@ class FilesManagerXBlock(XBlock):
 
         self.count += 1
         return {"count": self.count}
+
+    @XBlock.json_handler
+    def render_in_iframe(self, data, suffix=''):
+        """
+        TODO: make this render a view with the whole html page to be put in an iframe
+        """
+        frag = self.student_view()
+        return frag
+
 
     # TO-DO: change this to create the scenarios you'd like to see in the
     # workbench while developing your XBlock.
