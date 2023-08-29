@@ -1,6 +1,9 @@
 .test-div {
-  background-color: aquamarine;
-  border: 1px solid black;
-  color: black;
-  padding: 16px;
+  font-family: sans-serif;
+  text-align: center;
+}
+
+.title {
+  font-weight: 700;
+  margin: 16px;
 }
