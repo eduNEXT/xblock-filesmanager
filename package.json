@@ -6,7 +6,8 @@
   "author": "technical@edunext.co",
   "license": "MIT",
   "scripts": {
-    "build": "webpack --mode=production"
+    "build": "webpack --mode=production",
+    "dev": "webpack --mode=development --watch --progress"
   },
   "dependencies": {
     "@babel/core": "^7.22.10",
@@ -24,5 +25,8 @@
     "webpack-cli": "^5.1.4",
     "webpack-manifest-plugin": "^5.0.0",
     "webpack-merge": "^5.9.0"
+  },
+  "devDependencies": {
+    "prettier": "^3.0.3"
   }
 }

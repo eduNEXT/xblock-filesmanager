@@ -1,12 +1,12 @@
 const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
-const { WebpackManifestPlugin } = require('webpack-manifest-plugin');
 
 module.exports = {
-  entry:  path.resolve(__dirname, "src", "index.js"),
+  entry: path.resolve(__dirname, "src", "index.js"),
   output: {
     path: path.resolve(__dirname, "filesmanager", "static", "html"),
-    libraryTarget: 'window',
+    filename: "bundle.js",
+    libraryTarget: "window",
   },
   module: {
     rules: [
@@ -33,14 +33,9 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: path.resolve(__dirname, "index.html")
     }),
-    new WebpackManifestPlugin({
-      seed: {
-        base_url: path.resolve(__dirname, "filesmanager", "static", "html"),
-      }
-    }),
   ],
   resolve: {
     modules: [path.resolve(__dirname, "src"), "node_modules"],
-    extensions: [".js", ".jsx", ".tsx", ".ts"]
-  }
+    extensions: [".js", ".jsx", ".tsx", ".ts"],
+  },
 };
