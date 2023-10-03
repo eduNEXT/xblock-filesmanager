@@ -1,28 +1,53 @@
 /* Javascript for FilesManagerXBlock. */
 function FilesManagerXBlock(runtime, element) {
 
-    function updateCount(result) {
-        $('.count', element).text(result.count);
-    }
+    var getDirectories = runtime.handlerUrl(element, 'get_directories');
+    var getAssetHandler = runtime.handlerUrl(element, 'get_content');
+    var addDirectoryHandler = runtime.handlerUrl(element, 'add_directory');
 
-    var handlerUrl = runtime.handlerUrl(element, 'increment_count');
 
-    $('p', element).click(function(eventObject) {
-        $.ajax({
-            type: "POST",
-            url: handlerUrl,
-            data: JSON.stringify({"hello": "world"}),
-            success: updateCount
+    $(element).find(`#get-directories`).click(function () {
+        const data = {}
+        $.post(getDirectories, JSON.stringify(data))
+        .done(function (response) {
+            console.log(response);
+        })
+        .fail(function () {
+            console.log("Error getting assets");
         });
     });
 
-    $(function ($) {
-        /*
-        Use `gettext` provided by django-statici18n for static translations
+    $(element).find(`#get-asset-by-id`).click(function () {
+        const id = $(element).find("#content-id").val();
+        const type = $(element).find("#content-type").val();
+        const path = $(element).find("#content-path").val();
+        const data = {
+            "content_id": id,
+            "type": type,
+            "path": path,
+        }
+        $.post(getAssetHandler, JSON.stringify(data))
+        .done(function (response) {
+            console.log(response);
+        })
+        .fail(function () {
+            console.log("Error getting assets");
+        });
+    });
 
-        var gettext = FilesManagerXBlocki18n.gettext;
-        */
-
-        /* Here's where you'd do things on page load. */
+    $(element).find(`#add-directory`).click(function () {
+        const directoryName = $(element).find("#directory-name").val();
+        const directoryPath = $(element).find("#directory-path").val();
+        const data = {
+            "name": directoryName,
+            "path": directoryPath,
+        }
+        $.post(addDirectoryHandler, JSON.stringify(data))
+        .done(function (response) {
+            console.log(response);
+        })
+        .fail(function () {
+            console.log("Error adding directory");
+        });
     });
 }

@@ -4,7 +4,7 @@ import pkg_resources
 import re
 from django.utils import translation
 from xblock.core import XBlock
-from xblock.fields import Integer, Scope
+from xblock.fields import Integer, Scope, List
 from xblock.fragment import Fragment
 from xblockutils.resources import ResourceLoader
 
@@ -14,13 +14,71 @@ class FilesManagerXBlock(XBlock):
     TO-DO: document what your XBlock does.
     """
 
-    # Fields are defined on the class.  You can access them in your code as
-    # self.<fieldname>.
+    """
+    Example of directories list:
+    [
+        {
+            "name": "Folder 1",
+            "type": "folder",
+            "path": "folder1",
+            "metadata": {
+                "id": ..,
+                ...
+            },
+            "children": [
+                {
+                    "name": "File 1",
+                    "type": "file",
+                    "path": "folder1/file1"
+                    "metadata": {
+                        "id": ..,
+                        "asset_key": ..,
+                        "display_name": ..,
+                        "url": ..,
+                        "content_type": ..,
+                        "file_size": ..,
+                        "external_url": ..,
+                        "thumbnail": ..,
+                    },
+                {
+                    "name": "Folder 2",
+                    "type": "folder",
+                    "path": "folder1/folder2",
+                    "metadata": {
+                        "id": ..,
+                        ...
+                    },
+                    "children": [
+                        {
+                            "name": "File 2",
+                            "type": "file",
+                            "path": "folder1/folder2/file2"
+                            "metadata": {
+                                "id": ..,
+                                "asset_key": ..,
+                                "display_name": ..,
+                                "url": ..,
+                                "content_type": ..,
+                                "file_size": ..,
+                                "external_url": ..,
+                                "thumbnail": ..,
+                            },
+                        }
+                    ]
+                }
+            ]
+    ]
+    """
+    directories = List(
+        default=[],
+        scope=Scope.settings,
+        help="List of directories to be displayed in the Files Manager."
+    )
 
-    # TO-DO: delete count, and define your own fields.
-    count = Integer(
-        default=0, scope=Scope.user_state,
-        help="A simple counter, to show something happening",
+    incremental_directory_id = Integer(
+        default=0,
+        scope=Scope.settings,
+        help="Incremental ID for directories."
     )
 
     def resource_string(self, path):
@@ -56,20 +114,93 @@ class FilesManagerXBlock(XBlock):
 
         return frag
 
-    # TO-DO: change this handler to perform your own actions.  You may need more
-    # than one handler, or you may not need any handlers at all.
+    def studio_view(self, context=None):
+        """
+        The edit view of the FilesManagerXBlock in Studio.
+        """
+        if context:
+            pass  # TO-DO: do something based on the context.
+        html = self.resource_string("static/html/filesmanager.html")
+        frag = Fragment(html.format(self=self))
+        frag.add_css(self.resource_string("static/css/filesmanager.css"))
+
+        # Add i18n js
+        statici18n_js_url = self._get_statici18n_js_url()
+        if statici18n_js_url:
+            frag.add_javascript_url(self.runtime.local_resource_url(self, statici18n_js_url))
+
+        frag.add_javascript(self.resource_string("static/js/src/filesmanager.js"))
+        frag.initialize_js('FilesManagerXBlock')
+        return frag
+
     @XBlock.json_handler
-    def increment_count(self, data, suffix=''):
+    def get_directories(self, data, suffix=''):
+        return {
+            "content": self.directories,
+        }
+
+    @XBlock.json_handler
+    def get_content(self, data, suffix=''):
         """
         An example handler, which increments the data.
         """
-        if suffix:
-            pass  # TO-DO: Use the suffix when storing data.
-        # Just to show data coming in...
-        assert data['hello'] == 'world'
+        content_id = data.get("content_id")
+        content_type = data.get("type")
+        path = data.get("path")
+        if not path:
+            return {}
+        return {
+            "status": "success",
+            "content": self.get_content_by_path(path, content_id, content_type)
+        }
 
-        self.count += 1
-        return {"count": self.count}
+    @XBlock.json_handler
+    def add_directory(self, data, suffix=''):
+        """
+        An example handler, which increments the data.
+        """
+        directory_name = data.get("name")
+        path = data.get("path")
+        target_directory = self.directories
+        if path:
+            target_directory = self.get_content_by_path(path)
+            if not target_directory:
+                return {}
+            target_directory = target_directory["children"]
+        target_directory.append(
+            {
+                "name": directory_name,
+                "type": "directory",
+                "path": f"{path}/{directory_name}" if path else directory_name,
+                "metadata": {
+                    "id": self.incremental_directory_id,
+                },
+                "children": [],
+            }
+        )
+        self.incremental_directory_id += 1
+        return {
+            "content": target_directory,
+        }
+
+    def get_content_by_path(self, path, content_id=None, content_type=None):
+        """
+        An example handler, which increments the data.
+        """
+        path_tree = path.split("/")
+        current_content = self.directories
+        for directory in path_tree:
+            for content in current_content:
+                # is_content = str(content_id) == str(content["metadata"]["id"]) and content_type == content["type"]
+                # correct_path = content["path"] == path
+                if content["path"] == path:
+                    return content
+                if content["type"] == "folder" and content["name"] == directory:
+                    current_content = content["children"]
+                    break
+        if isinstance(current_content, list):
+            return {}
+        return current_content
 
     # TO-DO: change this to create the scenarios you'd like to see in the
     # workbench while developing your XBlock.
