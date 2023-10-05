@@ -232,7 +232,6 @@ class FilesManagerXBlock(XBlock):
 
     @XBlock.json_handler
     def delete_content(self, data, suffix=''):
-        import pudb; pu.db
         path = data.get("path")
         if not path:
             return {}

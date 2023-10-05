@@ -66,12 +66,8 @@ function FilesManagerXBlock(runtime, element) {
     });
 
     $(element).find(`#delete-content`).click(function () {
-        const id = $(element).find("#content-delete-id").val();
-        const type = $(element).find("#content-delete-type").val();
         const path = $(element).find("#content-delete-path").val();
         const data = {
-            "content_id": id,
-            "type": type,
             "path": path,
         }
         $.post(deleteContentHandler, JSON.stringify(data))
