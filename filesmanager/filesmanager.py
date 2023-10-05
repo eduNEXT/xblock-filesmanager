@@ -204,6 +204,14 @@ class FilesManagerXBlock(XBlock):
         }
 
     @XBlock.json_handler
+    def clear_directories(self, data, suffix=''):
+        self.directories = []
+        self.incremental_directory_id = 0
+        return {
+            "content": self.directories,
+        }
+
+    @XBlock.json_handler
     def get_content(self, data, suffix=''):
         """Get the content of a directory.
 
