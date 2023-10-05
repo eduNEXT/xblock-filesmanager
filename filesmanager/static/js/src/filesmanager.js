@@ -2,8 +2,11 @@
 function FilesManagerXBlock(runtime, element) {
 
     var getDirectories = runtime.handlerUrl(element, 'get_directories');
+    var clearDirectories = runtime.handlerUrl(element, 'clear_directories');
     var getAssetHandler = runtime.handlerUrl(element, 'get_content');
+    var deleteContentHandler = runtime.handlerUrl(element, 'delete_content');
     var addDirectoryHandler = runtime.handlerUrl(element, 'add_directory');
+    var uploadFilesHandler = runtime.handlerUrl(element, 'upload_files');
 
 
     $(element).find(`#get-directories`).click(function () {
@@ -17,16 +20,61 @@ function FilesManagerXBlock(runtime, element) {
         });
     });
 
-    $(element).find(`#get-asset-by-id`).click(function () {
-        const id = $(element).find("#content-id").val();
-        const type = $(element).find("#content-type").val();
+    $(element).find(`#clear-directories`).click(function () {
+        const data = {}
+        $.post(clearDirectories, JSON.stringify(data))
+        .done(function (response) {
+            console.log(response);
+        })
+        .fail(function () {
+            console.log("Error getting assets");
+        });
+    });
+
+    $(element).find(`#file-upload`).submit(function (e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        $.post(
+            {
+                url: uploadFilesHandler,
+                data: formData,
+                processData: false,
+                contentType: false,
+                type: 'POST',
+            }
+        )
+        .done(function (response) {
+            console.log(response);
+        })
+        .fail(function () {
+            console.log("Error getting assets");
+        });
+    });
+
+    $(element).find(`#get-asset-by-path`).click(function () {
         const path = $(element).find("#content-path").val();
+        const data = {
+            "path": path,
+        }
+        $.post(getAssetHandler, JSON.stringify(data))
+        .done(function (response) {
+            console.log(response);
+        })
+        .fail(function () {
+            console.log("Error getting assets");
+        });
+    });
+
+    $(element).find(`#delete-content`).click(function () {
+        const id = $(element).find("#content-delete-id").val();
+        const type = $(element).find("#content-delete-type").val();
+        const path = $(element).find("#content-delete-path").val();
         const data = {
             "content_id": id,
             "type": type,
             "path": path,
         }
-        $.post(getAssetHandler, JSON.stringify(data))
+        $.post(deleteContentHandler, JSON.stringify(data))
         .done(function (response) {
             console.log(response);
         })

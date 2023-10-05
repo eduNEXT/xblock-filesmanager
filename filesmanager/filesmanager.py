@@ -1,4 +1,5 @@
 """TO-DO: Write a description of what this XBlock is."""
+import logging
 
 import pkg_resources
 import re
@@ -8,12 +9,29 @@ from xblock.fields import Integer, Scope, List
 from xblock.fragment import Fragment
 from xblockutils.resources import ResourceLoader
 
+from urllib.parse import urljoin
+
+from django.conf import settings
+
+from http import HTTPStatus
+from webob.response import Response
+
+try:
+    from cms.djangoapps.contentstore.exceptions import AssetNotFoundException
+    from opaque_keys.edx.keys import AssetKey
+    from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
+    from xmodule.contentstore.content import StaticContent
+    from xmodule.contentstore.django import contentstore
+except ImportError:
+    AssetNotFoundException = None
+    configuration_helpers = None
+    StaticContent = None
+    contentstore = None
+    AssetKey = None
+
+log = logging.getLogger(__name__)
 
 class FilesManagerXBlock(XBlock):
-    """
-    TO-DO: document what your XBlock does.
-    """
-
     """
     Example of directories list:
     [
@@ -69,6 +87,7 @@ class FilesManagerXBlock(XBlock):
             ]
     ]
     """
+
     directories = List(
         default=[],
         scope=Scope.settings,
@@ -140,33 +159,29 @@ class FilesManagerXBlock(XBlock):
         }
 
     @XBlock.json_handler
+    def clear_directories(self, data, suffix=''):
+        self.directories = []
+        self.incremental_directory_id = 0
+        return {
+            "content": self.directories,
+        }
+
+    @XBlock.json_handler
     def get_content(self, data, suffix=''):
-        """
-        An example handler, which increments the data.
-        """
-        content_id = data.get("content_id")
-        content_type = data.get("type")
         path = data.get("path")
         if not path:
             return {}
+        content, _, _ = self.get_content_by_path(path)
         return {
             "status": "success",
-            "content": self.get_content_by_path(path, content_id, content_type)
+            "content": content,
         }
 
     @XBlock.json_handler
     def add_directory(self, data, suffix=''):
-        """
-        An example handler, which increments the data.
-        """
         directory_name = data.get("name")
         path = data.get("path")
-        target_directory = self.directories
-        if path:
-            target_directory = self.get_content_by_path(path)
-            if not target_directory:
-                return {}
-            target_directory = target_directory["children"]
+        target_directory = self.get_target_directory(path)
         target_directory.append(
             {
                 "name": directory_name,
@@ -183,24 +198,110 @@ class FilesManagerXBlock(XBlock):
             "content": target_directory,
         }
 
-    def get_content_by_path(self, path, content_id=None, content_type=None):
-        """
-        An example handler, which increments the data.
-        """
-        path_tree = path.split("/")
-        current_content = self.directories
-        for directory in path_tree:
-            for content in current_content:
-                # is_content = str(content_id) == str(content["metadata"]["id"]) and content_type == content["type"]
-                # correct_path = content["path"] == path
-                if content["path"] == path:
-                    return content
-                if content["type"] == "folder" and content["name"] == directory:
-                    current_content = content["children"]
-                    break
-        if isinstance(current_content, list):
+    @XBlock.handler
+    def upload_files(self, request, suffix=''):  # pylint: disable=unused-argument
+        """Handler for file upload to the course assets."""
+        # Temporary fix for supporting both contentstore assets management versions (master / Palm)
+        try:
+            from cms.djangoapps.contentstore.views.assets import update_course_run_asset  # pylint: disable=import-outside-toplevel
+        except ImportError:
+            from cms.djangoapps.contentstore.asset_storage_handler import update_course_run_asset  # pylint: disable=import-outside-toplevel
+        path = request.params.get("path")
+        target_directory = self.get_target_directory(path)
+        for type, file in request.params.items():
+            if not type.startswith("file"):
+                continue
+            try:
+                content = update_course_run_asset(self.course_id, file.file)
+                target_directory.append(
+                    {
+                        "name": file.filename,
+                        "type": "file",
+                        "path": f"{path}/{file.filename}" if path else file.filename,
+                        "metadata": self.get_asset_json_from_content(content),
+                    }
+                )
+            except Exception as e:  # pylint: disable=broad-except
+                log.exception(e)
+                return Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+        return Response(
+            status=HTTPStatus.OK,
+            json_body=target_directory,
+        )
+
+    @XBlock.json_handler
+    def delete_content(self, data, suffix=''):
+        import pudb; pu.db
+        path = data.get("path")
+        if not path:
             return {}
-        return current_content
+        content, index, parent_directory = self.get_content_by_path(path)
+        if content:
+            del parent_directory[index]
+            self.delete_content_from_assets(content)
+        return {
+            "content": parent_directory,
+        }
+
+    def get_target_directory(self, path):
+        target_directory = self.directories
+        if path:
+            target_directory, _, _ = self.get_content_by_path(path)
+            if not target_directory:
+                return {}
+            target_directory = target_directory["children"]
+        return target_directory
+
+    def get_asset_json_from_content(self, content):
+        """Serialize the content object to a JSON serializable object. """
+        asset_url = StaticContent.serialize_asset_key_with_slash(content.location)
+        thumbnail_url = StaticContent.serialize_asset_key_with_slash(content.thumbnail_location)
+        return {
+            "id": str(content.get_id()),
+            "asset_key": str(content.location),
+            "display_name": content.name,
+            "url": str(asset_url),
+            "content_type": content.content_type,
+            "file_size": content.length,
+            "external_url": urljoin(configuration_helpers.get_value('LMS_ROOT_URL', settings.LMS_ROOT_URL), asset_url),
+            "thumbnail": urljoin(configuration_helpers.get_value('LMS_ROOT_URL', settings.LMS_ROOT_URL), thumbnail_url),
+        }
+
+    def get_content_by_path(self, path):
+        path_tree = path.split("/")
+        parent_directory = self.directories
+        for directory in path_tree:
+            for index, content in enumerate(parent_directory):
+                if content["path"] == path:
+                    return content, index, parent_directory
+                if content["type"] == "directory" and content["name"] == directory:
+                    parent_directory = content["children"]
+                    break
+        return None, None, None
+
+    def delete_content_from_assets(self, content):
+        if content.get("type") == "file":
+            if asset_key := content.get("metadata", {}).get("asset_key"):
+                self.delete_asset(asset_key)
+                return
+        for child in content.get("children", []):
+            if asset_key := child.get("metadata", {}).get("asset_key"):
+                self.delete_asset(asset_key)
+                continue
+            if child.get("type") == "directory":
+                self.delete_content_from_assets(child)
+
+    def delete_asset(self, asset_key):
+        try:
+            from cms.djangoapps.contentstore.views.assets import delete_asset  # pylint: disable=import-outside-toplevel
+        except ImportError:
+            from cms.djangoapps.contentstore.asset_storage_handler import delete_asset  # pylint: disable=import-outside-toplevel
+        asset_key = AssetKey.from_string(asset_key)
+        try:
+            delete_asset(self.course_id, asset_key)
+        except AssetNotFoundException as e:  # pylint: disable=broad-except
+            log.exception(e)
 
     # TO-DO: change this to create the scenarios you'd like to see in the
     # workbench while developing your XBlock.

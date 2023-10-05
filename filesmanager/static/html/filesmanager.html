@@ -9,17 +9,33 @@
     <button id="add-directory" type="submit"> Add directory </button>
 </div>
 <div>
-    <input id="content-id" name="content-id"/>
-    <label for="content-id"> ID </label>
-    <input id="content-type" name="content-type"/>
-    <label for="content-type"> Type </label>
     <input id="content-path" name="content-path"/>
     <label for="content-path"> Path </label>
-    <button id="get-asset-by-id" type="submit"> Get content by ID </button>
+    <button id="get-asset-by-path" type="submit"> Get content by path </button>
+</div>
+<div>
+    <input id="content-delete-id" name="content-id"/>
+    <label for="content-delete-id"> ID </label>
+    <input id="content-delete-type" name="content-type"/>
+    <label for="content-delete-type"> Type </label>
+    <input id="content-delete-path" name="content-path"/>
+    <label for="content-delete-path"> Path </label>
+    <button id="delete-content" type="submit"> Delete content </button>
+</div>
+<div>
+    <form id="file-upload" enctype="multipart/form-data">
+        <input id="path" name="path"/>
+        <label for="content-file-path"> Path </label>
+        <input type="file" id="files" name="files" multiple/>
+        <button value="Upload" type="submit" >Upload files</button>
+    </form>
 </div>
 <div>
     <button id="get-directories" type="submit"> Get directories </button>
 </div>
+<!-- <div>
+    <button id="clear-directories" type="submit"> Clear directories </button>
+</div> -->
 
 <!-- <div style="display: block;">
     <button id="get-folder-by-name" type="submit"> GET FOLDER BY NAME </button>
