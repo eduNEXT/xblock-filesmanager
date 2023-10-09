@@ -155,6 +155,7 @@ class FilesManagerXBlock(XBlock):
     @XBlock.json_handler
     def get_directories(self, data, suffix=''):
         return {
+            "status": "success",
             "content": self.directories,
         }
 
@@ -163,6 +164,7 @@ class FilesManagerXBlock(XBlock):
         self.directories = []
         self.incremental_directory_id = 0
         return {
+            "status": "success",
             "content": self.directories,
         }
 
@@ -170,7 +172,10 @@ class FilesManagerXBlock(XBlock):
     def get_content(self, data, suffix=''):
         path = data.get("path")
         if not path:
-            return {}
+            return {
+                "status": "error",
+                "message": "Path not found",
+            }
         content, _, _ = self.get_content_by_path(path)
         return {
             "status": "success",
@@ -182,6 +187,11 @@ class FilesManagerXBlock(XBlock):
         directory_name = data.get("name")
         path = data.get("path")
         target_directory = self.get_target_directory(path)
+        if not target_directory:
+            return {
+                "status": "error",
+                "message": "Target directory not found",
+            }
         target_directory.append(
             {
                 "name": directory_name,
@@ -195,6 +205,7 @@ class FilesManagerXBlock(XBlock):
         )
         self.incremental_directory_id += 1
         return {
+            "status": "success",
             "content": target_directory,
         }
 
