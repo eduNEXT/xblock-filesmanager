@@ -161,7 +161,26 @@ class FilesManagerXBlock(XBlock):
 
     @XBlock.json_handler
     def get_directories(self, data, suffix=''):
-        """Return the list of directories."""
+        """Get the list of directories.
+
+
+        Returns: the list of directories is stored in the XBlock settings.
+
+        [
+            {
+                "name": "Folder 1",
+                "type": "directory",
+                "path": "Folder 1",
+                "metadata": {
+                    "id": ..,
+                    ...
+                },
+                "children": [
+                    ...
+                ]
+            }
+        ]
+        """
         return {
             "status": "success",
             "content": self.directories,
@@ -169,7 +188,12 @@ class FilesManagerXBlock(XBlock):
 
     @XBlock.json_handler
     def clear_directories(self, data, suffix=''):
-        """Clear the list of directories without removing files from course assets."""
+        """Clear the list of directories without removing files from course assets.
+
+        This method is intended to be used for testing purposes.
+
+        Returns: an empty list of directories.
+        """
         self.directories = []
         self.incremental_directory_id = 0
         return {
@@ -179,7 +203,13 @@ class FilesManagerXBlock(XBlock):
 
     @XBlock.json_handler
     def get_content(self, data, suffix=''):
-        """Return the content of a directory."""
+        """Get the content of a directory.
+
+        Arguments:
+            data: the path of the directory to be retrieved.
+
+        Returns: the content of the directory if found, an empty sequence otherwise.
+        """
         path = data.get("path")
         if not path:
             return {
@@ -194,7 +224,19 @@ class FilesManagerXBlock(XBlock):
 
     @XBlock.json_handler
     def add_directory(self, data, suffix=''):
-        """Add a directory to a target directory."""
+        """Add a directory to a target directory.
+
+        The new directory will:
+        - Be added to the target directory, if found. Otherwise, an error will be returned.
+        - Be added to the root directory if no target directory is specified.
+        - Have a unique incremental ID.
+        - Have a path composed by the target directory path and the directory name.
+        - Have an empty list of children.
+
+        Arguments:
+            name: the name and path of the directory to be added.
+            path: the path of the target directory where the new directory will be added.
+        """
         directory_name = data.get("name")
         path = data.get("path")
         target_directory = self.get_target_directory(path)
@@ -222,7 +264,14 @@ class FilesManagerXBlock(XBlock):
 
     @XBlock.handler
     def upload_files(self, request, suffix=''):  # pylint: disable=unused-argument
-        """Handler for file upload to the course assets."""
+        """Handler for file upload to the course assets.
+
+        Arguments:
+            request: the request object containing the files to be uploaded and the
+            target directory path.
+
+        Returns: the content of the target directory.
+        """
         # Temporary fix for supporting both contentstore assets management versions (master / Palm)
         try:
             from cms.djangoapps.contentstore.views.assets import update_course_run_asset  # pylint: disable=import-outside-toplevel
@@ -254,7 +303,15 @@ class FilesManagerXBlock(XBlock):
 
     @XBlock.json_handler
     def reorganize_content(self, data, suffix=''):
-        """Reorganize a content from a source path to a target path."""
+        """Reorganize a content from a source path to a target path.
+
+        Arguments:
+            target_path: the path of the target directory where the content will be moved.
+            source_path: the path of the source directory where the content is located.
+            target_index: the index where the content will be inserted in the target directory.
+
+        Returns: the content of the target directory.
+        """
         target_path = data.get("target_path")
         source_path = data.get("source_path")
         target_index = data.get("target_index")
@@ -288,7 +345,13 @@ class FilesManagerXBlock(XBlock):
 
     @XBlock.json_handler
     def delete_content(self, data, suffix=''):
-        """Delete a content from the course assets."""
+        """Delete a content from the course assets.
+
+        Arguments:
+            path: the path of the content to be deleted.
+
+        Returns: the content of the parent directory.
+        """
         path = data.get("path")
         if not path:
             return {
@@ -305,7 +368,13 @@ class FilesManagerXBlock(XBlock):
         }
 
     def get_target_directory(self, path):
-        """Return the target directory for a given path."""
+        """Get the target directory for a given path.
+
+        Arguments:
+            path: the path of the target directory.
+
+        Returns: the target directory if found, the root directory otherwise.
+        """
         target_directory = self.directories
         if path:
             target_directory, _, _ = self.get_content_by_path(path)
@@ -315,7 +384,13 @@ class FilesManagerXBlock(XBlock):
         return target_directory
 
     def get_asset_json_from_content(self, content):
-        """Serialize the content object to a JSON serializable object. """
+        """Serialize the content object to a JSON serializable object.
+
+        Arguments:
+            content: the content object to be serialized.
+
+        Returns: the JSON serializable object.
+        """
         asset_url = StaticContent.serialize_asset_key_with_slash(content.location)
         thumbnail_url = StaticContent.serialize_asset_key_with_slash(content.thumbnail_location)
         return {
@@ -330,7 +405,13 @@ class FilesManagerXBlock(XBlock):
         }
 
     def get_content_by_path(self, path):
-        """Return the (content, index, parent directory) for a given content path."""
+        """Get the (content, index, parent directory) for a given content path.
+
+        Arguments:
+            path: the path of the content to be retrieved.
+
+        Returns: the content, the index of the content in the parent directory and the parent directory.
+        """
         path_tree = path.split("/")
         parent_directory = self.directories
         for directory in path_tree:
@@ -343,14 +424,27 @@ class FilesManagerXBlock(XBlock):
         return None, None, None
 
     def update_content_path(self, content, path):
-        """Update the path of a content."""
+        """Update the path of a content.
+
+        Arguments:
+            content: the content to be updated.
+            path: the new path of the content.
+
+        Returns: the updated content.
+        """
         content["path"] = path
         if content.get("type") == "directory":
             for child in content.get("children", []):
                 self.update_content_path(child, f"{path}/{child['name']}")
 
     def delete_content_from_assets(self, content):
-        """Delete a content from the course assets."""
+        """Delete a content from the course assets.
+
+        Arguments:
+            content: the content to be deleted.
+
+        Returns: None.
+        """
         if content.get("type") == "file":
             if asset_key := content.get("metadata", {}).get("asset_key"):
                 self.delete_asset(asset_key)
@@ -363,7 +457,13 @@ class FilesManagerXBlock(XBlock):
                 self.delete_content_from_assets(child)
 
     def delete_asset(self, asset_key):
-        """Delete an asset from the course assets."""
+        """Delete an asset from the course assets.
+
+        Arguments:
+            asset_key: the asset key of the asset to be deleted.
+
+        Returns: None.
+        """
         try:
             from cms.djangoapps.contentstore.views.assets import delete_asset  # pylint: disable=import-outside-toplevel
         except ImportError:
