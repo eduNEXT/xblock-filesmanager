@@ -33,12 +33,19 @@ log = logging.getLogger(__name__)
 
 class FilesManagerXBlock(XBlock):
     """
+    Xblock to manage files which live in the course assets.
+
+
+    This xblock is intended to be used as a presentation layer for the course assets.
+    It allows to add, delete and reorganize files and (virtual) directories in the course assets.
+    It also allows to upload files to the course assets.
+
     Example of directories list:
     [
         {
             "name": "Folder 1",
-            "type": "folder",
-            "path": "folder1",
+            "type": "directory",
+            "path": "Folder 1",
             "metadata": {
                 "id": ..,
                 ...
@@ -47,7 +54,7 @@ class FilesManagerXBlock(XBlock):
                 {
                     "name": "File 1",
                     "type": "file",
-                    "path": "folder1/file1"
+                    "path": "Folder 1/File 1"
                     "metadata": {
                         "id": ..,
                         "asset_key": ..,
@@ -60,8 +67,8 @@ class FilesManagerXBlock(XBlock):
                     },
                 {
                     "name": "Folder 2",
-                    "type": "folder",
-                    "path": "folder1/folder2",
+                    "type": "directory",
+                    "path": "Folder 1/Folder 2",
                     "metadata": {
                         "id": ..,
                         ...
@@ -70,7 +77,7 @@ class FilesManagerXBlock(XBlock):
                         {
                             "name": "File 2",
                             "type": "file",
-                            "path": "folder1/folder2/file2"
+                            "path": "Folder 1/Folder 2/File 2"
                             "metadata": {
                                 "id": ..,
                                 "asset_key": ..,
@@ -154,6 +161,7 @@ class FilesManagerXBlock(XBlock):
 
     @XBlock.json_handler
     def get_directories(self, data, suffix=''):
+        """Return the list of directories."""
         return {
             "status": "success",
             "content": self.directories,
@@ -161,6 +169,7 @@ class FilesManagerXBlock(XBlock):
 
     @XBlock.json_handler
     def clear_directories(self, data, suffix=''):
+        """Clear the list of directories without removing files from course assets."""
         self.directories = []
         self.incremental_directory_id = 0
         return {
@@ -170,6 +179,7 @@ class FilesManagerXBlock(XBlock):
 
     @XBlock.json_handler
     def get_content(self, data, suffix=''):
+        """Return the content of a directory."""
         path = data.get("path")
         if not path:
             return {
@@ -184,6 +194,7 @@ class FilesManagerXBlock(XBlock):
 
     @XBlock.json_handler
     def add_directory(self, data, suffix=''):
+        """Add a directory to a target directory."""
         directory_name = data.get("name")
         path = data.get("path")
         target_directory = self.get_target_directory(path)
@@ -243,6 +254,7 @@ class FilesManagerXBlock(XBlock):
 
     @XBlock.json_handler
     def reorganize_content(self, data, suffix=''):
+        """Reorganize a content from a source path to a target path."""
         target_path = data.get("target_path")
         source_path = data.get("source_path")
         target_index = data.get("target_index")
@@ -272,6 +284,7 @@ class FilesManagerXBlock(XBlock):
 
     @XBlock.json_handler
     def delete_content(self, data, suffix=''):
+        """Delete a content from the course assets."""
         path = data.get("path")
         if not path:
             return {
@@ -288,6 +301,7 @@ class FilesManagerXBlock(XBlock):
         }
 
     def get_target_directory(self, path):
+        """Return the target directory for a given path."""
         target_directory = self.directories
         if path:
             target_directory, _, _ = self.get_content_by_path(path)
@@ -312,6 +326,7 @@ class FilesManagerXBlock(XBlock):
         }
 
     def get_content_by_path(self, path):
+        """Return the (content, index, parent directory) for a given content path."""
         path_tree = path.split("/")
         parent_directory = self.directories
         for directory in path_tree:
@@ -324,6 +339,7 @@ class FilesManagerXBlock(XBlock):
         return None, None, None
 
     def delete_content_from_assets(self, content):
+        """Delete a content from the course assets."""
         if content.get("type") == "file":
             if asset_key := content.get("metadata", {}).get("asset_key"):
                 self.delete_asset(asset_key)
@@ -336,6 +352,7 @@ class FilesManagerXBlock(XBlock):
                 self.delete_content_from_assets(child)
 
     def delete_asset(self, asset_key):
+        """Delete an asset from the course assets."""
         try:
             from cms.djangoapps.contentstore.views.assets import delete_asset  # pylint: disable=import-outside-toplevel
         except ImportError:
