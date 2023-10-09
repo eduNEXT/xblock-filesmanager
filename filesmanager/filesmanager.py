@@ -101,12 +101,6 @@ class FilesManagerXBlock(XBlock):
         help="List of directories to be displayed in the Files Manager."
     )
 
-    incremental_directory_id = Integer(
-        default=0,
-        scope=Scope.settings,
-        help="Incremental ID for directories."
-    )
-
     def resource_string(self, path):
         """Handy helper for getting resources from our kit."""
         data = pkg_resources.resource_string(__name__, path)
@@ -195,7 +189,6 @@ class FilesManagerXBlock(XBlock):
         Returns: an empty list of directories.
         """
         self.directories = []
-        self.incremental_directory_id = 0
         return {
             "status": "success",
             "content": self.directories,
@@ -250,13 +243,10 @@ class FilesManagerXBlock(XBlock):
                 "name": directory_name,
                 "type": "directory",
                 "path": f"{path}/{directory_name}" if path else directory_name,
-                "metadata": {
-                    "id": self.incremental_directory_id,
-                },
+                "metadata": {},  # Empty for now but could be used to store the directory data needed by Chonky.
                 "children": [],
             }
         )
-        self.incremental_directory_id += 1
         return {
             "status": "success",
             "content": target_directory,
