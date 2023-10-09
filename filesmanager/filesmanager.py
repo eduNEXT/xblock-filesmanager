@@ -208,6 +208,7 @@ class FilesManagerXBlock(XBlock):
         self.directories = []
         self.incremental_directory_id = 0
         return {
+            "status": "success",
             "content": self.directories,
         }
 
