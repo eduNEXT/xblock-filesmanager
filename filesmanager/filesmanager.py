@@ -205,7 +205,12 @@ class FilesManagerXBlock(XBlock):
 
     @XBlock.json_handler
     def clear_directories(self, data, suffix=''):
-        """Clear the list of directories without removing files from course assets."""
+        """Clear the list of directories without removing files from course assets.
+
+        This method is intended to be used for testing purposes.
+
+        Returns: an empty list of directories.
+        """
         self.directories = []
         self.incremental_directory_id = 0
         return {
