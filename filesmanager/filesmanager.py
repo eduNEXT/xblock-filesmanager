@@ -259,7 +259,10 @@ class FilesManagerXBlock(XBlock):
         source_path = data.get("source_path")
         target_index = data.get("target_index")
         if not target_path or not source_path:
-            return {}
+            return {
+                "status": "error",
+                "message": "Path not found",
+            }
         content, index, source_parent_directory = self.get_content_by_path(source_path)
         target_content, _, target_parent_directory = self.get_content_by_path(target_path)
         if not content or not target_content:
