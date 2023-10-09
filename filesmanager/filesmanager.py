@@ -101,7 +101,15 @@ class FilesManagerXBlock(XBlock):
     """
 
     directories = List(
-        default=[],
+        default=[
+            {
+                "name": "uncategorized",
+                "type": "directory",
+                "path": "uncategorized",
+                "metadata": {},
+                "children": [],
+            }
+        ],
         scope=Scope.settings,
         help="List of directories to be displayed in the Files Manager."
     )
@@ -409,6 +417,54 @@ class FilesManagerXBlock(XBlock):
             "status": "success",
         }
 
+    def get_all_serialized_assets(self):
+        """Get all the serialized assets for a given course.
+
+        Arguments:
+            course_key: the course key of the course.
+            options: the options for the query.
+
+        Returns: the serialized assets.
+        """
+        options = {
+            "current_page": 0,
+            "page_size": 100,
+        }
+        current_page = options["current_page"]
+        page_size = options["page_size"]
+        sort = options["sort"]
+        filter_params = options["filter_params"] if options["filter_params"] else None
+        start = current_page * page_size
+        serialized_course_assets = []
+        while True:
+            course_assets_for_page = contentstore().get_all_content_for_course(start, page_size, sort, filter_params)
+            if not course_assets_for_page:
+                break
+            serialized_course_assets.extend([self.get_asset_json_from_content(content) for content in course_assets_for_page])
+            start += page_size
+
+    def prefill_directories(self, data):
+        """Prefill the directories list with the content of the course assets.
+
+        Arguments:
+            data: the content of the course assets.
+
+        Returns: None.
+        """
+        uncategorized_directory = self.directories[0]
+        all_course_assets = self.get_all_serialized_assets()
+        for course_asset in all_course_assets:
+            content, _, _ = self.get_content_by_name(course_asset["display_name"], self.directories)
+            if not content:
+                uncategorized_directory["children"].append(
+                    {
+                        "name": course_asset["display_name"],
+                        "type": "file",
+                        "path": course_asset["display_name"],
+                        "metadata": course_asset,
+                    }
+                )
+
     def get_target_directory(self, path):
         """Get the target directory for a given path.
 
@@ -445,6 +501,22 @@ class FilesManagerXBlock(XBlock):
             "external_url": urljoin(configuration_helpers.get_value('LMS_ROOT_URL', settings.LMS_ROOT_URL), asset_url),
             "thumbnail": urljoin(configuration_helpers.get_value('LMS_ROOT_URL', settings.LMS_ROOT_URL), thumbnail_url),
         }
+
+    def get_content_by_name(self, name, parent_content):
+        """Get the (content, index, parent directory) for a given content name.
+
+        Arguments:
+            name: the name of the content to be retrieved.
+            parent_directory: the parent directory of the content to be retrieved.
+
+        Returns: the content, the index of the content in the parent directory and the parent directory.
+        """
+        for index, content in enumerate(parent_content):
+            if content["name"] == name:
+                return content, index, parent_content
+        if parent_content["type"] == "file":
+            return None, None, None
+        return self.get_content_by_name(name, parent_content["children"])
 
     def get_content_by_path(self, path):
         """Get the (content, index, parent directory) for a given content path.
