@@ -7,6 +7,7 @@ function FilesManagerXBlock(runtime, element) {
     var deleteContentHandler = runtime.handlerUrl(element, 'delete_content');
     var addDirectoryHandler = runtime.handlerUrl(element, 'add_directory');
     var uploadFilesHandler = runtime.handlerUrl(element, 'upload_files');
+    var reorganizeContentHandler = runtime.handlerUrl(element, 'reorganize_content');
 
 
     $(element).find(`#get-directories`).click(function () {
@@ -78,6 +79,25 @@ function FilesManagerXBlock(runtime, element) {
             console.log("Error getting assets");
         });
     });
+
+    $(element).find(`#reorganize-content`).click(function () {
+        const source_path = $(element).find("#content-reorganize-source-path").val();
+        const target_path = $(element).find("#content-reorganize-target-path").val();
+        const new_index = $(element).find("#content-reorganize-index").val();
+        const data = {
+            "source_path": source_path,
+            "target_path": target_path,
+            "target_index": new_index,
+        }
+        $.post(reorganizeContentHandler, JSON.stringify(data))
+        .done(function (response) {
+            console.log(response);
+        })
+        .fail(function () {
+            console.log("Error getting assets");
+        });
+    });
+
 
     $(element).find(`#add-directory`).click(function () {
         const directoryName = $(element).find("#directory-name").val();

@@ -231,15 +231,48 @@ class FilesManagerXBlock(XBlock):
         )
 
     @XBlock.json_handler
+    def reorganize_content(self, data, suffix=''):
+        target_path = data.get("target_path")
+        source_path = data.get("source_path")
+        target_index = data.get("target_index")
+        if not target_path or not source_path:
+            return {}
+        content, index, source_parent_directory = self.get_content_by_path(source_path)
+        target_content, _, target_parent_directory = self.get_content_by_path(target_path)
+        if not content or not target_content:
+            return {
+                "status": "error",
+                "message": "Content not found",
+            }
+        content["path"] = f"{target_content['path']}/{content['name']}"
+        del source_parent_directory[index]
+        if target_index is None:
+            target_content["children"].append(content)
+        else:
+            target_index = int(target_index)
+            new_target_content_directory_children = target_content["children"][:target_index]
+            new_target_content_directory_children.append(content)
+            new_target_content_directory_children.extend(target_content["children"][target_index:])
+            target_content["children"] = new_target_content_directory_children
+        return {
+            "status": "success",
+            "content": target_parent_directory,
+        }
+
+    @XBlock.json_handler
     def delete_content(self, data, suffix=''):
         path = data.get("path")
         if not path:
-            return {}
+            return {
+                "status": "error",
+                "message": "Path not found",
+            }
         content, index, parent_directory = self.get_content_by_path(path)
         if content:
             del parent_directory[index]
             self.delete_content_from_assets(content)
         return {
+            "status": "success",
             "content": parent_directory,
         }
 
