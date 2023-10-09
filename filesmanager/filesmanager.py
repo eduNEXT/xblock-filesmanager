@@ -267,16 +267,17 @@ class FilesManagerXBlock(XBlock):
                 "status": "error",
                 "message": "Content not found",
             }
-        content["path"] = f"{target_content['path']}/{content['name']}"
+        new_content_path = f"{target_content['path']}/{content['name']}"
         del source_parent_directory[index]
         if target_index is None:
             target_content["children"].append(content)
         else:
-            target_index = int(target_index)
+            target_index = 0 if not target_index else int(target_index)
             new_target_content_directory_children = target_content["children"][:target_index]
             new_target_content_directory_children.append(content)
             new_target_content_directory_children.extend(target_content["children"][target_index:])
             target_content["children"] = new_target_content_directory_children
+        self.update_content_path(content, new_content_path)
         return {
             "status": "success",
             "content": target_parent_directory,
@@ -337,6 +338,13 @@ class FilesManagerXBlock(XBlock):
                     parent_directory = content["children"]
                     break
         return None, None, None
+
+    def update_content_path(self, content, path):
+        """Update the path of a content."""
+        content["path"] = path
+        if content.get("type") == "directory":
+            for child in content.get("children", []):
+                self.update_content_path(child, f"{path}/{child['name']}")
 
     def delete_content_from_assets(self, content):
         """Delete a content from the course assets."""
