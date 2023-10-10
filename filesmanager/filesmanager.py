@@ -342,19 +342,19 @@ class FilesManagerXBlock(XBlock):
 
         Returns: the content of the parent directory.
         """
-        path = data.get("path")
-        if not path:
+        paths = data.get("paths")
+        if not paths:
             return {
                 "status": "error",
                 "message": "Path not found",
             }
-        content, index, parent_directory = self.get_content_by_path(path)
-        if content:
-            del parent_directory[index]
-            self.delete_content_from_assets(content)
+        for path in paths:
+            content, index, parent_directory = self.get_content_by_path(path)
+            if content:
+                del parent_directory[index]
+                self.delete_content_from_assets(content)
         return {
             "status": "success",
-            "content": parent_directory,
         }
 
     def get_target_directory(self, path):

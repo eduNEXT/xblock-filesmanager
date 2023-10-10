@@ -67,9 +67,9 @@ function FilesManagerXBlock(runtime, element) {
     });
 
     $(element).find(`#delete-content`).click(function () {
-        const path = $(element).find("#content-delete-path").val();
+        const paths = $(element).find("#content-delete-path").val();
         const data = {
-            "path": path,
+            "paths": paths.split(",").map(path => path.trim()),
         }
         $.post(deleteContentHandler, JSON.stringify(data))
         .done(function (response) {
