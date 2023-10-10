@@ -35,6 +35,7 @@ except ImportError:
     AssetKey = None
 
 log = logging.getLogger(__name__)
+COURSE_ASSETS_PAGE_SIZE = 100
 
 class FilesManagerXBlock(XBlock):
     """
@@ -481,18 +482,15 @@ class FilesManagerXBlock(XBlock):
         Returns: the serialized assets.
         """
         current_page = 0
-        page_size = 100
-        sort = None
-        filter_params = None
-        start = current_page * page_size
+        start = current_page * COURSE_ASSETS_PAGE_SIZE
         serialized_course_assets = []
         while True:
             course_assets_for_page, _ = contentstore().get_all_content_for_course(
                 self.course_id,
-                start=current_page * page_size,
-                maxresults=page_size,
-                sort=sort,
-                filter_params=filter_params,
+                start=current_page * COURSE_ASSETS_PAGE_SIZE,
+                maxresults=COURSE_ASSETS_PAGE_SIZE,
+                sort=None,
+                filter_params={},
             )
             if not course_assets_for_page:
                 break
@@ -501,7 +499,7 @@ class FilesManagerXBlock(XBlock):
                     serialized_course_assets.append(self.get_asset_json_from_dict(content))
                     continue
                 serialized_course_assets.append(self.get_asset_json_from_content(content))
-            start += page_size
+            start += COURSE_ASSETS_PAGE_SIZE
             current_page += 1
         return serialized_course_assets
 
