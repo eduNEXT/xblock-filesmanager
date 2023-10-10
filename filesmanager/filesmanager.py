@@ -9,12 +9,17 @@ from xblock.fields import Integer, Scope, List
 from xblock.fragment import Fragment
 from xblockutils.resources import ResourceLoader
 
+from http import HTTPStatus
 from urllib.parse import urljoin
 
+import pkg_resources
 from django.conf import settings
-
-from http import HTTPStatus
+from django.utils import translation
 from webob.response import Response
+from xblock.core import XBlock
+from xblock.fields import Integer, List, Scope
+from xblock.fragment import Fragment
+from xblockutils.resources import ResourceLoader
 
 try:
     from cms.djangoapps.contentstore.exceptions import AssetNotFoundException
@@ -262,9 +267,11 @@ class FilesManagerXBlock(XBlock):
         """
         # Temporary fix for supporting both contentstore assets management versions (master / Palm)
         try:
-            from cms.djangoapps.contentstore.views.assets import update_course_run_asset  # pylint: disable=import-outside-toplevel
+            from cms.djangoapps.contentstore.views.assets import \
+                update_course_run_asset  # pylint: disable=import-outside-toplevel
         except ImportError:
-            from cms.djangoapps.contentstore.asset_storage_handler import update_course_run_asset  # pylint: disable=import-outside-toplevel
+            from cms.djangoapps.contentstore.asset_storage_handler import \
+                update_course_run_asset  # pylint: disable=import-outside-toplevel
         path = request.params.get("path")
         target_directory = self.get_target_directory(path)
         if not target_directory:
@@ -463,7 +470,8 @@ class FilesManagerXBlock(XBlock):
         try:
             from cms.djangoapps.contentstore.views.assets import delete_asset  # pylint: disable=import-outside-toplevel
         except ImportError:
-            from cms.djangoapps.contentstore.asset_storage_handler import delete_asset  # pylint: disable=import-outside-toplevel
+            from cms.djangoapps.contentstore.asset_storage_handler import \
+                delete_asset  # pylint: disable=import-outside-toplevel
         asset_key = AssetKey.from_string(asset_key)
         try:
             delete_asset(self.course_id, asset_key)
