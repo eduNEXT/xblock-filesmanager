@@ -236,7 +236,7 @@ class FilesManagerXBlock(XBlock):
         directory_name = data.get("name")
         path = data.get("path")
         target_directory = self.get_target_directory(path)
-        if not target_directory:
+        if target_directory is None:
             return {
                 "status": "error",
                 "message": "Target directory not found",
