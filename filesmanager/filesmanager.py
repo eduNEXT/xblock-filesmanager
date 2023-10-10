@@ -1,4 +1,4 @@
-"""TO-DO: Write a description of what this XBlock is."""
+"""Definition for the Files Manager XBlock."""
 import logging
 
 import pkg_resources
@@ -138,8 +138,6 @@ class FilesManagerXBlock(XBlock):
         """
         The edit view of the FilesManagerXBlock in Studio.
         """
-        if context:
-            pass  # TO-DO: do something based on the context.
         html = self.resource_string("static/html/filesmanager.html")
         frag = Fragment(html.format(self=self))
         frag.add_css(self.resource_string("static/css/filesmanager.css"))
@@ -269,8 +267,16 @@ class FilesManagerXBlock(XBlock):
             from cms.djangoapps.contentstore.asset_storage_handler import update_course_run_asset  # pylint: disable=import-outside-toplevel
         path = request.params.get("path")
         target_directory = self.get_target_directory(path)
-        for type, file in request.params.items():
-            if not type.startswith("file"):
+        if not target_directory:
+            return Response(
+                status=HTTPStatus.NOT_FOUND,
+                json_body={
+                    "status": "error",
+                    "message": "Target directory not found",
+                }
+            )
+        for content_type, file in request.params.items():
+            if not content_type.startswith("file"):
                 continue
             try:
                 content = update_course_run_asset(self.course_id, file.file)
