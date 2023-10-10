@@ -106,6 +106,12 @@ class FilesManagerXBlock(XBlock):
         help="List of directories to be displayed in the Files Manager."
     )
 
+    content_ids = List(
+        default=[],
+        scope=Scope.settings,
+        help="List of content IDs to be displayed in the Files Manager."
+    )
+
     def resource_string(self, path):
         """Handy helper for getting resources from our kit."""
         data = pkg_resources.resource_string(__name__, path)
@@ -241,6 +247,13 @@ class FilesManagerXBlock(XBlock):
                 "status": "error",
                 "message": "Target directory not found",
             }
+        directory_path = f"{path}/{directory_name}" if path else directory_name
+        if directory_path in self.content_ids:
+            return {
+                "status": "error",
+                "message": "Directory already exists",
+            }
+        self.content_ids.append(directory_path)
         target_directory.append(
             {
                 "name": directory_name,
@@ -272,9 +285,9 @@ class FilesManagerXBlock(XBlock):
         except ImportError:
             from cms.djangoapps.contentstore.asset_storage_handler import \
                 update_course_run_asset  # pylint: disable=import-outside-toplevel
-        path = request.params.get("path")
-        target_directory = self.get_target_directory(path)
-        if not target_directory:
+        target_path = request.params.get("path")
+        target_directory = self.get_target_directory(target_path)
+        if target_directory is None:
             return Response(
                 status=HTTPStatus.NOT_FOUND,
                 json_body={
@@ -282,16 +295,27 @@ class FilesManagerXBlock(XBlock):
                     "message": "Target directory not found",
                 }
             )
+
         for content_type, file in request.params.items():
             if not content_type.startswith("file"):
                 continue
+            file_path = f"{target_path}/{file.filename}" if target_path else file.filename
+            if file_path in self.content_ids:
+                return Response(
+                    status=HTTPStatus.CONFLICT,
+                    json_body={
+                        "status": "error",
+                        "message": "File already exists",
+                    }
+                )
             try:
                 content = update_course_run_asset(self.course_id, file.file)
+                self.content_ids.append(file_path)
                 target_directory.append(
                     {
                         "name": file.filename,
                         "type": "file",
-                        "path": f"{path}/{file.filename}" if path else file.filename,
+                        "path": file_path,
                         "metadata": self.get_asset_json_from_content(content),
                     }
                 )
@@ -382,7 +406,7 @@ class FilesManagerXBlock(XBlock):
         if path:
             target_directory, _, _ = self.get_content_by_path(path)
             if not target_directory:
-                return {}
+                return
             target_directory = target_directory["children"]
         return target_directory
 
