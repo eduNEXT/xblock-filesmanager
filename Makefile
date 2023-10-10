@@ -26,7 +26,7 @@ install-dev:
 install: install-test
 
 quality:  ## Run the quality checks
-	pylint --rcfile=pylintrc limesurvey
+	pylint --rcfile=pylintrc filesmanager
 	python setup.py -q sdist
 	twine check dist/*
 
