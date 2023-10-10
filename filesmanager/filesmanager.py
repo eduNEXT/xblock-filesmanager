@@ -201,11 +201,13 @@ class FilesManagerXBlock(XBlock):
     def clear_directories(self, data, suffix=''):
         """Clear the list of directories without removing files from course assets.
 
-        This method is intended to be used for testing purposes.
+        All the directories will be removed except the uncategorized directory,
+        and assets from the course will be added to the uncategorized directory.
 
         Returns: an empty list of directories.
         """
-        self.directories = []
+        self.initialize_uncategorized_directory()
+        self.prefill_directories()
         return {
             "status": "success",
             "content": self.directories,
@@ -417,37 +419,41 @@ class FilesManagerXBlock(XBlock):
             "status": "success",
         }
 
-    def get_all_serialized_assets(self):
-        """Get all the serialized assets for a given course.
+    @XBlock.json_handler
+    def fill_directories(self, data, suffix=''):
+        """Fill the directories list with the content of the course assets.
 
-        Arguments:
-            course_key: the course key of the course.
-            options: the options for the query.
+        This unorganized content will be added to the uncategorized directory, which is the first
+        directory in the directory list.
 
-        Returns: the serialized assets.
+        Returns: None.
         """
-        options = {
-            "current_page": 0,
-            "page_size": 100,
+        self.prefill_directories()
+        return {
+            "status": "success",
+            "content": self.directories,
         }
-        current_page = options["current_page"]
-        page_size = options["page_size"]
-        sort = options["sort"]
-        filter_params = options["filter_params"] if options["filter_params"] else None
-        start = current_page * page_size
-        serialized_course_assets = []
-        while True:
-            course_assets_for_page = contentstore().get_all_content_for_course(start, page_size, sort, filter_params)
-            if not course_assets_for_page:
-                break
-            serialized_course_assets.extend([self.get_asset_json_from_content(content) for content in course_assets_for_page])
-            start += page_size
 
-    def prefill_directories(self, data):
+    def initialize_uncategorized_directory(self):
+        """Initialize the uncategorized directory.
+
+        Returns: None.
+        """
+        self.directories = [
+            {
+                "name": "uncategorized",
+                "type": "directory",
+                "path": "uncategorized",
+                "metadata": {},
+                "children": [],
+            }
+        ]
+
+    def prefill_directories(self):
         """Prefill the directories list with the content of the course assets.
 
-        Arguments:
-            data: the content of the course assets.
+        This unorganized content will be added to the uncategorized directory, which is the first
+        directory in the list.
 
         Returns: None.
         """
@@ -460,10 +466,45 @@ class FilesManagerXBlock(XBlock):
                     {
                         "name": course_asset["display_name"],
                         "type": "file",
-                        "path": course_asset["display_name"],
+                        "path": f"uncategorized/{course_asset['display_name']}",
                         "metadata": course_asset,
                     }
                 )
+
+    def get_all_serialized_assets(self):
+        """Get all the serialized assets for a given course.
+
+        Arguments:
+            course_key: the course key of the course.
+            options: the options for the query.
+
+        Returns: the serialized assets.
+        """
+        current_page = 0
+        page_size = 100
+        sort = None
+        filter_params = None
+        start = current_page * page_size
+        serialized_course_assets = []
+        while True:
+            course_assets_for_page, _ = contentstore().get_all_content_for_course(
+                self.course_id,
+                start=current_page * page_size,
+                maxresults=page_size,
+                sort=sort,
+                filter_params=filter_params,
+            )
+            if not course_assets_for_page:
+                break
+            for content in course_assets_for_page:
+                if isinstance(content, dict):
+                    serialized_course_assets.append(self.get_asset_json_from_dict(content))
+                    continue
+                serialized_course_assets.append(self.get_asset_json_from_content(content))
+            start += page_size
+            current_page += 1
+        return serialized_course_assets
+
 
     def get_target_directory(self, path):
         """Get the target directory for a given path.
@@ -502,6 +543,31 @@ class FilesManagerXBlock(XBlock):
             "thumbnail": urljoin(configuration_helpers.get_value('LMS_ROOT_URL', settings.LMS_ROOT_URL), thumbnail_url),
         }
 
+    def get_asset_json_from_dict(self, asset):
+        """Transform the asset dictionary into a JSON serializable object."""
+        asset_url = StaticContent.serialize_asset_key_with_slash(asset["asset_key"])
+        thumbnail_url = self._get_thumbnail_asset_key(asset)
+        return {
+            "id": asset["_id"],
+            "asset_key": str(asset["asset_key"]),
+            "display_name": asset["displayname"],
+            "url": str(asset_url),
+            "content_type": asset["contentType"],
+            "file_size": asset["length"],
+            "external_url": urljoin(configuration_helpers.get_value('LMS_ROOT_URL', settings.LMS_ROOT_URL), asset_url),
+            "thumbnail": urljoin(configuration_helpers.get_value('LMS_ROOT_URL', settings.LMS_ROOT_URL), thumbnail_url),
+        }
+
+    def _get_thumbnail_asset_key(self, asset):
+        """Return the thumbnail asset key."""
+        thumbnail_location = asset.get('thumbnail_location', None)
+        thumbnail_asset_key = None
+
+        if thumbnail_location:
+            thumbnail_path = thumbnail_location[4]
+            thumbnail_asset_key = self.course_id.make_asset_key('thumbnail', thumbnail_path)
+        return str(thumbnail_asset_key)
+
     def get_content_by_name(self, name, parent_content):
         """Get the (content, index, parent directory) for a given content name.
 
@@ -514,9 +580,11 @@ class FilesManagerXBlock(XBlock):
         for index, content in enumerate(parent_content):
             if content["name"] == name:
                 return content, index, parent_content
-        if parent_content["type"] == "file":
-            return None, None, None
-        return self.get_content_by_name(name, parent_content["children"])
+            if content["type"] == "directory":
+                content, index, parent_content = self.get_content_by_name(name, content["children"])
+                if content:
+                    return content, index, parent_content
+        return None, None, None
 
     def get_content_by_path(self, path):
         """Get the (content, index, parent directory) for a given content path.
