@@ -17,6 +17,27 @@ TRANSLATIONS_DIR := $(PACKAGE_NAME)/translations
 help:
 	@perl -nle'print $& if m{^[\.a-zA-Z_-]+:.*?## .*$$}' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m  %-25s\033[0m %s\n", $$1, $$2}'
 
+install-test:
+	pip install -qr requirements/test.txt
+
+install-dev:
+	pip install -qr requirements/dev.txt
+
+install: install-test
+
+quality:  ## Run the quality checks
+	pylint --rcfile=pylintrc limesurvey
+	python setup.py -q sdist
+	twine check dist/*
+
+test:  ## Run the tests
+	mkdir -p var
+	rm -rf .coverage
+	python -m coverage run --rcfile=.coveragerc  -m pytest
+
+covreport:  ## Show the coverage results
+	python -m coverage report -m --skip-covered
+
 # Define PIP_COMPILE_OPTS=-v to get more information during make upgrade.
 PIP_COMPILE = pip-compile --upgrade $(PIP_COMPILE_OPTS)
 
