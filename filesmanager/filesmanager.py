@@ -375,7 +375,7 @@ class FilesManagerXBlock(XBlock):
         """Delete a content from the course assets.
 
         Arguments:
-            path: the path of the content to be deleted.
+            paths: list of paths of the content to be deleted.
 
         Returns: the content of the parent directory.
         """
