@@ -1,3 +1,57 @@
 <div class="filesmanager_block">
-    <p>FilesManagerXBlock: count is now <span class="count">{self.count}</span> (click me to increment).</p>
+<p>FilesManagerXBlock</p>
+
+<div>
+    <input id="directory-name" name="directory-name"/>
+    <label for="directory-name"> Directory name </label>
+    <input id="directory-path" path="directory-path"/>
+    <label for="directory-path"> Directory path </label>
+    <button id="add-directory" type="submit"> Add directory </button>
+</div>
+<div>
+    <input id="content-path" name="content-path"/>
+    <label for="content-path"> Path </label>
+    <button id="get-asset-by-path" type="submit"> Get content by path </button>
+</div>
+<div>
+    <input id="content-delete-path" name="content-path"/>
+    <label for="content-delete-path"> Path </label>
+    <button id="delete-content" type="submit"> Delete content </button>
+</div>
+<div>
+    <input id="content-reorganize-source-path" name="content-path"/>
+    <label for="content-reorganize-source-path"> Source path </label>
+    <input id="content-reorganize-target-path" name="content-path"/>
+    <label for="content-reorganize-target-path"> Target path </label>
+    <input id="content-reorganize-index" name="content"/>
+    <label for="content-reorganize-index"> Index </label>
+    <button id="reorganize-content" type="submit"> Reorganize content </button>
+</div>
+<div>
+    <form id="file-upload" enctype="multipart/form-data">
+        <input id="path" name="path"/>
+        <label for="content-file-path"> Path </label>
+        <input type="file" id="files" name="files" multiple/>
+        <button value="Upload" type="submit" >Upload files</button>
+    </form>
+</div>
+<div>
+    <button id="get-directories" type="submit"> Get directories </button>
+</div>
+<!-- <div>
+    <button id="clear-directories" type="submit"> Clear directories </button>
+</div> -->
+
+<!-- <div style="display: block;">
+    <button id="get-folder-by-name" type="submit"> GET FOLDER BY NAME </button>
+</div>
+<div style="display: block;">
+    <button id="upload-asset-to-folder" type="submit"> UPLOAD ASSET TO FOLDER </button>
+</div>
+<div style="display: block;">
+    <button id="remove-asset-from-folder" type="submit"> REMOVE ASSET FROM FOLDER </button>
+</div>
+<div style="display: block;">
+    <button id="move-asset" type="submit"> MOVE ASSET </button>
+</div> -->
 </div>
