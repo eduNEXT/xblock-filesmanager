@@ -3,23 +3,17 @@ import logging
 
 import pkg_resources
 import re
+from django.conf import settings
 from django.utils import translation
+from webob.response import Response
 from xblock.core import XBlock
-from xblock.fields import Integer, Scope, List
+from xblock.fields import List, Scope
 from xblock.fragment import Fragment
 from xblockutils.resources import ResourceLoader
 
 from http import HTTPStatus
 from urllib.parse import urljoin
 
-import pkg_resources
-from django.conf import settings
-from django.utils import translation
-from webob.response import Response
-from xblock.core import XBlock
-from xblock.fields import Integer, List, Scope
-from xblock.fragment import Fragment
-from xblockutils.resources import ResourceLoader
 
 try:
     from cms.djangoapps.contentstore.exceptions import AssetNotFoundException
@@ -36,6 +30,7 @@ except ImportError:
 
 log = logging.getLogger(__name__)
 COURSE_ASSETS_PAGE_SIZE = 100
+
 
 class FilesManagerXBlock(XBlock):
     """
@@ -104,9 +99,9 @@ class FilesManagerXBlock(XBlock):
     directories = List(
         default=[
             {
-                "name": "uncategorized",
+                "name": "unpublished",
                 "type": "directory",
-                "path": "uncategorized",
+                "path": "unpublished",
                 "metadata": {},
                 "children": [],
             }
@@ -202,28 +197,13 @@ class FilesManagerXBlock(XBlock):
     def clear_directories(self, data, suffix=''):
         """Clear the list of directories without removing files from course assets.
 
-        All the directories will be removed except the uncategorized directory,
-        and assets from the course will be added to the uncategorized directory.
+        All the directories will be removed except the unpublished directory,
+        and assets from the course will be added to the unpublished directory.
 
         Returns: an empty list of directories.
         """
-        self.initialize_uncategorized_directory()
+        self.initialize_unpublished_directory()
         self.prefill_directories()
-        return {
-            "status": "success",
-            "content": self.directories,
-        }
-
-    @XBlock.json_handler
-    def clear_directories(self, data, suffix=''):
-        """Clear the list of directories without removing files from course assets.
-
-        This method is intended to be used for testing purposes.
-
-        Returns: an empty list of directories.
-        """
-        self.directories = []
-        self.incremental_directory_id = 0
         return {
             "status": "success",
             "content": self.directories,
@@ -424,7 +404,7 @@ class FilesManagerXBlock(XBlock):
     def fill_directories(self, data, suffix=''):
         """Fill the directories list with the content of the course assets.
 
-        This unorganized content will be added to the uncategorized directory, which is the first
+        This unorganized content will be added to the unpublished directory, which is the first
         directory in the directory list.
 
         Returns: None.
@@ -435,16 +415,16 @@ class FilesManagerXBlock(XBlock):
             "content": self.directories,
         }
 
-    def initialize_uncategorized_directory(self):
-        """Initialize the uncategorized directory.
+    def initialize_unpublished_directory(self):
+        """Initialize the unpublished directory.
 
         Returns: None.
         """
         self.directories = [
             {
-                "name": "uncategorized",
+                "name": "unpublished",
                 "type": "directory",
-                "path": "uncategorized",
+                "path": "unpublished",
                 "metadata": {},
                 "children": [],
             }
@@ -453,21 +433,21 @@ class FilesManagerXBlock(XBlock):
     def prefill_directories(self):
         """Prefill the directories list with the content of the course assets.
 
-        This unorganized content will be added to the uncategorized directory, which is the first
+        This unorganized content will be added to the unpublished directory, which is the first
         directory in the list.
 
         Returns: None.
         """
-        uncategorized_directory = self.directories[0]
+        unpublished_directory = self.directories[0]
         all_course_assets = self.get_all_serialized_assets()
         for course_asset in all_course_assets:
             content, _, _ = self.get_content_by_name(course_asset["display_name"], self.directories)
             if not content:
-                uncategorized_directory["children"].append(
+                unpublished_directory["children"].append(
                     {
                         "name": course_asset["display_name"],
                         "type": "file",
-                        "path": f"uncategorized/{course_asset['display_name']}",
+                        "path": f"unpublished/{course_asset['display_name']}",
                         "metadata": course_asset,
                     }
                 )

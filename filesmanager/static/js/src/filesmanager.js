@@ -70,7 +70,7 @@ function FilesManagerXBlock(runtime, element) {
         const data = {
             "path": path,
         }
-        $.post(deleteContentHandler, JSON.stringify(data))
+        $.post(getAssetHandler, JSON.stringify(data))
         .done(function (response) {
             console.log(response);
         })
