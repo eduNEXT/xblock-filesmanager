@@ -3,23 +3,17 @@ import logging
 
 import pkg_resources
 import re
+from django.conf import settings
 from django.utils import translation
+from webob.response import Response
 from xblock.core import XBlock
-from xblock.fields import Integer, Scope, List
+from xblock.fields import List, Scope
 from xblock.fragment import Fragment
 from xblockutils.resources import ResourceLoader
 
 from http import HTTPStatus
 from urllib.parse import urljoin
 
-import pkg_resources
-from django.conf import settings
-from django.utils import translation
-from webob.response import Response
-from xblock.core import XBlock
-from xblock.fields import Integer, List, Scope
-from xblock.fragment import Fragment
-from xblockutils.resources import ResourceLoader
 
 try:
     from cms.djangoapps.contentstore.exceptions import AssetNotFoundException
@@ -35,6 +29,8 @@ except ImportError:
     AssetKey = None
 
 log = logging.getLogger(__name__)
+COURSE_ASSETS_PAGE_SIZE = 100
+
 
 class FilesManagerXBlock(XBlock):
     """
@@ -101,7 +97,15 @@ class FilesManagerXBlock(XBlock):
     """
 
     directories = List(
-        default=[],
+        default=[
+            {
+                "name": "unpublished",
+                "type": "directory",
+                "path": "unpublished",
+                "metadata": {},
+                "children": [],
+            }
+        ],
         scope=Scope.settings,
         help="List of directories to be displayed in the Files Manager."
     )
@@ -193,11 +197,13 @@ class FilesManagerXBlock(XBlock):
     def clear_directories(self, data, suffix=''):
         """Clear the list of directories without removing files from course assets.
 
-        This method is intended to be used for testing purposes.
+        All the directories will be removed except the unpublished directory,
+        and assets from the course will be added to the unpublished directory.
 
         Returns: an empty list of directories.
         """
-        self.directories = []
+        self.initialize_unpublished_directory()
+        self.prefill_directories()
         return {
             "status": "success",
             "content": self.directories,
@@ -394,6 +400,90 @@ class FilesManagerXBlock(XBlock):
             "status": "success",
         }
 
+    @XBlock.json_handler
+    def fill_directories(self, data, suffix=''):
+        """Fill the directories list with the content of the course assets.
+
+        This unorganized content will be added to the unpublished directory, which is the first
+        directory in the directory list.
+
+        Returns: None.
+        """
+        self.prefill_directories()
+        return {
+            "status": "success",
+            "content": self.directories,
+        }
+
+    def initialize_unpublished_directory(self):
+        """Initialize the unpublished directory.
+
+        Returns: None.
+        """
+        self.directories = [
+            {
+                "name": "unpublished",
+                "type": "directory",
+                "path": "unpublished",
+                "metadata": {},
+                "children": [],
+            }
+        ]
+
+    def prefill_directories(self):
+        """Prefill the directories list with the content of the course assets.
+
+        This unorganized content will be added to the unpublished directory, which is the first
+        directory in the list.
+
+        Returns: None.
+        """
+        unpublished_directory = self.directories[0]
+        all_course_assets = self.get_all_serialized_assets()
+        for course_asset in all_course_assets:
+            content, _, _ = self.get_content_by_name(course_asset["display_name"], self.directories)
+            if not content:
+                unpublished_directory["children"].append(
+                    {
+                        "name": course_asset["display_name"],
+                        "type": "file",
+                        "path": f"unpublished/{course_asset['display_name']}",
+                        "metadata": course_asset,
+                    }
+                )
+
+    def get_all_serialized_assets(self):
+        """Get all the serialized assets for a given course.
+
+        Arguments:
+            course_key: the course key of the course.
+            options: the options for the query.
+
+        Returns: the serialized assets.
+        """
+        current_page = 0
+        start = current_page * COURSE_ASSETS_PAGE_SIZE
+        serialized_course_assets = []
+        while True:
+            course_assets_for_page, _ = contentstore().get_all_content_for_course(
+                self.course_id,
+                start=current_page * COURSE_ASSETS_PAGE_SIZE,
+                maxresults=COURSE_ASSETS_PAGE_SIZE,
+                sort=None,
+                filter_params={},
+            )
+            if not course_assets_for_page:
+                break
+            for content in course_assets_for_page:
+                if isinstance(content, dict):
+                    serialized_course_assets.append(self.get_asset_json_from_dict(content))
+                    continue
+                serialized_course_assets.append(self.get_asset_json_from_content(content))
+            start += COURSE_ASSETS_PAGE_SIZE
+            current_page += 1
+        return serialized_course_assets
+
+
     def get_target_directory(self, path):
         """Get the target directory for a given path.
 
@@ -430,6 +520,49 @@ class FilesManagerXBlock(XBlock):
             "external_url": urljoin(configuration_helpers.get_value('LMS_ROOT_URL', settings.LMS_ROOT_URL), asset_url),
             "thumbnail": urljoin(configuration_helpers.get_value('LMS_ROOT_URL', settings.LMS_ROOT_URL), thumbnail_url),
         }
+
+    def get_asset_json_from_dict(self, asset):
+        """Transform the asset dictionary into a JSON serializable object."""
+        asset_url = StaticContent.serialize_asset_key_with_slash(asset["asset_key"])
+        thumbnail_url = self._get_thumbnail_asset_key(asset)
+        return {
+            "id": asset["_id"],
+            "asset_key": str(asset["asset_key"]),
+            "display_name": asset["displayname"],
+            "url": str(asset_url),
+            "content_type": asset["contentType"],
+            "file_size": asset["length"],
+            "external_url": urljoin(configuration_helpers.get_value('LMS_ROOT_URL', settings.LMS_ROOT_URL), asset_url),
+            "thumbnail": urljoin(configuration_helpers.get_value('LMS_ROOT_URL', settings.LMS_ROOT_URL), thumbnail_url),
+        }
+
+    def _get_thumbnail_asset_key(self, asset):
+        """Return the thumbnail asset key."""
+        thumbnail_location = asset.get('thumbnail_location', None)
+        thumbnail_asset_key = None
+
+        if thumbnail_location:
+            thumbnail_path = thumbnail_location[4]
+            thumbnail_asset_key = self.course_id.make_asset_key('thumbnail', thumbnail_path)
+        return str(thumbnail_asset_key)
+
+    def get_content_by_name(self, name, parent_content):
+        """Get the (content, index, parent directory) for a given content name.
+
+        Arguments:
+            name: the name of the content to be retrieved.
+            parent_directory: the parent directory of the content to be retrieved.
+
+        Returns: the content, the index of the content in the parent directory and the parent directory.
+        """
+        for index, content in enumerate(parent_content):
+            if content["name"] == name:
+                return content, index, parent_content
+            if content["type"] == "directory":
+                content, index, parent_content = self.get_content_by_name(name, content["children"])
+                if content:
+                    return content, index, parent_content
+        return None, None, None
 
     def get_content_by_path(self, path):
         """Get the (content, index, parent directory) for a given content path.

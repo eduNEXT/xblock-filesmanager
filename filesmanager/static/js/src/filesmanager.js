@@ -3,6 +3,7 @@ function FilesManagerXBlock(runtime, element) {
 
     var getDirectories = runtime.handlerUrl(element, 'get_directories');
     var clearDirectories = runtime.handlerUrl(element, 'clear_directories');
+    var fillDirectories = runtime.handlerUrl(element, 'fill_directories');
     var getAssetHandler = runtime.handlerUrl(element, 'get_content');
     var deleteContentHandler = runtime.handlerUrl(element, 'delete_content');
     var addDirectoryHandler = runtime.handlerUrl(element, 'add_directory');
@@ -31,6 +32,18 @@ function FilesManagerXBlock(runtime, element) {
             console.log("Error getting assets");
         });
     });
+
+    $(element).find(`#fill-directories`).click(function () {
+        const data = {}
+        $.post(fillDirectories, JSON.stringify(data))
+        .done(function (response) {
+            console.log(response);
+        })
+        .fail(function () {
+            console.log("Error getting assets");
+        });
+    });
+
 
     $(element).find(`#file-upload`).submit(function (e) {
         e.preventDefault();
