@@ -7,7 +7,7 @@
   "license": "MIT",
   "scripts": {
     "build": "webpack --mode=production",
-    "dev": "webpack --mode=development --watch --progress"
+    "dev": "webpack --mode=production --watch"
   },
   "dependencies": {
     "@babel/core": "^7.22.10",
@@ -21,6 +21,8 @@
     "html-webpack-plugin": "^5.5.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "sass": "^1.69.4",
+    "sass-loader": "^13.3.2",
     "style-loader": "^3.3.3",
     "webpack": "^5.88.2",
     "webpack-bundle-tracker": "^2.0.1",
@@ -29,7 +31,9 @@
     "webpack-merge": "^5.9.0"
   },
   "devDependencies": {
+    "babel-plugin-module-resolver": "^5.0.0",
     "prettier": "^3.0.3",
-    "typescript": "^5.2.2"
+    "typescript": "^5.2.2",
+    "webpack-dev-server": "^4.15.1"
   }
 }
