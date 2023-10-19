@@ -1,8 +1,10 @@
 """Definition for the Files Manager XBlock."""
 import logging
+import re
+from http import HTTPStatus
+from urllib.parse import urljoin
 
 import pkg_resources
-import re
 from django.conf import settings
 from django.utils import translation
 from webob.response import Response
@@ -10,10 +12,6 @@ from xblock.core import XBlock
 from xblock.fields import List, Scope
 from xblock.fragment import Fragment
 from xblockutils.resources import ResourceLoader
-
-from http import HTTPStatus
-from urllib.parse import urljoin
-
 
 try:
     from cms.djangoapps.contentstore.exceptions import AssetNotFoundException
@@ -149,7 +147,7 @@ class FilesManagerXBlock(XBlock):
 
         return frag
 
-    def studio_view(self, context=None):
+    def studio_view(self, context=None):  # pylint: disable=unused-argument
         """
         The edit view of the FilesManagerXBlock in Studio.
         """
@@ -167,7 +165,7 @@ class FilesManagerXBlock(XBlock):
         return frag
 
     @XBlock.json_handler
-    def get_directories(self, data, suffix=''):
+    def get_directories(self, data, suffix=''):  # pylint: disable=unused-argument
         """Get the list of directories.
 
 
@@ -194,7 +192,7 @@ class FilesManagerXBlock(XBlock):
         }
 
     @XBlock.json_handler
-    def clear_directories(self, data, suffix=''):
+    def clear_directories(self, data, suffix=''):  # pylint: disable=unused-argument
         """Clear the list of directories without removing files from course assets.
 
         All the directories will be removed except the unpublished directory,
@@ -210,7 +208,7 @@ class FilesManagerXBlock(XBlock):
         }
 
     @XBlock.json_handler
-    def get_content(self, data, suffix=''):
+    def get_content(self, data, suffix=''):  # pylint: disable=unused-argument
         """Get the content of a directory.
 
         Arguments:
@@ -231,7 +229,7 @@ class FilesManagerXBlock(XBlock):
         }
 
     @XBlock.json_handler
-    def add_directory(self, data, suffix=''):
+    def add_directory(self, data, suffix=''):  # pylint: disable=unused-argument
         """Add a directory to a target directory.
 
         The new directory will:
@@ -335,7 +333,7 @@ class FilesManagerXBlock(XBlock):
         )
 
     @XBlock.json_handler
-    def reorganize_content(self, data, suffix=''):
+    def reorganize_content(self, data, suffix=''):  # pylint: disable=unused-argument
         """Reorganize a content from a source path to a target path.
 
         Arguments:
@@ -377,7 +375,7 @@ class FilesManagerXBlock(XBlock):
         }
 
     @XBlock.json_handler
-    def delete_content(self, data, suffix=''):
+    def delete_content(self, data, suffix=''):  # pylint: disable=unused-argument
         """Delete a content from the course assets.
 
         Arguments:
@@ -401,7 +399,7 @@ class FilesManagerXBlock(XBlock):
         }
 
     @XBlock.json_handler
-    def fill_directories(self, data, suffix=''):
+    def fill_directories(self, data, suffix=''):  # pylint: disable=unused-argument
         """Fill the directories list with the content of the course assets.
 
         This unorganized content will be added to the unpublished directory, which is the first
@@ -496,7 +494,7 @@ class FilesManagerXBlock(XBlock):
         if path:
             target_directory, _, _ = self.get_content_by_path(path)
             if not target_directory:
-                return
+                return None
             target_directory = target_directory["children"]
         return target_directory
 
@@ -632,7 +630,7 @@ class FilesManagerXBlock(XBlock):
         asset_key = AssetKey.from_string(asset_key)
         try:
             delete_asset(self.course_id, asset_key)
-        except AssetNotFoundException as e:  # pylint: disable=broad-except
+        except AssetNotFoundException as e:
             log.exception(e)
 
     # TO-DO: change this to create the scenarios you'd like to see in the

@@ -1,5 +1,5 @@
 FilesManager Xblock for Open edX
-#############################
+#################################
 
 Testing with Docker
 ********************

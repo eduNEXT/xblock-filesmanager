@@ -1,3 +1,7 @@
+"""
+Test settings for filesmanager project.
+"""
+
 # SECURITY WARNING: keep the secret key used in production secret!
 DATABASES = {
     "default": {
