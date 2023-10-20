@@ -324,7 +324,7 @@ class FilesManagerXBlock(XBlock):
         }
 
     @XBlock.json_handler
-    def add_directory(self, data, suffix=''):
+    def add_directories(self, data, suffix=''):
         """Add a directory to a target directory.
 
         The new directory will:
@@ -338,30 +338,37 @@ class FilesManagerXBlock(XBlock):
             name: the name and path of the directory to be added.
             path: the path of the target directory where the new directory will be added.
         """
-        directory_name = data.get("name")
-        path = data.get("path")
-        target_directory = self.get_target_directory(path)
-        if target_directory is None:
+        directories = data.get("directories")
+        if not directories:
             return {
                 "status": "error",
-                "message": "Target directory not found",
+                "message": "Directories not found in the request",
             }
-        directory_path = f"{path}/{directory_name}" if path else directory_name
-        if directory_path in self.content_ids:
-            return {
-                "status": "error",
-                "message": "Directory already exists",
-            }
-        self.content_ids.append(directory_path)
-        target_directory.append(
-            {
-                "name": directory_name,
-                "type": "directory",
-                "path": f"{path}/{directory_name}" if path else directory_name,
-                "metadata": {},  # Empty for now but could be used to store the directory data needed by Chonky.
-                "children": [],
-            }
-        )
+        for directory in directories:
+            directory_name = directory.get("name")
+            path = directory.get("path")
+            target_directory = self.get_target_directory(path)
+            if target_directory is None:
+                return {
+                    "status": "error",
+                    "message": "Target directory not found",
+                }
+            directory_path = f"{path}/{directory_name}" if path else directory_name
+            if directory_path in self.content_ids:
+                return {
+                    "status": "error",
+                    "message": f"Directory {directory_name} already exists",
+                }
+            self.content_ids.append(directory_path)
+            target_directory.append(
+                {
+                    "name": directory_name,
+                    "type": "directory",
+                    "path": directory_path,
+                    "metadata": {},  # Empty for now but could be used to store the directory data needed by Chonky.
+                    "children": [],
+                }
+            )
         return {
             "status": "success",
             "content": target_directory,
