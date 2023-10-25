@@ -1,4 +1,5 @@
 """Definition for the Files Manager XBlock."""
+import json
 import logging
 import os
 import pkg_resources
@@ -7,13 +8,12 @@ from django.conf import settings
 from django.utils import translation
 from webob.response import Response
 from xblock.core import XBlock
-from xblock.fields import List, Scope
+from xblock.fields import Dict, List, Scope
 from xblock.fragment import Fragment
 from xblockutils.resources import ResourceLoader
 
 from http import HTTPStatus
 from urllib.parse import urljoin
-
 
 try:
     from cms.djangoapps.contentstore.exceptions import AssetNotFoundException
@@ -114,6 +114,12 @@ class FilesManagerXBlock(XBlock):
         default=[],
         scope=Scope.settings,
         help="List of content paths to be displayed in the Files Manager."
+    )
+
+    temporary_uploaded_files = Dict(
+        default={},
+        scope=Scope.settings,
+        help="List of temporary uploaded files."
     )
 
     @property
@@ -314,43 +320,74 @@ class FilesManagerXBlock(XBlock):
             "contents": contents,
         }
 
-    @XBlock.json_handler
-    def add_directories(self, data, suffix=''):
-        """Add a directory to a target directory.
-
-        The new directory will:
-        - Be added to the target directory, if found. Otherwise, an error will be returned.
-        - Be added to the root directory if no target directory is specified.
-        - Have a path composed by the target directory path and the directory name, this path
-        will be unique.
-        - Have an empty list of children.
+    @XBlock.handler
+    def create_content(self, request, suffix=''):
+        """Associate content to the Xblock state and course assets when necessary.
 
         Arguments:
-            name: the name and path of the directory to be added.
-            path: the path of the target directory where the new directory will be added.
+            request: the request object containing the content to be added. The content can be
+            directories or a files.
+            Each request must contain the following parameters:
+            - contents: the content to be added with the following format:
+            [
+                {
+                    "name": "Folder 1",
+                    "type": "directory",
+                    "path": ..., // Empty if the directory will be added to the root directory
+                                 // or the path of the target directory where the new directory
+                                // will be added.
+                    "children": [
+                        {
+                            "name": "File 1",
+                            "type": "file",
+                            "path": "Folder 1/File 1",
+                        }
+                    ]
+                },
+            ]
+            - file(s): file(s) to be uploaded, in case the content to be added contains files.
         """
-        directories = data.get("directories")
-        if not directories:
-            return {
-                "status": "error",
-                "message": "Directories not found in the request",
-            }
-        for directory in directories:
-            path = directory.get("path")
+        try:
+            self.temporary_save_upload_files(request.params.items())
+            contents = json.loads(request.params.get("contents", "{}"))
+            if not contents:
+                return Response(status=HTTPStatus.BAD_REQUEST)
+            self._create_content(contents)
+        except Exception as e:
+            log.exception(e)
+            return Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)
+        finally:
+            self.clean_uploaded_files()
+        return Response(
+            json_body=self.directories,
+            status=HTTPStatus.OK,
+        )
+
+    def _create_content(self, contents):
+        """Add new content to a target directory or to the root directory.
+
+        Arguments:
+            contents: the content to be added.
+        """
+        if not contents:
+            raise Exception("Contents not found in the request")
+        for content in contents:
+            path = content.get("path")
             target_directory = self.get_target_directory(path)
             if target_directory is None:
-                return {
-                    "status": "error",
-                    "message": "Target directory not found",
-                }
-            self.create_directory(directory, target_directory)
+                raise Exception("Target directory not found")
+            if content.get("type") == "directory":
+                self.create_directory(content, target_directory)
+            elif content.get("type") == "file":
+                self.upload_file_to_directory(content, target_directory)
+            else:
+                raise Exception("Content type not found")
         return {
             "status": "success",
             "content": target_directory,
         }
 
-    @XBlock.handler
-    def upload_files(self, request, suffix=''):  # pylint: disable=unused-argument
+    def temporary_save_upload_files(self, uploaded_files):  # pylint: disable=unused-argument
         """Handler for file upload to the course assets.
 
         Arguments:
@@ -359,30 +396,17 @@ class FilesManagerXBlock(XBlock):
 
         Returns: the content of the target directory.
         """
-        target_path = request.params.get("path")
-        target_directory = self.get_target_directory(target_path)
-        if target_directory is None:
-            return Response(
-                status=HTTPStatus.NOT_FOUND,
-                json_body={
-                    "status": "error",
-                    "message": "Target directory not found",
-                }
-            )
-
-        for content_type, file in request.params.items():
+        for content_type, file in uploaded_files:
             if not content_type.startswith("file"):
                 continue
-            try:
-                self.upload_file_to_directory(file, target_directory, target_path)
-            except Exception as e:  # pylint: disable=broad-except
-                log.exception(e)
-                return Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)
+            self.temporary_uploaded_files[file.file.name] = file
 
-        return Response(
-            status=HTTPStatus.OK,
-            json_body=target_directory,
-        )
+    def clean_uploaded_files(self):
+        """Clean the temporary uploaded files.
+
+        Returns: None.
+        """
+        self.temporary_uploaded_files = {}
 
     def generate_content_path(self, base_path, name=None):
         """Generate a new file name if the file name already exists.
@@ -396,7 +420,7 @@ class FilesManagerXBlock(XBlock):
             name = f"{name} ({len(self.content_paths)})"
         return base_path, name
 
-    def upload_file_to_directory(self, file, target_directory, target_path=None):
+    def upload_file_to_directory(self, file, target_directory):
         """Upload a file to a directory.
 
         Arguments:
@@ -412,13 +436,18 @@ class FilesManagerXBlock(XBlock):
             from cms.djangoapps.contentstore.asset_storage_handler import \
                 update_course_run_asset  # pylint: disable=import-outside-toplevel
 
-        file_path = file.filename
-        if target_path:
-            file_path = f"{target_path}/{file_path}"
-        file_path, name = self.generate_content_path(file_path, file.filename)
-        file.file._set_name(name)
+        file_object = self.temporary_uploaded_files.pop(file.get("name"), None)
+        if not file_object:
+            raise Exception("File not found in the temporary uploaded files")
 
-        content = update_course_run_asset(self.course_id, file.file)
+        file_path = file_object.filename
+        if target_path := file.get("path"):
+            file_path = f"{target_path}/{file_path}"
+
+        file_path, name = self.generate_content_path(file_path, file_object.filename)
+        file_object.file._set_name(name)
+
+        content = update_course_run_asset(self.course_id, file_object.file)
         target_directory.append(
             {
                 "name": name,
@@ -431,6 +460,13 @@ class FilesManagerXBlock(XBlock):
 
     def create_directory(self, directory, target_directory):
         """Create a directory.
+
+         The new directory will:
+        - Be added to the target directory, if found. Otherwise, an error will be returned.
+        - Be added to the root directory if no target directory is specified.
+        - Have a path composed by the target directory path and the directory name, this path
+        will be unique.
+        - Have an empty list of children unless the directory from the request contains children.
 
         Arguments:
             directory: the directory to be created.
@@ -458,7 +494,7 @@ class FilesManagerXBlock(XBlock):
             if child.get("type") == "directory":
                 self.create_directory(child, target_directory[-1]["children"])
             else:
-                self.upload_file_to_directory(child, target_directory[-1]["children"], directory_path)
+                self.upload_file_to_directory(child, target_directory[-1]["children"])
 
     @XBlock.json_handler
     def reorganize_content(self, data, suffix=''):
