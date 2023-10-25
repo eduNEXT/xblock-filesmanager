@@ -1,94 +1,150 @@
-import { setChonkyDefaults } from "chonky";
-import { ChonkyIconFA } from "chonky-icon-fontawesome";
+import React, { useCallback, useRef, useMemo } from 'react';
 import {
+  ChonkyActions,
   FileBrowser,
+  FileContextMenu,
+  FileList,
   FileNavbar,
   FileToolbar,
-  FileList,
-  FileContextMenu,
-  ChonkyIconName,
-  ChonkyActions,
-  defineFileAction
-} from "chonky";
-import ExampleFolderData from "./ExampleFolderData";
+  setChonkyDefaults
+} from 'chonky';
+import useSWRMutation from 'swr/mutation';
+import { ChonkyIconFA } from 'chonky-icon-fontawesome';
+import xBlockContext from '@constants/xBlockContext';
+import useXBlockActionButtons from '@hooks/useXBlockActionButtons';
+import { uploadFiles } from '@services/directoriesService';
 
-// set chonky default
+import { useCustomFileMap, useFiles, useFolderChain, useFileActionHandler } from './hooks';
+import DemoFsMap from './default.json';
 
-
-// dummy data
-const { files, currentPath } = ExampleFolderData();
-console.log(files, currentPath);
-
-const handleAction = (data) => {
-  if (data.id === createNewFolder.id) alert("Create Folder Action");
-  if (data.id === editFiles.id) alert("Edit Folder Action");
-  if (data.id === renameFiles.id) alert("Rename Folder Action");
-  if (data.id === ChonkyActions.UploadFiles.id) alert("Upload Folder Action");
-  if (data.id === ChonkyActions.DownloadFiles.id)
-    alert("Download Folder Action");
-  if (data.id === ChonkyActions.DeleteFiles.id) alert("Delete Folder Action");
-  if (data.id === ChonkyActions.OpenFiles.id)
-    alert("Fetch another file structure");
+const prepareCustomFileMap = () => {
+  const baseFileMap = DemoFsMap.fileMap;
+  const rootFolderId = DemoFsMap.rootFolderId;
+  return { baseFileMap, rootFolderId };
 };
-const createNewFolder = defineFileAction({
-  id: "create_files",
-  button: {
-    name: "Create Folder",
-    toolbar: true,
-    contextMenu: true,
-    icon: ChonkyIconName.folderCreate
-  }
-});
 
-const editFiles = defineFileAction({
-  id: "edit_files",
-  button: {
-    name: "Edit",
-    toolbar: true,
-    contextMenu: true,
-    icon: ChonkyIconName.archive
-  }
-});
+async function sendRequest(url, { arg }) {
+  return uploadFiles(arg);
+}
 
-const renameFiles = defineFileAction({
-  id: "rename_files",
-  button: {
-    name: "Rename",
-    toolbar: true,
-    contextMenu: true,
-    icon: ChonkyIconName.code
-  }
-});
-
-const myFileActions = [
-  createNewFolder,
-  editFiles,
-  renameFiles,
-  ChonkyActions.UploadFiles,
-  ChonkyActions.DownloadFiles,
-  ChonkyActions.DeleteFiles
-];
-
-const FileManager = () => {
+const FileManager = (props) => {
   setChonkyDefaults({ iconComponent: ChonkyIconFA });
+  const fileInputRef = useRef(null);
+
+  const addFile = () => {
+    fileInputRef.current.click();
+  };
+
+  const {
+    fileMap,
+    currentFolderId,
+    setCurrentFolderId,
+    resetFileMap,
+    deleteFiles,
+    moveFiles,
+    createFolder,
+    createFile
+  } = useCustomFileMap(prepareCustomFileMap);
+
+  const handleFileChange = (event) => {
+    const selectedFiles = [...event.target.files];
+    if (selectedFiles.length > 0) {
+      // You can handle the selected files here using forEach
+      // console.log('selected files', selectedFiles);
+      selectedFiles.forEach((file) => {
+        // console.log('Selected file:', file.name);
+        const currentFolderName = fileMap[currentFolderId].name || '';
+        file.path = `/${currentFolderName}`;
+        file.folderName = currentFolderName;
+        const { name } = file;
+        createFile(name, file);
+      });
+    }
+  };
+
+  const files = useFiles(fileMap, currentFolderId);
+  const folderChain = useFolderChain(fileMap, currentFolderId);
+  const handleFileAction = useFileActionHandler(setCurrentFolderId, deleteFiles, moveFiles, createFolder, addFile);
+  const fileActions = [ChonkyActions.CreateFolder, ChonkyActions.UploadFiles, ChonkyActions.DeleteFiles];
+  const thumbnailGenerator = useCallback(
+    (file) => (file.thumbnailUrl ? `https://chonky.io${file.thumbnailUrl}` : null),
+    []
+  );
+
+  const { trigger: triggerSwr, isMutating } =
+    useSWRMutation('/api/user', sendRequest, {
+      onError: () => {
+        //setMutateError(true);
+      },
+      onSuccess: ({ data }) => {
+        //setCustomerData(data);
+        //setMutateError(false);
+        //alert('data send success 😄');
+        console.log('Looking good :D');
+      }
+    }) ?? {};
+
+  const { xblockId } = xBlockContext;
+  const xblockBottomButtons = useMemo(() => {
+    return [
+      {
+        id: new Date().getTime(),
+        xblockIdItem: xblockId,
+        title: gettext('Save'),
+        callback: () => {}
+      }
+    ];
+  }, [xblockId]);
+
+  const handleSaveButton = (idButton, fileMap, buttonRef) => {
+
+    const filesToSave = { ...fileMap };
+    const filesKeys = Object.keys(filesToSave);
+    const formData = new FormData();
+    let sizeFiles = 0;
+    filesKeys.forEach((key) => {
+      const isFile = filesToSave[key].isDir === false;
+      if (isFile) {
+        const { file } = filesToSave[key];
+        formData.append('files', file);
+        sizeFiles++;
+      }
+
+    });
+    console.log('formData', formData);
+
+    if (sizeFiles) triggerSwr(formData);
+
+    //handleSaveImages(imagesList, imagesToDelete, buttonRef);
+  };
+
+  useXBlockActionButtons(xblockBottomButtons, false, fileMap, handleSaveButton);
+
   return (
-    <div style={{ height: 700 }}>
-      {/* <FullFileBrowser files={files} folderChain={folderChain} /> */}
-      <FileBrowser
-        files={files}
-        folderChain={currentPath}
-        fileActions={myFileActions}
-        onFileAction={handleAction}
-        defaultFileViewActionId={ChonkyActions.EnableListView.id}
-        clearSelectionOnOutsideClick={true}
-        disableDragAndDropProvider={true}
-      >
-        <FileNavbar />
-        <FileToolbar />
-        <FileList />
-        <FileContextMenu />
-      </FileBrowser>
-    </div>
+    <>
+      {/*
+        <button onClick={resetFileMap} style={{ marginBottom: 15 }}>
+        Reset file map
+      </button>
+      */}
+      <input type="file" ref={fileInputRef} style={{ display: 'none' }} onChange={handleFileChange} multiple />
+
+      <div style={{ height: 400 }}>
+        <FileBrowser
+          files={files}
+          folderChain={folderChain}
+          fileActions={fileActions}
+          onFileAction={handleFileAction}
+          defaultFileViewActionId={ChonkyActions.EnableListView.id}
+          clearSelectionOnOutsideClick={true}
+          disableDragAndDropProvider={false}>
+          <FileNavbar />
+          <FileToolbar />
+          <FileList />
+          <FileContextMenu />
+        </FileBrowser>
+      </div>
+    </>
   );
 };
 

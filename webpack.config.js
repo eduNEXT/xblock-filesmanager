@@ -50,6 +50,11 @@ module.exports = {
     extensions: [".js", ".jsx", ".tsx", ".ts"],
     alias: {
       chonky: "chonky/dist",
+      '@components': path.resolve(__dirname, 'react-app/components'),
+      '@constants': path.resolve(__dirname, 'react-app/constants'),
+      "@config": path.resolve(__dirname, 'react-app/config'),
+      "@services": path.resolve(__dirname, 'react-app/services'),
+      "@hooks": path.resolve(__dirname, 'react-app/hooks')
     }
   },
   devServer: {

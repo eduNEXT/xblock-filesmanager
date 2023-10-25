@@ -1,7 +1,18 @@
+import useSWRImmutable from 'swr/immutable';
+import FileManager from '@components/FileManager';
+import { getDirectories } from '@services/directoriesService';
+import xBlockContext from '@constants/xBlockContext';
+
 import './App.css';
-import FileManager from './components/FileManager';
 
 const App = () => {
+  const { data, error, isLoading } = useSWRImmutable('/api/directories', getDirectories);
+  const { isEditView } = xBlockContext;
+
+  if(!isEditView) return <div>Xblock FIles manager</div>;
+  if (error) return <div>failed to load</div>
+  if (isLoading) return <div>loading...</div>
+
   return (
     <div className="test-div">
       <h1 className="title">Files Manager</h1>
