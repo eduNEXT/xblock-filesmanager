@@ -7,12 +7,18 @@ export const getDirectories = () => {
   return apiConfig.post(directoriesGetterHandler, {});
 }
 
-export const uploadFiles = (formData) => {
+export const createContent = (formData) => {
   const { element: globalElement } = xBlockContext;
-  const uploadFilesHandler = xBlockContext.runtime.handlerUrl(globalElement, 'upload_files');
-  return apiConfig.post(uploadFilesHandler, formData, {
+  const createContentHandler = xBlockContext.runtime.handlerUrl(globalElement, 'create_content');
+  return apiConfig.post(createContentHandler, formData, {
     headers: {
       'Content-Type': 'multipart/form-data'
     }
   });
+}
+
+export const deleteContent = (pathsToDelete) => {
+  const { element: globalElement } = xBlockContext;
+  const createContentHandler = xBlockContext.runtime.handlerUrl(globalElement, 'delete_content');
+  return apiConfig.post(createContentHandler, pathsToDelete);
 }
