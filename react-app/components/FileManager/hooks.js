@@ -11,16 +11,20 @@ import {
   setChonkyDefaults
 } from 'chonky';
 
+import { convertFileMapToTree, convertTreToNewFileMapFormat, findNodeByIdInTree } from './utils';
+
 export const useCustomFileMap = (prepareCustomFileMap) => {
   const { baseFileMap, rootFolderId } = useMemo(prepareCustomFileMap, []);
   console.log('baseFileMap', baseFileMap);
 
   const [fileMap, setFileMap] = useState(baseFileMap);
   const [currentFolderId, setCurrentFolderId] = useState(rootFolderId);
+  const [pathsToDelete, setPathToDelete] = useState([]);
 
   const resetFileMap = useCallback(() => {
     setFileMap(baseFileMap);
     setCurrentFolderId(rootFolderId);
+    setPathToDelete([]);
   }, [baseFileMap, rootFolderId]);
 
   const currentFolderIdRef = useRef(currentFolderId);
@@ -31,15 +35,20 @@ export const useCustomFileMap = (prepareCustomFileMap) => {
   const deleteFiles = useCallback((files) => {
     setFileMap((currentFileMap) => {
       const newFileMap = { ...currentFileMap };
+      const fileMapToTree = convertFileMapToTree(rootFolderId, '', fileMap);
 
       files.forEach((file) => {
-        delete newFileMap[file.id];
+        const nodeTree = findNodeByIdInTree(fileMapToTree, file.id) || { metadata: {}, path: '' };
+        // If the node has metadata means that was saved previously
+        if ('id' in nodeTree.metadata) {
+          const { path } = nodeTree;
+          setPathToDelete((prevPaths) => [...prevPaths, path]);
+        }
 
         if (file.parentId) {
           const parent = newFileMap[file.parentId];
           const newChildrenIds = parent.childrenIds.filter((id) => id !== file.id);
-          console.log('parent.children', parent.children);
-          //const newChildrenNodes = parent.children.filter(({ id }) => id !== file.id);
+
           newFileMap[file.parentId] = {
             ...parent,
             childrenIds: newChildrenIds,
@@ -128,6 +137,16 @@ export const useCustomFileMap = (prepareCustomFileMap) => {
     setFileMap((currentFileMap) => {
       const newFileMap = { ...currentFileMap };
       const parentName = newFileMap[currentFolderIdRef.current].name || '';
+      const currentFolderKeys = Object.keys(newFileMap);
+      const parentId = currentFolderIdRef.current;
+
+      const isFileAdded = currentFolderKeys.some(
+        (key) => newFileMap[key].name === fileName && newFileMap[key].parentId === parentId
+      );
+
+      if (isFileAdded) {
+        return newFileMap;
+      }
 
       const newFileId = `file-${fileName}-${idCounter.current++}`;
       const newFileContent = {
@@ -157,6 +176,7 @@ export const useCustomFileMap = (prepareCustomFileMap) => {
   return {
     fileMap,
     currentFolderId,
+    pathsToDelete,
     setCurrentFolderId,
     resetFileMap,
     deleteFiles,
@@ -214,6 +234,8 @@ export const useFileActionHandler = (setCurrentFolderId, deleteFiles, moveFiles,
         // moveFiles(data.payload.files, data.payload.source, data.payload.destination);
         console.log('Hello My friend :D');
         addFile();
+      } else if (data.id === ChonkyActions.DownloadFiles.id) {
+        console.log('Download Folder Action - data: ', data);
       }
 
       //showActionNotification(data);
