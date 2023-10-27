@@ -5,8 +5,10 @@ import xBlockContext from '@constants/xBlockContext';
 
 import './App.css';
 
+
+// {data: {}, error: null, isLoading: false};
 const App = () => {
-  const { data, error, isLoading } = useSWRImmutable('/api/directories', getDirectories);
+  const { data, error, isLoading } = useSWRImmutable('/api/content', getDirectories);
   const { isEditView } = xBlockContext;
 
   if(!isEditView) return <div>Xblock FIles manager</div>;
