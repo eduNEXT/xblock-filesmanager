@@ -86,6 +86,43 @@ const fileMapObject = {
 
   /*
 
+   {
+  "rootFolderId": "qwerty123456",
+  "fileMap": {
+    "qwerty123456": {
+      "id": "qwerty123456",
+      "name": "Root",
+      "isDir": true,
+      "childrenIds": ["f9b3b8472664"],
+      "childrenCount": 6,
+      "children": []
+    },
+    "f9b3b8472664": {
+      "id": "f9b3b8472664",
+      "isDir": false,
+      "name": "lerna-debug.log",
+      "size": 1119,
+      "modDate": "2020-10-24T17:48:39.866Z",
+      "parentId": "qwerty123456",
+      "metadata": {
+        "id": "asset-v1:demo+filemanager-v1+2023+type@asset+block@Creo_que_mgta.png",
+        "asset_key": "asset-v1:demo+filemanager-v1+2023+type@asset+block@Creo_que_mgta.png",
+        "display_name": "Creo que mgta.png",
+        "url": "/asset-v1:demo+filemanager-v1+2023+type@asset+block@Creo_que_mgta.png",
+        "content_type": "image/png",
+        "file_size": "781136",
+        "external_url": "http://local.overhang.io:8000/asset-v1:demo+filemanager-v1+2023+type@asset+block@Creo_que_mgta.png",
+        "thumbnail": "http://local.overhang.io:8000/asset-v1:demo+filemanager-v1+2023+type@thumbnail+block@Creo_que_mgta-png.jpg"
+      }
+    }
+  }
+}
+
+
+  */
+
+  /*
+
     /*const tree = convertFileMapToTree('qwerty123456', '', fileMapObject);
 
   console.log('convertFileMapToTree', tree);

@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useMemo, useState} from 'react';
+import React, { useCallback, useRef, useMemo, useState } from 'react';
 import {
   ChonkyActions,
   FileBrowser,
@@ -136,22 +136,24 @@ const FileManager = (props) => {
         sizeFiles++;
       }
     });
-    console.log('formData', formData);
-   //setIsFetchLoading(true);
-   /*try {
 
-    if (sizeFiles) {
+
+    console.log('formData', formData);
+
+    setIsFetchLoading(true);
+
+    try {
+      if (sizeFiles) {
         await saveContent(formData);
       }
 
       if (hasPathsToDelete) {
         await removeContent(formData);
       }
-   } catch (error) {
-
-   }finally {
-    //setIsFetchLoading(false);
-   } */
+    } catch (error) {
+    } finally {
+      setIsFetchLoading(false);
+    }
 
     //handleSaveImages(imagesList, imagesToDelete, buttonRef);
   };

@@ -3,8 +3,8 @@ import xBlockContext from '@constants/xBlockContext';
 
 export const getDirectories = () => {
   const { element: globalElement } = xBlockContext;
-  const directoriesGetterHandler = xBlockContext.runtime.handlerUrl(globalElement, 'get_directories');
-  return apiConfig.post(directoriesGetterHandler, {});
+  const directoriesGetterHandler = xBlockContext.runtime.handlerUrl(globalElement, 'get_content');
+  return apiConfig.post(directoriesGetterHandler, { paths: ['Root']});
 }
 
 export const createContent = (formData) => {
