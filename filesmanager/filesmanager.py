@@ -107,13 +107,14 @@ class FilesManagerXBlock(XBlock):
             "parentId": "",
             "metadata": {},
             "children": [
-                {
-                    "name": "Unpublished",
-                    "type": "directory",
-                    "path": "Root/Unpublished",
-                    "metadata": {},
-                    "children": [],
-                }
+                # Commented in the meantime while we figure out how to integrate this folder into Chonky
+                # {
+                #     "name": "Unpublished",
+                #     "type": "directory",
+                #     "path": "Root/Unpublished",
+                #     "metadata": {},
+                #     "children": [],
+                # }
             ],
         },
         scope=Scope.settings,
@@ -325,13 +326,14 @@ class FilesManagerXBlock(XBlock):
             "parentId": "",
             "metadata": {},
             "children": [
-                {
-                    "name": "Unpublished",
-                    "type": "directory",
-                    "path": "Root/Unpublished",
-                    "metadata": {},
-                    "children": [],
-                }
+                # Commented in the meantime while we figure out how to integrate this folder into Chonky
+                # {
+                #     "name": "Unpublished",
+                #     "type": "directory",
+                #     "path": "Root/Unpublished",
+                #     "metadata": {},
+                #     "children": [],
+                # }
             ],
         }
         self.prefill_directories()
@@ -651,7 +653,7 @@ class FilesManagerXBlock(XBlock):
                     {
                         "name": course_asset["display_name"],
                         "type": "file",
-                        "path": f"unpublished/{course_asset['display_name']}",
+                        "path": f"Unpublished/{course_asset['display_name']}",
                         "metadata": course_asset,
                     }
                 )
