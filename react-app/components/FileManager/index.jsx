@@ -118,31 +118,36 @@ const FileManager = (props) => {
   }, [xblockId]);
 
   const handleSaveButton = async (idButton, fileMap, buttonRef) => {
+    const rootFolderId = 'qwerty123456';
     const filesToSave = { ...fileMap };
     const filesKeys = Object.keys(filesToSave);
-    const contentFormat = convertFileMapToTree('qwerty123456', '', filesToSave);
-    const contentString = JSON.stringify([contentFormat]);
+    const contentFormat = convertFileMapToTree(rootFolderId, '', filesToSave);
+    const contentString = JSON.stringify({ rootFolderId, treeFolders: contentFormat });
+    console.log('format: ', { rootFolderId, treeFolders: contentFormat });
     const formData = new FormData();
     formData.append('contents', contentString);
     const hasPathsToDelete = pathsToDelete.length > 0;
     let sizeFiles = 0;
+    const fileNames = new Set();
 
     filesKeys.forEach((key) => {
       const isFile = filesToSave[key].isDir === false;
+      const fileName = filesToSave[key].name;
       const isSavedFile = 'metadata' in filesToSave[key];
-      if (isFile && !isSavedFile) {
+      if (isFile && !isSavedFile && !fileNames.has(fileName)) {
+        fileNames.add(fileName);
         const { file } = filesToSave[key];
         formData.append('files', file);
         sizeFiles++;
       }
     });
 
-
     console.log('formData', formData);
 
     setIsFetchLoading(true);
 
     try {
+
       if (sizeFiles) {
         await saveContent(formData);
       }
@@ -150,7 +155,9 @@ const FileManager = (props) => {
       if (hasPathsToDelete) {
         await removeContent(formData);
       }
+
     } catch (error) {
+      setErrorMessage('Show an error');
     } finally {
       setIsFetchLoading(false);
     }
