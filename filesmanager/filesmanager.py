@@ -290,6 +290,7 @@ class FilesManagerXBlock(XBlock):
             }
         ]
         """
+        self.prefill_directories()
         return {
             "status": "success",
             "content": self.directories,
@@ -355,7 +356,7 @@ class FilesManagerXBlock(XBlock):
         }
 
     @XBlock.handler
-    def create_content(self, request, suffix=''):
+    def sync_content(self, request, suffix=''):
         """Associate content to the Xblock state and course assets when necessary.
 
         Arguments:
@@ -382,6 +383,7 @@ class FilesManagerXBlock(XBlock):
             - file(s): file(s) to be uploaded, in case the content to be added contains files.
         """
         try:
+            self.initialize_directories()
             self.temporary_save_upload_files(request.params.items())
             contents = json.loads(request.params.get("contents", "{}"))
             if not contents:
@@ -393,10 +395,40 @@ class FilesManagerXBlock(XBlock):
             return Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)
         finally:
             self.clean_uploaded_files()
+            self.prefill_directories()
         return Response(
             json_body=self.get_formatted_content(),
             status=HTTPStatus.OK,
         )
+
+    def initialize_directories(self):
+        """Initialize the directories list with the content of the course assets.
+
+        This unorganized content will be added to the unpublished directory, which is the first
+        directory in the directory list.
+
+        Returns: None.
+        """
+        self.directories = {
+            "id": None,
+            "name": "Root",
+            "type": "directory",
+            "path": "Root",
+            "parentId": "",
+            "metadata": {},
+            "children": [
+                # Commented in the meantime while we figure out how to integrate this folder into Chonky
+                # {
+                #     "name": "Unpublished",
+                #     "type": "directory",
+                #     "path": "Root/Unpublished",
+                #     "metadata": {},
+                #     "children": [],
+                # }
+            ],
+        }
+        self.content_paths = []
+        self.content_ids = []
 
     def _create_content(self, contents):
         """Add new content to a target directory or to the root directory.
@@ -532,48 +564,6 @@ class FilesManagerXBlock(XBlock):
                 self.upload_file_to_directory(child, target_directory[-1]["children"])
 
     @XBlock.json_handler
-    def reorganize_content(self, data, suffix=''):
-        """Reorganize a content from a source path to a target path.
-
-        Arguments:
-            target_path: the path of the target directory where the content will be moved.
-            source_path: the path of the source directory where the content is located.
-            target_index: the index where the content will be inserted in the target directory.
-
-        Returns: the content of the target directory.
-        """
-        target_path = data.get("target_path")
-        source_path = data.get("source_path")
-        target_index = data.get("target_index")
-        if not target_path or not source_path:
-            return {
-                "status": "error",
-                "message": "Path not found",
-            }
-        content, index, source_parent_directory = self.get_content_by_path(source_path)
-        target_content, _, target_parent_directory = self.get_content_by_path(target_path)
-        if not content or not target_content:
-            return {
-                "status": "error",
-                "message": "Content not found",
-            }
-        new_content_path = f"{target_content['path']}/{content['name']}"
-        del source_parent_directory[index]
-        if target_index is None:
-            target_content["children"].append(content)
-        else:
-            target_index = 0 if not target_index else int(target_index)
-            new_target_content_directory_children = target_content["children"][:target_index]
-            new_target_content_directory_children.append(content)
-            new_target_content_directory_children.extend(target_content["children"][target_index:])
-            target_content["children"] = new_target_content_directory_children
-        self.update_content_path(content, new_content_path)
-        return {
-            "status": "success",
-            "content": target_parent_directory,
-        }
-
-    @XBlock.json_handler
     def delete_content(self, data, suffix=''):
         """Delete a content from the course assets.
 
@@ -597,21 +587,6 @@ class FilesManagerXBlock(XBlock):
             "status": "success",
         }
 
-    @XBlock.json_handler
-    def fill_directories(self, data, suffix=''):
-        """Fill the directories list with the content of the course assets.
-
-        This unorganized content will be added to the unpublished directory, which is the first
-        directory in the directory list.
-
-        Returns: None.
-        """
-        self.prefill_directories()
-        return {
-            "status": "success",
-            "content": self.directories,
-        }
-
     def get_formatted_content(self):
         """Get the formatted content of the directories.
 
@@ -631,6 +606,7 @@ class FilesManagerXBlock(XBlock):
         Returns: None.
         """
         unpublished_directory = self.get_content_by_path("Root/Unpublished")[0]
+        unpublished_directory["children"] = []
         all_course_assets = self.get_all_serialized_assets()
         for course_asset in all_course_assets:
             content, _, _ = self.get_content_by_name(course_asset["display_name"], self.directories["children"])
@@ -775,20 +751,6 @@ class FilesManagerXBlock(XBlock):
                     parent_directory = content["children"]
                     break
         return None, None, None
-
-    def update_content_path(self, content, path):
-        """Update the path of a content.
-
-        Arguments:
-            content: the content to be updated.
-            path: the new path of the content.
-
-        Returns: the updated content.
-        """
-        content["path"] = path
-        if content.get("type") == "directory":
-            for child in content.get("children", []):
-                self.update_content_path(child, f"{path}/{child['name']}")
 
     def delete_content_from_assets(self, content):
         """Delete a content from the course assets.
