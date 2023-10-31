@@ -127,12 +127,6 @@ class FilesManagerXBlock(XBlock):
         help="List of content paths to be displayed in the Files Manager."
     )
 
-    content_ids = List(
-        default=[],
-        scope=Scope.settings,
-        help="List of content (from Chunky) ids to be displayed in the Files Manager."
-    )
-
     temporary_uploaded_files = Dict(
         default={},
         scope=Scope.settings,
@@ -339,7 +333,6 @@ class FilesManagerXBlock(XBlock):
         }
         self.prefill_directories()
         self.content_paths = []
-        self.content_ids = []
         return {
             "status": "success",
             "content": self.directories,
@@ -442,7 +435,6 @@ class FilesManagerXBlock(XBlock):
             ],
         }
         self.content_paths = []
-        self.content_ids = []
 
     def _create_content(self, contents):
         """Add new content to a target directory or to the root directory.
@@ -517,9 +509,6 @@ class FilesManagerXBlock(XBlock):
             from cms.djangoapps.contentstore.asset_storage_handler import \
                 update_course_run_asset  # pylint: disable=import-outside-toplevel
 
-        if file["id"] in self.content_ids:
-            return
-
         file_object = self.temporary_uploaded_files.pop(file.get("name"), None)
         if not file_object:
             raise Exception("File not found in the temporary uploaded files")
@@ -539,7 +528,6 @@ class FilesManagerXBlock(XBlock):
             }
         )
         self.content_paths.append(file_path)
-        self.content_ids.append(file["id"])
 
     def create_directory(self, directory, target_directory):
         """Create a directory.
@@ -555,21 +543,19 @@ class FilesManagerXBlock(XBlock):
             directory: the directory to be created.
             target_directory: the target directory where the new directory will be created.
         """
-        if directory["id"] not in self.content_ids:
-            directory_path, name = self.generate_content_path(directory["path"], directory["name"])
-            target_directory.append(
-                {
-                    "id": directory["id"],
-                    "parentId": directory.get("parentId", ""),
-                    "name": name,
-                    "type": "directory",
-                    "path": directory_path,
-                    "metadata": {},
-                    "children": [],
-                }
-            )
-            self.content_paths.append(directory_path)
-            self.content_ids.append(directory["id"])
+        directory_path, name = self.generate_content_path(directory["path"], directory["name"])
+        target_directory.append(
+            {
+                "id": directory["id"],
+                "parentId": directory.get("parentId", ""),
+                "name": name,
+                "type": "directory",
+                "path": directory_path,
+                "metadata": {},
+                "children": [],
+            }
+        )
+        self.content_paths.append(directory_path)
 
         for child in directory.get("children", []):
             if child.get("type") == "directory":
@@ -778,18 +764,15 @@ class FilesManagerXBlock(XBlock):
             if asset_key := content.get("metadata", {}).get("asset_key"):
                 self.delete_asset(asset_key)
                 self.content_paths.remove(content["path"])
-                self.content_ids.remove(content["id"])
                 return
         for child in content.get("children", []):
             if asset_key := child.get("metadata", {}).get("asset_key"):
                 self.delete_asset(asset_key)
                 self.content_paths.remove(content["path"])
-                self.content_ids.remove(content["id"])
                 continue
             if child.get("type") == "directory":
                 self.delete_content_from_assets(child)
                 self.content_paths.remove(content["path"])
-                self.content_ids.remove(content["id"])
 
     def delete_asset(self, asset_key):
         """Delete an asset from the course assets.
