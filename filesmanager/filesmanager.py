@@ -298,7 +298,7 @@ class FilesManagerXBlock(XBlock):
             }
         ]
         """
-        self.prefill_directories()
+        # self.prefill_directories()
         return {
             "status": "success",
             "content": self.directories,
@@ -331,7 +331,7 @@ class FilesManagerXBlock(XBlock):
                 # }
             ],
         }
-        self.prefill_directories()
+        # self.prefill_directories()
         self.content_paths = []
         return {
             "status": "success",
@@ -402,7 +402,7 @@ class FilesManagerXBlock(XBlock):
             return Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)
         finally:
             self.clean_uploaded_files()
-            self.prefill_directories()
+            # self.prefill_directories()
         return Response(
             json_body=self.get_formatted_content(),
             status=HTTPStatus.OK,
