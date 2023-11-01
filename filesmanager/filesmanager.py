@@ -558,17 +558,14 @@ class FilesManagerXBlock(XBlock):
 
         Returns: the content of the parent directory.
         """
-        paths = data.get("paths")
-        if not paths:
+        contents = data.get("contents")
+        if not contents:
             return {
                 "status": "error",
                 "message": "Path not found",
             }
-        for path in paths:
-            content, index, parent_directory = self.get_content_by_path(path)
-            if content:
-                del parent_directory[index]
-                self.delete_content_from_assets(content)
+        for content in contents:
+            self.delete_asset(content)
         return {
             "status": "success",
         }
@@ -737,28 +734,6 @@ class FilesManagerXBlock(XBlock):
                     parent_directory = content["children"]
                     break
         return None, None, None
-
-    def delete_content_from_assets(self, content):
-        """Delete a content from the course assets.
-
-        Arguments:
-            content: the content to be deleted.
-
-        Returns: None.
-        """
-        if content.get("type") == "file":
-            if asset_key := content.get("metadata", {}).get("asset_key"):
-                self.delete_asset(asset_key)
-                self.content_paths.remove(content["path"])
-                return
-        for child in content.get("children", []):
-            if asset_key := child.get("metadata", {}).get("asset_key"):
-                self.delete_asset(asset_key)
-                self.content_paths.remove(content["path"])
-                continue
-            if child.get("type") == "directory":
-                self.delete_content_from_assets(child)
-                self.content_paths.remove(content["path"])
 
     def delete_asset(self, asset_key):
         """Delete an asset from the course assets.
