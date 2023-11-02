@@ -349,27 +349,47 @@ class FilesManagerXBlock(XBlock):
     def sync_content(self, request, suffix=''):
         """Associate content to the Xblock state and course assets when necessary.
 
+        This handler does the following:
+        - Initialize the directories list with the content of the course assets.
+        - Temporary save the uploaded files so we can reference them later.
+        - Add new content to a target directory or to the root directory.
+        - Clean the temporary uploaded files.
+        - Return the content of the parent directory.
+
         Arguments:
             request: the request object containing the content to be added. The content can be
             directories or a files.
             Each request must contain the following parameters:
             - contents: the content to be added with the following format:
-            [
-                {
-                    "name": "Folder 1",
+            {
+                "rootFolderId": ...,
+                "treeFolders": {
+                    "id": "<rootFolderId>",
+                    "name": "Root",
                     "type": "directory",
-                    "path": ..., // Empty if the directory will be added to the root directory
-                                 // or the path of the target directory where the new directory
-                                // will be added.
+                    "path": "Root",
+                    "parentId": "",
+                    "metadata": {},
                     "children": [
                         {
-                            "name": "File 1",
-                            "type": "file",
-                            "path": "Folder 1/File 1",
-                        }
+                            "id": <folderId>,
+                            "name": "Folder 1",
+                            "type": "directory",
+                            "path": "Root/Folder 1",
+                            "parentId": "<rootFolderId>",
+                            "children": [
+                                {
+                                    "id": <fileId>,
+                                    "parentId": "<folderId>",
+                                    "name": "File 1",
+                                    "type": "file",
+                                    "path": "Root/Folder 1/File 1",
+                                }
+                            ]
+                        },
                     ]
-                },
-            ]
+            }
+
             - file(s): file(s) to be uploaded, in case the content to be added contains files.
         """
         try:
