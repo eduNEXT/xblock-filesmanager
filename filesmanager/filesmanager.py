@@ -583,7 +583,8 @@ class FilesManagerXBlock(XBlock):
                 "message": "Path not found",
             }
         for content in contents:
-            self.delete_asset(content)
+            if content:
+                self.delete_asset(content)
         return {
             "status": "success",
         }
