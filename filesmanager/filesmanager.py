@@ -333,19 +333,16 @@ class FilesManagerXBlock(XBlock):
 
         Returns: the content of the directory if found, an empty sequence otherwise.
         """
-        paths = data.get("paths")
-        if not paths:
+        path = data.get("path")
+        if not path:
             return {
                 "status": "error",
                 "message": "Path not found",
             }
-        contents = []
-        for path in paths:
-            content, _, _ = self.get_content_by_path(path)
-            contents.append(content)
+        content, _, _ = self.get_content_by_path(path)
         return {
             "status": "success",
-            "contents": contents,
+            "content": content,
         }
 
     @XBlock.handler
