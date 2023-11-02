@@ -301,7 +301,7 @@ class FilesManagerXBlock(XBlock):
         # self.prefill_directories()
         return {
             "status": "success",
-            "content": self.directories,
+            "contents": self.directories,
         }
 
     @XBlock.json_handler
@@ -335,7 +335,7 @@ class FilesManagerXBlock(XBlock):
         self.content_paths = []
         return {
             "status": "success",
-            "content": self.directories,
+            "contents": self.directories,
         }
 
     @XBlock.json_handler
@@ -356,7 +356,7 @@ class FilesManagerXBlock(XBlock):
         content, _, _ = self.get_content_by_path(path)
         return {
             "status": "success",
-            "content": content,
+            "contents": content,
         }
 
     @XBlock.handler
@@ -473,7 +473,7 @@ class FilesManagerXBlock(XBlock):
                 raise Exception("Content type not found")
         return {
             "status": "success",
-            "content": target_directory,
+            "contents": target_directory,
         }
 
     def temporary_save_upload_files(self, uploaded_files):  # pylint: disable=unused-argument
