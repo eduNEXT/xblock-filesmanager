@@ -408,8 +408,7 @@ class FilesManagerXBlock(XBlock):
     def initialize_directories(self):
         """Initialize the directories list with the content of the course assets.
 
-        This unorganized content will be added to the unpublished directory, which is the first
-        directory in the directory list.
+        The directory data structure is initialized every time the sync_content method is called.
 
         Returns: None.
         """
