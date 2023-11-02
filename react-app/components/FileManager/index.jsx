@@ -15,7 +15,7 @@ import { StatusCodes } from 'http-status-codes';
 import xBlockContext from '@constants/xBlockContext';
 import useXBlockActionButtons from '@hooks/useXBlockActionButtons';
 import useFileDownloader from '@hooks/useFileDownloader';
-import { createContent, deleteContent } from '@services/directoriesService';
+import { syncContent, deleteContent } from '@services/directoriesService';
 
 import { useCustomFileMap, useFiles, useFolderChain, useFileActionHandler } from './hooks';
 import DemoFsMap from './default.json';
@@ -75,7 +75,8 @@ const FileManager = (props) => {
   const {
     fileMap,
     currentFolderId,
-    pathsToDelete,
+    assetsKeyToDelete,
+    rootFolderIdFixed,
     setCurrentFolderId,
     resetFileMap,
     deleteFiles,
@@ -117,21 +118,21 @@ const FileManager = (props) => {
 
   const saveContent = async (formData) => {
     try {
-      const createContentData = await createContent(formData);
+      const syncContentData = await syncContent(formData);
 
-      if (createContentData.status !== StatusCodes.OK) {
-        throw new Error('Create content has failed');
+      if (syncContentData.status !== StatusCodes.OK) {
+        throw new Error('Sync content has failed');
       }
 
-      return Promise.resolve('Save content successfully');
+      return Promise.resolve('Synchronizing content successfully');
     } catch (error) {
-      return Promise.reject('Error creating content');
+      return Promise.reject('Error synchronizing content');
     }
   };
 
-  const removeContent = async (pathsToDelete) => {
+  const removeContent = async (assetsKeyToDelete) => {
     try {
-      const createContentData = await deleteContent({ paths: pathsToDelete });
+      const createContentData = await deleteContent({ contents: assetsKeyToDelete });
 
       if (createContentData.status !== StatusCodes.OK) {
         throw new Error('Delete content has failed');
@@ -158,14 +159,16 @@ const FileManager = (props) => {
   const handleSaveButton = async (idButton, rootFolderId, fileMap, filesToDelete, buttonRef) => {
     const filesToSave = { ...fileMap };
     const filesKeys = Object.keys(filesToSave);
+    //console.log('test', rootFolderId);
     const contentFormat = convertFileMapToTree(rootFolderId, '', filesToSave);
     const contentString = JSON.stringify({ rootFolderId, treeFolders: contentFormat });
-    //console.log('format: ', { rootFolderId, treeFolders: contentFormat });
-    //console.log('pathsToDelete', filesToDelete);
+    console.log('format: ', { rootFolderId, treeFolders: contentFormat });
+    //console.log('assetsKeyToDelete', filesToDelete);
     //console.log('filesToSave', filesToSave);
     const formData = new FormData();
+
     formData.append('contents', contentString);
-    const hasPathsToDelete = filesToDelete.length > 0;
+    const hasAssetsKeyToDelete = filesToDelete.length > 0;
     let sizeFiles = 0;
     const fileNames = new Set();
 
@@ -183,7 +186,7 @@ const FileManager = (props) => {
     });
 
     //console.log('formData', formData);
-    //console.log('hasPathsToDelete', hasPathsToDelete);
+    //console.log('hasassetsKeyToDelete', hasassetsKeyToDelete);
 
     //setIsFetchLoading(true);
 
@@ -197,10 +200,10 @@ const FileManager = (props) => {
 
       await saveContent(formData);
 
-      if (hasPathsToDelete) {
-        //console.log('Yeess!', filesToDelete);
+      if (hasAssetsKeyToDelete) {
+
         await removeContent(filesToDelete);
-        // promisesAll.push(saveContent(formData));
+        //promisesAll.push(saveContent(formData));
       }
 
       /*await Promise.all(promisesAll)
@@ -220,10 +223,10 @@ const FileManager = (props) => {
     //handleSaveImages(imagesList, imagesToDelete, buttonRef);
   };
 
-  useXBlockActionButtons(xblockBottomButtons, false, fileMap, pathsToDelete, rootFolderId, handleSaveButton);
+  useXBlockActionButtons(xblockBottomButtons, false, fileMap, assetsKeyToDelete, rootFolderIdFixed, handleSaveButton);
 
   // console.log('fileMap', fileMap);
-  // console.log('pathsToDelete', pathsToDelete);
+  // console.log('assetsKeyToDelete', assetsKeyToDelete);
 
   return (
     <>

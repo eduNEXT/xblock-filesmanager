@@ -3,13 +3,13 @@ import xBlockContext from '@constants/xBlockContext';
 
 export const getDirectories = () => {
   const { element: globalElement } = xBlockContext;
-  const directoriesGetterHandler = xBlockContext.runtime.handlerUrl(globalElement, 'get_content');
+  const directoriesGetterHandler = xBlockContext.runtime.handlerUrl(globalElement, 'get_directories');
   return apiConfig.post(directoriesGetterHandler, { paths: ['Root']});
 }
 
-export const createContent = (formData) => {
+export const syncContent = (formData) => {
   const { element: globalElement } = xBlockContext;
-  const createContentHandler = xBlockContext.runtime.handlerUrl(globalElement, 'create_content');
+  const createContentHandler = xBlockContext.runtime.handlerUrl(globalElement, 'sync_content');
   return apiConfig.post(createContentHandler, formData, {
     headers: {
       'Content-Type': 'multipart/form-data'

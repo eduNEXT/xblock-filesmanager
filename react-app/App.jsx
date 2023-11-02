@@ -12,18 +12,10 @@ const App = () => {
   const { data, error, isLoading } = useSWRImmutable('/api/content', getDirectories);
   const { isEditView } = xBlockContext;
   const { data: apiResponse } = data || {};
-  const {
-    contents: [content]
-  } = apiResponse || { contents: [{}] };
-  console.log('content', content);
-  const formatResponse = content && 'id' in content ? convertTreeToNewFileMapFormat(content, true) : {};
-  const rootFolderId = content && 'id' in content ? content.id : null;
-  //console.log('formatResponse', formatResponse);
-  /*
-  console.log('data', data);
-  console.log('apiResponse', apiResponse);
-  console.log(JSON.stringify(apiResponse, null, 2));
-  console.log('formatResponse', formatResponse); */
+  const { contents } = apiResponse || { contents: {} };
+  const contentHasId = 'id' in contents && contents.id !== null;
+  const formatResponse = contentHasId ? convertTreeToNewFileMapFormat(contents, true) : {};
+  const rootFolderId = contentHasId ? contents.id : null;
 
   if (!isEditView) return <div>Xblock FIles manager</div>;
   if (error) return <div>failed to load</div>;

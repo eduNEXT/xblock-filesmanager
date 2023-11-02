@@ -16,16 +16,18 @@ import { convertFileMapToTree, convertTreToNewFileMapFormat, findNodeByIdInTree 
 
 export const useCustomFileMap = (prepareCustomFileMap) => {
   const { baseFileMap, rootFolderId } = useMemo(prepareCustomFileMap, []);
+  const rootFolderIdFixed = rootFolderId;
+  console.log('rootFolderIdFixed', rootFolderIdFixed);
   //console.log('baseFileMap', baseFileMap);
 
   const [fileMap, setFileMap] = useState(baseFileMap);
   const [currentFolderId, setCurrentFolderId] = useState(rootFolderId);
-  const [pathsToDelete, setPathToDelete] = useState([]);
+  const [assetsKeyToDelete, setAssetsKeyToDelete] = useState([]);
 
   const resetFileMap = useCallback(() => {
     setFileMap(baseFileMap);
     setCurrentFolderId(rootFolderId);
-    setPathToDelete([]);
+    setAssetsKeyToDelete([]);
   }, [baseFileMap, rootFolderId]);
 
   const currentFolderIdRef = useRef(currentFolderId);
@@ -42,8 +44,8 @@ export const useCustomFileMap = (prepareCustomFileMap) => {
         const nodeTree = findNodeByIdInTree(fileMapToTree, file.id) || { metadata: {}, path: '' };
         // If the node has metadata means that was saved previously
         if (file.isSaved) {
-          const { path } = nodeTree;
-          setPathToDelete((prevPaths) => [...prevPaths, path]);
+          const { metadata: { asset_key } } = nodeTree;
+          setAssetsKeyToDelete((prevPaths) => [...prevPaths, asset_key]);
         }
 
         if (file.parentId) {
@@ -153,12 +155,12 @@ export const useCustomFileMap = (prepareCustomFileMap) => {
 
       const newFileId = uuidv4();
       //`file-${fileName}-${idCounter.current++}`;
+      //  modDate: new Date(),
       const newFileContent = {
         id: newFileId,
         name: fileName,
         isDir: false,
         isSaved: false,
-        modDate: new Date(),
         parentId: currentFolderIdRef.current,
         path: `/${parentName}`,
         isNew: true,
@@ -184,7 +186,8 @@ export const useCustomFileMap = (prepareCustomFileMap) => {
   return {
     fileMap,
     currentFolderId,
-    pathsToDelete,
+    assetsKeyToDelete,
+    rootFolderIdFixed,
     setCurrentFolderId,
     resetFileMap,
     deleteFiles,
