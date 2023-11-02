@@ -512,13 +512,15 @@ class FilesManagerXBlock(XBlock):
                 update_course_run_asset  # pylint: disable=import-outside-toplevel
 
         file_object = self.temporary_uploaded_files.pop(file.get("name"), None)
-        if not file_object:
-            raise Exception("File not found in the temporary uploaded files")
+        file_path, name = file.get("path"), file.get("name")
+        metadata = file.get("metadata", {})
 
-        file_path, name = self.generate_content_path(file.get("path"), file_object.filename)
-        file_object.file._set_name(name)
+        if file_object:
+            file_path, name = self.generate_content_path(file_path, file_object.filename)
+            file_object.file._set_name(name)
+            content = update_course_run_asset(self.course_id, file_object.file)
+            metadata = self.get_asset_json_from_content(content)
 
-        content = update_course_run_asset(self.course_id, file_object.file)
         target_directory.append(
             {
                 "id": file["id"],
@@ -526,7 +528,7 @@ class FilesManagerXBlock(XBlock):
                 "name": name,
                 "type": "file",
                 "path": file_path,
-                "metadata": self.get_asset_json_from_content(content),
+                "metadata": metadata,
             }
         )
         self.content_paths.append(file_path)
