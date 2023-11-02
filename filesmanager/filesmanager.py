@@ -603,7 +603,6 @@ class FilesManagerXBlock(XBlock):
         Returns: None.
         """
         unpublished_directory = self.get_content_by_path("Root/Unpublished")[0]
-        unpublished_directory["children"] = []
         all_course_assets = self.get_all_serialized_assets()
         for course_asset in all_course_assets:
             content, _, _ = self.get_content_by_name(course_asset["display_name"], self.directories["children"])
