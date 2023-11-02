@@ -10,12 +10,13 @@ import {
   defineFileAction,
   setChonkyDefaults
 } from 'chonky';
+import { v4 as uuidv4 } from 'uuid';
 
 import { convertFileMapToTree, convertTreToNewFileMapFormat, findNodeByIdInTree } from './utils';
 
 export const useCustomFileMap = (prepareCustomFileMap) => {
   const { baseFileMap, rootFolderId } = useMemo(prepareCustomFileMap, []);
-  console.log('baseFileMap', baseFileMap);
+  //console.log('baseFileMap', baseFileMap);
 
   const [fileMap, setFileMap] = useState(baseFileMap);
   const [currentFolderId, setCurrentFolderId] = useState(rootFolderId);
@@ -40,7 +41,7 @@ export const useCustomFileMap = (prepareCustomFileMap) => {
       files.forEach((file) => {
         const nodeTree = findNodeByIdInTree(fileMapToTree, file.id) || { metadata: {}, path: '' };
         // If the node has metadata means that was saved previously
-        if ('id' in nodeTree.metadata) {
+        if (file.isSaved) {
           const { path } = nodeTree;
           setPathToDelete((prevPaths) => [...prevPaths, path]);
         }
@@ -106,15 +107,17 @@ export const useCustomFileMap = (prepareCustomFileMap) => {
         return newFileMap;
       }
 
-      const newFolderId = `folder-${folderName}-${idCounter.current++}`;
+      const newFolderId = uuidv4();
+      //`folder-${folderName}-${idCounter.current++}`;
+      //  modDate: new Date(),
       const newFolderContent = {
         id: newFolderId,
         name: folderName,
         isDir: true,
-        modDate: new Date(),
         parentId: currentFolderIdRef.current,
         path: `/${parentName}`,
         isNew: true,
+        isSaved: false,
         childrenIds: [],
         childrenCount: 0,
         children: []
@@ -148,11 +151,13 @@ export const useCustomFileMap = (prepareCustomFileMap) => {
         return newFileMap;
       }
 
-      const newFileId = `file-${fileName}-${idCounter.current++}`;
+      const newFileId = uuidv4();
+      //`file-${fileName}-${idCounter.current++}`;
       const newFileContent = {
         id: newFileId,
         name: fileName,
         isDir: false,
+        isSaved: false,
         modDate: new Date(),
         parentId: currentFolderIdRef.current,
         path: `/${parentName}`,
@@ -160,9 +165,12 @@ export const useCustomFileMap = (prepareCustomFileMap) => {
         file
       };
 
+      console.log('newFileContent', newFileContent);
+
       newFileMap[newFileId] = newFileContent;
 
       const parent = newFileMap[currentFolderIdRef.current];
+
       newFileMap[currentFolderIdRef.current] = {
         ...parent,
         childrenIds: [...parent.childrenIds, newFileId],
@@ -213,7 +221,14 @@ export const useFolderChain = (fileMap, currentFolderId) => {
   }, [currentFolderId, fileMap]);
 };
 
-export const useFileActionHandler = (setCurrentFolderId, deleteFiles, moveFiles, createFolder, addFile) => {
+export const useFileActionHandler = (
+  setCurrentFolderId,
+  deleteFiles,
+  moveFiles,
+  createFolder,
+  addFile,
+  downloadFile
+) => {
   return useCallback(
     (data) => {
       if (data.id === ChonkyActions.OpenFiles.id) {
@@ -235,6 +250,14 @@ export const useFileActionHandler = (setCurrentFolderId, deleteFiles, moveFiles,
         console.log('Hello My friend :D');
         addFile();
       } else if (data.id === ChonkyActions.DownloadFiles.id) {
+        const { selectedFiles } = data.state;
+        if (selectedFiles.length === 1) {
+          // Download the file
+          const [fileData] = selectedFiles;
+          downloadFile(fileData);
+        } else {
+          alert('You must select a one file to download');
+        }
         console.log('Download Folder Action - data: ', data);
       }
 

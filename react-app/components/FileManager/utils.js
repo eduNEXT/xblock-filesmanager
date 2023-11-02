@@ -1,20 +1,24 @@
 import _ from 'lodash';
 
-const convertTreeToNewFileMap = (node, parent = null, existingFileMap = {}) => {
+const convertTreeToNewFileMap = (node, parent = null, newFileMapObject, isSaved = false) => {
   const isDirectory = node.type === 'directory';
 
   const fileMapEntry = {
     id: node.id,
     name: node.name,
-    isDir: isDirectory
+    isDir: isDirectory,
+    metadata: node.metadata || {},
+    isSaved
   };
 
   if (isDirectory) {
     fileMapEntry.childrenIds = [];
+    fileMapEntry.children = [];
     if (node.children) {
       for (const childNode of node.children) {
-        const childEntry = convertTreeToNewFileMap(childNode, fileMapEntry, existingFileMap);
+        const childEntry = convertTreeToNewFileMap(childNode, fileMapEntry, newFileMapObject, isSaved);
         fileMapEntry.childrenIds.push(childEntry.id);
+        fileMapEntry.children.push(childEntry);
       }
     }
   }
@@ -28,27 +32,23 @@ const convertTreeToNewFileMap = (node, parent = null, existingFileMap = {}) => {
     fileMapEntry.childrenCount = fileMapEntry.childrenIds.length;
   } else {
     // Assuming you want to add size and modDate for files
-    fileMapEntry.size = node.size;
-    fileMapEntry.modDate = node.modDate;
+    if (node.metadata) {
+      fileMapEntry.size = node.metadata.file_size;
+      //fileMapEntry.modDate = node.metadata.modDate;
+    }
   }
 
-  existingFileMap[node.id] = fileMapEntry;
+  // Store the fileMapEntry in the newFileMapObject
+  newFileMapObject[node.id] = fileMapEntry;
 
   return fileMapEntry;
 };
 
-export const convertTreToNewFileMapFormat = (tree, originalFileMapObject) => {
+export const convertTreeToNewFileMapFormat = (tree, isSaved = false) => {
   const newFileMapObject = {};
   const treeCloned = _.cloneDeep(tree);
 
-  convertTreeToNewFileMap(treeCloned, null, newFileMapObject);
-  const sortedFileMapObject = {};
-  const originalKeys = Object.keys(originalFileMapObject);
-  for (const key of originalKeys) {
-    if (newFileMapObject[key]) {
-      sortedFileMapObject[key] = newFileMapObject[key];
-    }
-  }
+  convertTreeToNewFileMap(treeCloned, null, newFileMapObject, isSaved);
 
   return newFileMapObject;
 };

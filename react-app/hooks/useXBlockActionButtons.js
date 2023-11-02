@@ -6,7 +6,7 @@ import { useEffect, useRef } from 'react';
  * @param {Function} callbackFunction - The callback function to execute when a button is clicked.
  * @returns {Object} - An object containing buttonRefs for each button element.
  */
-const useXBlockActionButtons = (buttons, loading, filesMap, callbackFunction) => {
+const useXBlockActionButtons = (buttons, loading, filesMap, pathsToDelete, rootFolderId, callbackFunction) => {
   const buttonRefs = useRef({});
   const clickHandlers = {};
 
@@ -39,7 +39,7 @@ const useXBlockActionButtons = (buttons, loading, filesMap, callbackFunction) =>
       if (!clickHandlers[id]) {
         clickHandlers[id] = (event) => {
           event.preventDefault();
-          callbackFunction(id, filesMap, buttonRefs.current[id]);
+          callbackFunction(id, rootFolderId, filesMap, pathsToDelete, buttonRefs.current[id]);
         };
         buttonRefs.current[id].addEventListener('click', clickHandlers[id]);
       }
@@ -50,7 +50,7 @@ const useXBlockActionButtons = (buttons, loading, filesMap, callbackFunction) =>
         buttonRefs.current[id].removeEventListener('click', clickHandlers[id]);
       });
     };
-  }, [buttons, loading, filesMap, callbackFunction]);
+  }, [buttons, loading, filesMap, rootFolderId, pathsToDelete, callbackFunction]);
 
   return buttonRefs;
 };

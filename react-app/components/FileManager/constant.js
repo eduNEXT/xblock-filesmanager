@@ -84,6 +84,35 @@ const fileMapObject = {
   };
 
 
+
+   /*
+
+    {
+  "rootFolderId": "qwerty123456",
+  "fileMap": {
+    "file-global-warn.jpg-1": {
+      "id": "file-global-warn.jpg-1",
+      "parentId": "qwerty123456",
+      "name": "Root",
+      "isDir": false
+    },
+    "qwerty123456": {
+      "id": "qwerty123456",
+      "name": "Root",
+      "isDir": true,
+      "childrenIds": ["file-global-warn.jpg-1"],
+      "childrenCount": 1,
+      "children": []
+    }
+  }
+}
+
+
+   */
+
+
+
+
   /*
 
    {

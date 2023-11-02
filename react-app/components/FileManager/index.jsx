@@ -10,8 +10,11 @@ import {
 } from 'chonky';
 import _ from 'lodash';
 import { ChonkyIconFA } from 'chonky-icon-fontawesome';
+import { v4 as uuidv4 } from 'uuid';
+import { StatusCodes } from 'http-status-codes';
 import xBlockContext from '@constants/xBlockContext';
 import useXBlockActionButtons from '@hooks/useXBlockActionButtons';
+import useFileDownloader from '@hooks/useFileDownloader';
 import { createContent, deleteContent } from '@services/directoriesService';
 
 import { useCustomFileMap, useFiles, useFolderChain, useFileActionHandler } from './hooks';
@@ -19,14 +22,21 @@ import DemoFsMap from './default.json';
 import { convertFileMapToTree } from './utils';
 
 const prepareCustomFileMap = () => {
-  const baseFileMap = DemoFsMap.fileMap;
-  const rootFolderId = DemoFsMap.rootFolderId;
+  const rootFolderId = uuidv4();
+  const baseFileMap = {
+    [rootFolderId]: {
+      id: rootFolderId,
+      name: 'Root',
+      isDir: true,
+      childrenIds: [],
+      childrenCount: 0,
+      children: []
+    }
+  };
+
   return { baseFileMap, rootFolderId };
 };
 
-async function sendRequest(url, { arg }) {
-  return uploadFiles(arg);
-}
 
 const FileManager = (props) => {
   setChonkyDefaults({ iconComponent: ChonkyIconFA });
@@ -34,8 +44,32 @@ const FileManager = (props) => {
   const [errorMessage, setErrorMessage] = useState(null);
   const [isFetchLoading, setIsFetchLoading] = useState(false);
 
+  const onDownloaded = () => {
+    console.log('fine');
+  };
+
+  const onError = () => {
+    console.log('error :/');
+  };
+
+  const { downloadFileHook, isLoading: isLoadingDownloadFile } = useFileDownloader({ onDownloaded, onError });
+
+  const fileMapData = () => props;
+  const { rootFolderId } = props;
+
   const addFile = () => {
     fileInputRef.current.click();
+  };
+
+  const downloadFile = (fileData) => {
+    //console.log('trying to download the file :)', fileData);
+    const {
+      metadata: { display_name, url }
+    } = fileData;
+    const { hostname, port, protocol } = window.location;
+    const fullUrl = port ? `${protocol}//${hostname}:${port}${url}` : `${protocol}//${hostname}${url}`;
+    //console.log('fullUrl', fullUrl);
+    downloadFileHook(fullUrl, display_name);
   };
 
   const {
@@ -48,7 +82,8 @@ const FileManager = (props) => {
     moveFiles,
     createFolder,
     createFile
-  } = useCustomFileMap(prepareCustomFileMap);
+  } = useCustomFileMap(rootFolderId ? fileMapData : prepareCustomFileMap);
+
 
   const handleFileChange = (event) => {
     const selectedFiles = [...event.target.files];
@@ -64,7 +99,14 @@ const FileManager = (props) => {
 
   const files = useFiles(fileMap, currentFolderId);
   const folderChain = useFolderChain(fileMap, currentFolderId);
-  const handleFileAction = useFileActionHandler(setCurrentFolderId, deleteFiles, moveFiles, createFolder, addFile);
+  const handleFileAction = useFileActionHandler(
+    setCurrentFolderId,
+    deleteFiles,
+    moveFiles,
+    createFolder,
+    addFile,
+    downloadFile
+  );
   // remove from here ChonkyActions.DeleteFiles
   const fileActions = [
     ChonkyActions.CreateFolder,
@@ -72,14 +114,10 @@ const FileManager = (props) => {
     ChonkyActions.DeleteFiles,
     ChonkyActions.DownloadFiles
   ];
-  const thumbnailGenerator = useCallback(
-    (file) => (file.thumbnailUrl ? `https://chonky.io${file.thumbnailUrl}` : null),
-    []
-  );
 
   const saveContent = async (formData) => {
     try {
-      const createContentData = createContent(formData);
+      const createContentData = await createContent(formData);
 
       if (createContentData.status !== StatusCodes.OK) {
         throw new Error('Create content has failed');
@@ -93,7 +131,7 @@ const FileManager = (props) => {
 
   const removeContent = async (pathsToDelete) => {
     try {
-      const createContentData = deleteContent({ paths: pathsToDelete });
+      const createContentData = await deleteContent({ paths: pathsToDelete });
 
       if (createContentData.status !== StatusCodes.OK) {
         throw new Error('Delete content has failed');
@@ -117,16 +155,17 @@ const FileManager = (props) => {
     ];
   }, [xblockId]);
 
-  const handleSaveButton = async (idButton, fileMap, buttonRef) => {
-    const rootFolderId = 'qwerty123456';
+  const handleSaveButton = async (idButton, rootFolderId, fileMap, filesToDelete, buttonRef) => {
     const filesToSave = { ...fileMap };
     const filesKeys = Object.keys(filesToSave);
     const contentFormat = convertFileMapToTree(rootFolderId, '', filesToSave);
     const contentString = JSON.stringify({ rootFolderId, treeFolders: contentFormat });
-    console.log('format: ', { rootFolderId, treeFolders: contentFormat });
+    //console.log('format: ', { rootFolderId, treeFolders: contentFormat });
+    //console.log('pathsToDelete', filesToDelete);
+    //console.log('filesToSave', filesToSave);
     const formData = new FormData();
     formData.append('contents', contentString);
-    const hasPathsToDelete = pathsToDelete.length > 0;
+    const hasPathsToDelete = filesToDelete.length > 0;
     let sizeFiles = 0;
     const fileNames = new Set();
 
@@ -134,7 +173,8 @@ const FileManager = (props) => {
       const isFile = filesToSave[key].isDir === false;
       const fileName = filesToSave[key].name;
       const isSavedFile = 'metadata' in filesToSave[key];
-      if (isFile && !isSavedFile && !fileNames.has(fileName)) {
+      const hasFileLoaded = 'file' in filesToSave[key];
+      if (isFile && hasFileLoaded && !isSavedFile && !fileNames.has(fileName)) {
         fileNames.add(fileName);
         const { file } = filesToSave[key];
         formData.append('files', file);
@@ -142,21 +182,36 @@ const FileManager = (props) => {
       }
     });
 
-    console.log('formData', formData);
+    //console.log('formData', formData);
+    //console.log('hasPathsToDelete', hasPathsToDelete);
 
-    setIsFetchLoading(true);
+    //setIsFetchLoading(true);
 
     try {
-
-      if (sizeFiles) {
+      /*if (sizeFiles) {
         await saveContent(formData);
-      }
+      }*/
+      const promisesAll = [];
+
+      //promisesAll.push(saveContent(formData));
+
+      await saveContent(formData);
 
       if (hasPathsToDelete) {
-        await removeContent(formData);
+        //console.log('Yeess!', filesToDelete);
+        await removeContent(filesToDelete);
+        // promisesAll.push(saveContent(formData));
       }
 
+      /*await Promise.all(promisesAll)
+        .then(() => {
+          console.log('Is everthing good');
+        })
+        .catch((err) => console.log('eerror', err)); */
+
+      // await saveContent(formData);
     } catch (error) {
+      console.log('This is the error: ', error.message);
       setErrorMessage('Show an error');
     } finally {
       setIsFetchLoading(false);
@@ -165,10 +220,10 @@ const FileManager = (props) => {
     //handleSaveImages(imagesList, imagesToDelete, buttonRef);
   };
 
-  useXBlockActionButtons(xblockBottomButtons, false, fileMap, handleSaveButton);
+  useXBlockActionButtons(xblockBottomButtons, false, fileMap, pathsToDelete, rootFolderId, handleSaveButton);
 
-  console.log('fileMap', fileMap);
-  console.log('pathsToDelete', pathsToDelete);
+  // console.log('fileMap', fileMap);
+  // console.log('pathsToDelete', pathsToDelete);
 
   return (
     <>
@@ -187,20 +242,12 @@ const FileManager = (props) => {
 
       <div style={{ height: 400 }}>
         <FileBrowser
-          setFileSelection={(select, rest) => {
-            console.log('select', select);
-          }}
           files={files}
           folderChain={folderChain}
           fileActions={fileActions}
+          disableDefaultFileActions={isLoadingDownloadFile ? [ChonkyActions.DownloadFiles.id] : undefined}
           onFileAction={handleFileAction}
           defaultFileViewActionId={ChonkyActions.EnableListView.id}
-          disableDefaultFileActions={[
-            ChonkyActions.OpenSelection.id,
-            ChonkyActions.SelectAllFiles.id,
-            ChonkyActions.ClearSelection.id,
-            ChonkyActions.DeleteFiles.id
-          ]}
           clearSelectionOnOutsideClick={false}
           disableDragAndDropProvider={false}>
           <FileNavbar />
