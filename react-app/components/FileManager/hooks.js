@@ -1,24 +1,14 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import {
   ChonkyActions,
-  FileBrowser,
-  FileContextMenu,
-  FileHelper,
-  FileList,
-  FileNavbar,
-  FileToolbar,
-  defineFileAction,
-  setChonkyDefaults
-} from 'chonky';
+  FileHelper} from 'chonky';
 import { v4 as uuidv4 } from 'uuid';
 
-import { convertFileMapToTree, convertTreToNewFileMapFormat, findNodeByIdInTree } from './utils';
+import { convertFileMapToTree, findNodeByIdInTree } from './utils';
 
 export const useCustomFileMap = (prepareCustomFileMap) => {
   const { baseFileMap, rootFolderId } = useMemo(prepareCustomFileMap, []);
   const rootFolderIdFixed = rootFolderId;
-  console.log('rootFolderIdFixed', rootFolderIdFixed);
-  //console.log('baseFileMap', baseFileMap);
 
   const [fileMap, setFileMap] = useState(baseFileMap);
   const [currentFolderId, setCurrentFolderId] = useState(rootFolderId);
@@ -94,7 +84,6 @@ export const useCustomFileMap = (prepareCustomFileMap) => {
     });
   }, []);
 
-  const idCounter = useRef(0);
   const createFolder = useCallback((folderName) => {
     setFileMap((currentFileMap) => {
       const newFileMap = { ...currentFileMap };
@@ -110,8 +99,7 @@ export const useCustomFileMap = (prepareCustomFileMap) => {
       }
 
       const newFolderId = uuidv4();
-      //`folder-${folderName}-${idCounter.current++}`;
-      //  modDate: new Date(),
+
       const newFolderContent = {
         id: newFolderId,
         name: folderName,
@@ -154,8 +142,6 @@ export const useCustomFileMap = (prepareCustomFileMap) => {
       }
 
       const newFileId = uuidv4();
-      //`file-${fileName}-${idCounter.current++}`;
-      //  modDate: new Date(),
       const newFileContent = {
         id: newFileId,
         name: fileName,
@@ -166,8 +152,6 @@ export const useCustomFileMap = (prepareCustomFileMap) => {
         isNew: true,
         file
       };
-
-      console.log('newFileContent', newFileContent);
 
       newFileMap[newFileId] = newFileContent;
 
@@ -250,7 +234,6 @@ export const useFileActionHandler = (
         if (folderName) createFolder(folderName);
       } else if (data.id === ChonkyActions.UploadFiles.id) {
         // moveFiles(data.payload.files, data.payload.source, data.payload.destination);
-        console.log('Hello My friend :D');
         addFile();
       } else if (data.id === ChonkyActions.DownloadFiles.id) {
         const { selectedFiles } = data.state;
@@ -261,10 +244,8 @@ export const useFileActionHandler = (
         } else {
           alert('You must select a one file to download');
         }
-        console.log('Download Folder Action - data: ', data);
       }
 
-      //showActionNotification(data);
     },
     [createFolder, deleteFiles, moveFiles, setCurrentFolderId]
   );

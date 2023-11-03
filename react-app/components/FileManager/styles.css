@@ -1,0 +1,27 @@
+.filesmanager-container {
+  min-height: 400px;
+  padding: 16px;
+}
+
+.error-message-edit {
+  padding: 15px 2% 10px 2% !important;
+  margin-top: -10px !important;
+}
+
+.error-message-edit > .error-icon {
+  font-size: 16px !important;
+  margin-right: 10px !important;
+}
+
+.error-message-edit > .error-text {
+  font-size: 14px !important;
+  margin-top: -5px !important;
+}
+
+.disabled-button {
+  opacity: 0.4;
+}
+
+.disabled-button:hover {
+  cursor: not-allowed;
+}

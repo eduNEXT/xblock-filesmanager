@@ -1,13 +1,12 @@
 import { useState } from 'react';
 import { getBlobFile } from '@services/fileService';
 
-const useFileDownloader = ({ onError, onDownloaded}) => {
-  const [blobUrl, setBlobUrl] = useState(null);
+const useFileDownloader = ({ onError, onFileDownloaded}) => {
+  const [, setBlobUrl] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const downloadFileHook = async (fileUrl, fileName) => {
-    // Extract the file extension from the fileName
-    //const fileExtension = fileName.split('.').pop().toLowerCase();
+
     setIsLoading(true);
 
     try {
@@ -16,18 +15,17 @@ const useFileDownloader = ({ onError, onDownloaded}) => {
       const url = window.URL.createObjectURL(blob);
       setBlobUrl(url);
 
-      const a = document.createElement('a');
-      a.style.display = 'none';
-      a.href = url;
-      a.download = fileName;
-      document.body.appendChild(a);
+      const link = document.createElement('a');
+      link.style.display = 'none';
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
 
       a.click();
 
       window.URL.revokeObjectURL(url);
 
-      onDownloaded();
-
+      onFileDownloaded();
       // Clean up by removing the anchor element
       document.body.removeChild(a);
     } catch (error) {

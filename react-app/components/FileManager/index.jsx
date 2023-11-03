@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useMemo, useState } from 'react';
+import React, { useEffect, useRef, useMemo, useState } from 'react';
 import {
   ChonkyActions,
   FileBrowser,
@@ -10,49 +10,34 @@ import {
 } from 'chonky';
 import _ from 'lodash';
 import { ChonkyIconFA } from 'chonky-icon-fontawesome';
-import { v4 as uuidv4 } from 'uuid';
 import { StatusCodes } from 'http-status-codes';
 import xBlockContext from '@constants/xBlockContext';
 import useXBlockActionButtons from '@hooks/useXBlockActionButtons';
 import useFileDownloader from '@hooks/useFileDownloader';
+import useAddErrorMessageToModal from '@hooks/useAddErrorMessageToModal';
 import { syncContent, deleteContent } from '@services/directoriesService';
+import ErrorMessage from '@components/ErrorMessage';
 
 import { useCustomFileMap, useFiles, useFolderChain, useFileActionHandler } from './hooks';
-import DemoFsMap from './default.json';
 import { convertFileMapToTree } from './utils';
-
-const prepareCustomFileMap = () => {
-  const rootFolderId = uuidv4();
-  const baseFileMap = {
-    [rootFolderId]: {
-      id: rootFolderId,
-      name: 'Root',
-      isDir: true,
-      childrenIds: [],
-      childrenCount: 0,
-      children: []
-    }
-  };
-
-  return { baseFileMap, rootFolderId };
-};
-
+import { prepareCustomFileMap } from './constants';
 
 const FileManager = (props) => {
   setChonkyDefaults({ iconComponent: ChonkyIconFA });
   const fileInputRef = useRef(null);
-  const [errorMessage, setErrorMessage] = useState(null);
-  const [isFetchLoading, setIsFetchLoading] = useState(false);
+  const [saveSyncErrorMessage, setSaveSyncErrorMessage] = useState(null);
+  const [, setIsFetchLoading] = useState(false);
+  const [downloadFileErrorMessage, setDownloadFileErrorMessage] = useState(null);
+  const [reloadPage, setReloadPage] = useState(false);
 
-  const onDownloaded = () => {
-    console.log('fine');
-  };
+  const onFileDownloaded = () => setDownloadFileErrorMessage(null);
 
   const onError = () => {
-    console.log('error :/');
+    const errorMessage = gettext('There was an error downloading the file');
+    setDownloadFileErrorMessage(errorMessage);
   };
 
-  const { downloadFileHook, isLoading: isLoadingDownloadFile } = useFileDownloader({ onDownloaded, onError });
+  const { downloadFileHook, isLoading: isLoadingDownloadFile } = useFileDownloader({ onFileDownloaded, onError });
 
   const fileMapData = () => props;
   const { rootFolderId } = props;
@@ -62,13 +47,11 @@ const FileManager = (props) => {
   };
 
   const downloadFile = (fileData) => {
-    //console.log('trying to download the file :)', fileData);
     const {
       metadata: { display_name, url }
     } = fileData;
     const { hostname, port, protocol } = window.location;
     const fullUrl = port ? `${protocol}//${hostname}:${port}${url}` : `${protocol}//${hostname}${url}`;
-    //console.log('fullUrl', fullUrl);
     downloadFileHook(fullUrl, display_name);
   };
 
@@ -85,12 +68,14 @@ const FileManager = (props) => {
     createFile
   } = useCustomFileMap(rootFolderId ? fileMapData : prepareCustomFileMap);
 
-
   const handleFileChange = (event) => {
-    const selectedFiles = [...event.target.files];
+    const inputElement = event.target;
+    if (inputElement.offsetWidth > 0 && inputElement.offsetHeight > 0) {
+      return;
+    }
+
+    const selectedFiles = [...inputElement.files];
     if (selectedFiles.length > 0) {
-      // You can handle the selected files here using forEach
-      // console.log('selected files', selectedFiles);
       selectedFiles.forEach((file) => {
         const { name } = file;
         createFile(name, file);
@@ -108,13 +93,12 @@ const FileManager = (props) => {
     addFile,
     downloadFile
   );
-  // remove from here ChonkyActions.DeleteFiles
-  const fileActions = [
-    ChonkyActions.CreateFolder,
-    ChonkyActions.UploadFiles,
-    ChonkyActions.DeleteFiles,
-    ChonkyActions.DownloadFiles
-  ];
+
+  const { xblockId, isEditView } = xBlockContext;
+
+  const fileActions = isEditView
+    ? [ChonkyActions.CreateFolder, ChonkyActions.UploadFiles, ChonkyActions.DeleteFiles, ChonkyActions.DownloadFiles]
+    : [ChonkyActions.DownloadFiles];
 
   const saveContent = async (formData) => {
     try {
@@ -144,7 +128,6 @@ const FileManager = (props) => {
     }
   };
 
-  const { xblockId } = xBlockContext;
   const xblockBottomButtons = useMemo(() => {
     return [
       {
@@ -156,15 +139,11 @@ const FileManager = (props) => {
     ];
   }, [xblockId]);
 
-  const handleSaveButton = async (idButton, rootFolderId, fileMap, filesToDelete, buttonRef) => {
+  const handleSaveButton = async (_, rootFolderId, fileMap, filesToDelete, buttonSaveRef) => {
     const filesToSave = { ...fileMap };
     const filesKeys = Object.keys(filesToSave);
-    //console.log('test', rootFolderId);
     const contentFormat = convertFileMapToTree(rootFolderId, '', filesToSave);
     const contentString = JSON.stringify({ rootFolderId, treeFolders: contentFormat });
-    console.log('format: ', { rootFolderId, treeFolders: contentFormat });
-    //console.log('assetsKeyToDelete', filesToDelete);
-    //console.log('filesToSave', filesToSave);
     const formData = new FormData();
 
     formData.append('contents', contentString);
@@ -185,65 +164,50 @@ const FileManager = (props) => {
       }
     });
 
-    //console.log('formData', formData);
-    //console.log('hasassetsKeyToDelete', hasassetsKeyToDelete);
-
-    //setIsFetchLoading(true);
+    buttonSaveRef.disabled = 'disabled';
+    buttonSaveRef.classList.add('disabled-button');
 
     try {
-      /*if (sizeFiles) {
-        await saveContent(formData);
-      }*/
-      const promisesAll = [];
-
-      //promisesAll.push(saveContent(formData));
-
+      // sync content
       await saveContent(formData);
 
       if (hasAssetsKeyToDelete) {
-
+        // delete assets
         await removeContent(filesToDelete);
-        //promisesAll.push(saveContent(formData));
       }
 
-      /*await Promise.all(promisesAll)
-        .then(() => {
-          console.log('Is everthing good');
-        })
-        .catch((err) => console.log('eerror', err)); */
-
-      // await saveContent(formData);
+      setReloadPage(true);
     } catch (error) {
-      console.log('This is the error: ', error.message);
-      setErrorMessage('Show an error');
+      const errorMessage = gettext('An unexpected error has occurred');
+      setSaveSyncErrorMessage(errorMessage);
+      buttonSaveRef.classList.remove('disabled-button');
+      buttonSaveRef.removeAttribute('disabled');
     } finally {
       setIsFetchLoading(false);
     }
 
-    //handleSaveImages(imagesList, imagesToDelete, buttonRef);
   };
 
   useXBlockActionButtons(xblockBottomButtons, false, fileMap, assetsKeyToDelete, rootFolderIdFixed, handleSaveButton);
 
-  // console.log('fileMap', fileMap);
-  // console.log('assetsKeyToDelete', assetsKeyToDelete);
+  useAddErrorMessageToModal(
+    saveSyncErrorMessage ? <ErrorMessage message={saveSyncErrorMessage} className="error-message-edit" /> : null
+  );
+
+  useEffect(() => {
+    if (reloadPage) {
+      window.location.reload();
+    }
+  }, [reloadPage]);
+
 
   return (
     <>
-      {/*
-        <button onClick={resetFileMap} style={{ marginBottom: 15 }}>
-        Reset file map
-          disableDefaultFileActions={[
-            ChonkyActions.OpenSelection.id,
-            ChonkyActions.SelectAllFiles.id,
-            ChonkyActions.ClearSelection.id
-          ]}
-
-      </button>
-      */}
       <input type="file" ref={fileInputRef} style={{ display: 'none' }} onChange={handleFileChange} multiple />
 
-      <div style={{ height: 400 }}>
+      {downloadFileErrorMessage && <ErrorMessage message={downloadFileErrorMessage} />}
+
+      <div className="filesmanager-container">
         <FileBrowser
           files={files}
           folderChain={folderChain}
