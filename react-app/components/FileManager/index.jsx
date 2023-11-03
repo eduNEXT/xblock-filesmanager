@@ -11,6 +11,7 @@ import {
 import _ from 'lodash';
 import { ChonkyIconFA } from 'chonky-icon-fontawesome';
 import { StatusCodes } from 'http-status-codes';
+import PropTypes from 'prop-types';
 import xBlockContext from '@constants/xBlockContext';
 import useXBlockActionButtons from '@hooks/useXBlockActionButtons';
 import useFileDownloader from '@hooks/useFileDownloader';
@@ -173,7 +174,7 @@ const FileManager = (props) => {
       // sync content
       await saveContent(formData);
 
-       // delete assets
+      // delete assets
       if (hasAssetsKeyToDelete) {
         await removeContent(filesToDelete);
       }
@@ -225,6 +226,11 @@ const FileManager = (props) => {
       </div>
     </>
   );
+};
+
+FileManager.propTypes = {
+  rootFolderId: PropTypes.string.isRequired,
+  baseFileMap: PropTypes.object.isRequired
 };
 
 export default FileManager;

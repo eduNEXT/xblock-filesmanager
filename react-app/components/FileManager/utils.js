@@ -1,5 +1,14 @@
 import _ from 'lodash';
 
+/**
+ * Converts a tree structure to a new file map format and stores it in an object.
+ *
+ * @param {Object} node - The current node in the tree.
+ * @param {Object} parent - The parent node.
+ * @param {Object} newFileMapObject - The object to store the new file map format.
+ * @param {boolean} isSaved - Indicates if the node is saved.
+ * @returns {Object} - The file map entry for the current node.
+ */
 const convertTreeToNewFileMap = (node, parent = null, newFileMapObject, isSaved = false) => {
   const isDirectory = node.type === 'directory';
 
@@ -44,6 +53,13 @@ const convertTreeToNewFileMap = (node, parent = null, newFileMapObject, isSaved 
   return fileMapEntry;
 };
 
+/**
+ * Converts a tree structure to a new file map format.
+ *
+ * @param {Object} tree - The tree structure to convert.
+ * @param {boolean} isSaved - Indicates if the nodes are saved.
+ * @returns {Object} - The new file map format.
+ */
 export const convertTreeToNewFileMapFormat = (tree, isSaved = false) => {
   const newFileMapObject = {};
   const treeCloned = _.cloneDeep(tree);
@@ -53,6 +69,14 @@ export const convertTreeToNewFileMapFormat = (tree, isSaved = false) => {
   return newFileMapObject;
 };
 
+/**
+ * Converts a file map to a tree structure.
+ *
+ * @param {string} rootId - The ID of the root node.
+ * @param {string} parentPath - The path of the parent node.
+ * @param {Object} originalFileMapObject - The original file map object.
+ * @returns {Object} - The tree structure.
+ */
 export const convertFileMapToTree = (rootId, parentPath = '', originalFileMapObject) => {
   const node = _.cloneDeep(originalFileMapObject[rootId]);
 
@@ -80,7 +104,13 @@ export const convertFileMapToTree = (rootId, parentPath = '', originalFileMapObj
   return tree;
 };
 
-
+/**
+ * Finds a node by its ID in a tree structure.
+ *
+ * @param {Object} object - The tree structure to search.
+ * @param {string} id - The ID of the node to find.
+ * @returns {Object|null} - The found node or null if not found.
+ */
 export const  findNodeByIdInTree = (object, id) => {
   if (object.id === id) {
     return object;
