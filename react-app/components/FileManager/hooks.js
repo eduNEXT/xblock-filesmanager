@@ -1,7 +1,5 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
-import {
-  ChonkyActions,
-  FileHelper} from 'chonky';
+import { ChonkyActions, FileHelper } from 'chonky';
 import { v4 as uuidv4 } from 'uuid';
 
 import { convertFileMapToTree, findNodeByIdInTree } from './utils';
@@ -34,7 +32,9 @@ export const useCustomFileMap = (prepareCustomFileMap) => {
         const nodeTree = findNodeByIdInTree(fileMapToTree, file.id) || { metadata: {}, path: '' };
         // If the node has metadata means that was saved previously
         if (file.isSaved) {
-          const { metadata: { asset_key } } = nodeTree;
+          const {
+            metadata: { asset_key }
+          } = nodeTree;
           setAssetsKeyToDelete((prevPaths) => [...prevPaths, asset_key]);
         }
 
@@ -237,15 +237,20 @@ export const useFileActionHandler = (
         addFile();
       } else if (data.id === ChonkyActions.DownloadFiles.id) {
         const { selectedFiles } = data.state;
-        if (selectedFiles.length === 1) {
+        if (selectedFiles.length === 1 && selectedFiles[0].isSaved) {
           // Download the file
           const [fileData] = selectedFiles;
           downloadFile(fileData);
-        } else {
+        }
+
+        if (selectedFiles.length === 1 && !selectedFiles[0].isSaved) {
+          alert('Th file to download must be saved');
+        }
+
+        if (selectedFiles.length > 1) {
           alert('You must select a one file to download');
         }
       }
-
     },
     [createFolder, deleteFiles, moveFiles, setCurrentFolderId]
   );

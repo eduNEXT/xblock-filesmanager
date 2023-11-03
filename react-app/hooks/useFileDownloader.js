@@ -21,13 +21,13 @@ const useFileDownloader = ({ onError, onFileDownloaded}) => {
       link.download = fileName;
       document.body.appendChild(link);
 
-      a.click();
+      link.click();
 
       window.URL.revokeObjectURL(url);
 
       onFileDownloaded();
       // Clean up by removing the anchor element
-      document.body.removeChild(a);
+      document.body.removeChild(link);
     } catch (error) {
       onError();
     }finally {

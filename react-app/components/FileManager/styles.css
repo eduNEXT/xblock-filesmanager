@@ -3,6 +3,10 @@
   padding: 16px;
 }
 
+.chonky-fileListWrapper {
+  min-height: 500px !important;
+}
+
 .error-message-edit {
   padding: 15px 2% 10px 2% !important;
   margin-top: -10px !important;

@@ -22,6 +22,8 @@ import { useCustomFileMap, useFiles, useFolderChain, useFileActionHandler } from
 import { convertFileMapToTree } from './utils';
 import { prepareCustomFileMap } from './constants';
 
+import './styles.css';
+
 const FileManager = (props) => {
   setChonkyDefaults({ iconComponent: ChonkyIconFA });
   const fileInputRef = useRef(null);
@@ -171,8 +173,8 @@ const FileManager = (props) => {
       // sync content
       await saveContent(formData);
 
+       // delete assets
       if (hasAssetsKeyToDelete) {
-        // delete assets
         await removeContent(filesToDelete);
       }
 
@@ -185,7 +187,6 @@ const FileManager = (props) => {
     } finally {
       setIsFetchLoading(false);
     }
-
   };
 
   useXBlockActionButtons(xblockBottomButtons, false, fileMap, assetsKeyToDelete, rootFolderIdFixed, handleSaveButton);
@@ -199,7 +200,6 @@ const FileManager = (props) => {
       window.location.reload();
     }
   }, [reloadPage]);
-
 
   return (
     <>

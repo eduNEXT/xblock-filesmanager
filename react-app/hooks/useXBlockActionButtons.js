@@ -12,43 +12,47 @@ const useXBlockActionButtons = (buttons, loading, filesMap, pathsToDelete, rootF
 
   useEffect(() => {
     const actionButtonsContainer = document.querySelector('.modal-actions ul');
-    const cancelButton = actionButtonsContainer.querySelector('.action-cancel');
-    cancelButton.classList.replace('action-primary', 'remove-button');
+    if (actionButtonsContainer) {
+      const cancelButton = actionButtonsContainer.querySelector('.action-cancel');
+      cancelButton.classList.replace('action-primary', 'remove-button');
 
-    const cancelButtons = actionButtonsContainer.querySelectorAll('.action-cancel');
+      const cancelButtons = actionButtonsContainer.querySelectorAll('.action-cancel');
 
-    cancelButtons.forEach((cancelButton) => {
-      cancelButton.textContent = gettext('Cancel');
-    });
+      cancelButtons.forEach((cancelButton) => {
+        cancelButton.textContent = gettext('Cancel');
+      });
 
-    buttons.forEach(({ id, title, isBeforePreviousButtons = true }) => {
-      if (!buttonRefs.current[id]) {
-        buttonRefs.current[id] = document.createElement('button');
-        buttonRefs.current[id].href = '#';
-        buttonRefs.current[id].className = 'button action-primary';
-        if (isBeforePreviousButtons) {
-          actionButtonsContainer.insertBefore(buttonRefs.current[id], actionButtonsContainer.firstChild);
-        } else {
-          actionButtonsContainer.appendChild(buttonRefs.current[id]);
+      buttons.forEach(({ id, title, isBeforePreviousButtons = true }) => {
+        if (!buttonRefs.current[id]) {
+          buttonRefs.current[id] = document.createElement('button');
+          buttonRefs.current[id].href = '#';
+          buttonRefs.current[id].className = 'button action-primary';
+          if (isBeforePreviousButtons) {
+            actionButtonsContainer.insertBefore(buttonRefs.current[id], actionButtonsContainer.firstChild);
+          } else {
+            actionButtonsContainer.appendChild(buttonRefs.current[id]);
+          }
         }
-      }
 
-      // Always update the button's title and disable state based on the loading prop
-      buttonRefs.current[id].textContent = title;
+        // Always update the button's title and disable state based on the loading prop
+        buttonRefs.current[id].textContent = title;
 
-      if (!clickHandlers[id]) {
-        clickHandlers[id] = (event) => {
-          event.preventDefault();
-          callbackFunction(id, rootFolderId, filesMap, pathsToDelete, buttonRefs.current[id]);
-        };
-        buttonRefs.current[id].addEventListener('click', clickHandlers[id]);
-      }
-    });
+        if (!clickHandlers[id]) {
+          clickHandlers[id] = (event) => {
+            event.preventDefault();
+            callbackFunction(id, rootFolderId, filesMap, pathsToDelete, buttonRefs.current[id]);
+          };
+          buttonRefs.current[id].addEventListener('click', clickHandlers[id]);
+        }
+      });
+    }
 
     return () => {
-      buttons.forEach(({ id }) => {
-        buttonRefs.current[id].removeEventListener('click', clickHandlers[id]);
-      });
+      if (actionButtonsContainer) {
+        buttons.forEach(({ id }) => {
+          buttonRefs.current[id].removeEventListener('click', clickHandlers[id]);
+        });
+      }
     };
   }, [buttons, loading, filesMap, rootFolderId, pathsToDelete, callbackFunction]);
 
