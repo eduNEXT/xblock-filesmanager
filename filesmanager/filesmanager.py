@@ -3,12 +3,12 @@ import json
 import logging
 import os
 import pkg_resources
-import re
+import uuid
 from django.conf import settings
 from django.utils import translation
 from webob.response import Response
 from xblock.core import XBlock
-from xblock.fields import Dict, List, Scope, String
+from xblock.fields import Dict, List, Scope
 from xblock.fragment import Fragment
 from xblockutils.resources import ResourceLoader
 
@@ -395,9 +395,7 @@ class FilesManagerXBlock(XBlock):
         try:
             self.initialize_directories()
             self.temporary_save_upload_files(request.params.items())
-            contents = json.loads(request.params.get("contents", "{}"))
-            if not contents:
-                return Response(status=HTTPStatus.BAD_REQUEST)
+            contents = json.loads(request.params.get("contents", "[]"))
             self.directories["id"] = contents.get("rootFolderId", "")
             self._create_content(contents.get("treeFolders", {}).get("children", []))
         except Exception as e:
@@ -462,7 +460,7 @@ class FilesManagerXBlock(XBlock):
             "contents": target_directory,
         }
 
-    def temporary_save_upload_files(self, uploaded_files):  # pylint: disable=unused-argument
+    def temporary_save_upload_files(self, uploaded_files):
         """Handler for file upload to the course assets.
 
         Arguments:
@@ -523,7 +521,7 @@ class FilesManagerXBlock(XBlock):
 
         target_directory.append(
             {
-                "id": file["id"],
+                "id": file.get("id") or uuid.uuid4().hex,
                 "parentId": file.get("parentId", ""),
                 "name": name,
                 "type": "file",
@@ -550,7 +548,7 @@ class FilesManagerXBlock(XBlock):
         directory_path, name = self.generate_content_path(directory["path"], directory["name"])
         target_directory.append(
             {
-                "id": directory["id"],
+                "id": directory.get("id") or uuid.uuid4().hex,
                 "parentId": directory.get("parentId", ""),
                 "name": name,
                 "type": "directory",
