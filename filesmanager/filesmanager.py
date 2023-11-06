@@ -442,8 +442,7 @@ class FilesManagerXBlock(XBlock):
         Arguments:
             contents: the content to be added.
         """
-        if not contents:
-            raise Exception("Contents not found in the request")
+        target_directory = self.directories
         for content in contents:
             path = content.get("path").rsplit("/", 1)[0]
             target_directory = self.get_target_directory(path)
