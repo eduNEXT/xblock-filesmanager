@@ -2,8 +2,10 @@
 import json
 import logging
 import os
+from http import HTTPStatus
+from urllib.parse import urljoin
+
 import pkg_resources
-import uuid
 from django.conf import settings
 from django.utils import translation
 from webob.response import Response
@@ -11,9 +13,6 @@ from xblock.core import XBlock
 from xblock.fields import Dict, List, Scope
 from xblock.fragment import Fragment
 from xblockutils.resources import ResourceLoader
-
-from http import HTTPStatus
-from urllib.parse import urljoin
 
 try:
     from cms.djangoapps.contentstore.exceptions import AssetNotFoundException
@@ -99,7 +98,7 @@ class FilesManagerXBlock(XBlock):
     directories = Dict(
         default=
         {
-            "id": uuid.uuid4().hex,
+            "id": None,
             "name": "Root",
             "type": "directory",
             "path": "Root",
@@ -520,7 +519,7 @@ class FilesManagerXBlock(XBlock):
 
         target_directory.append(
             {
-                "id": file.get("id") or uuid.uuid4().hex,
+                "id": file.get("id"),
                 "parentId": file.get("parentId", ""),
                 "name": name,
                 "type": "file",
@@ -547,7 +546,7 @@ class FilesManagerXBlock(XBlock):
         directory_path, name = self.generate_content_path(directory["path"], directory["name"])
         target_directory.append(
             {
-                "id": directory.get("id") or uuid.uuid4().hex,
+                "id": directory.get("id"),
                 "parentId": directory.get("parentId", ""),
                 "name": name,
                 "type": "directory",
