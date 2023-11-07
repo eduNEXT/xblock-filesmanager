@@ -116,7 +116,7 @@ class FilesManagerXBlock(XBlock):
             ],
         },
         scope=Scope.settings,
-        help="List of directories to be displayed in the Files Manager."
+        help="Directory tree to be displayed in the Files Manager."
     )
 
     content_paths = List(
