@@ -99,7 +99,7 @@ class FilesManagerXBlock(XBlock):
     directories = Dict(
         default=
         {
-            "id": None,
+            "id": uuid.uuid4().hex,
             "name": "Root",
             "type": "directory",
             "path": "Root",
