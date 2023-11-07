@@ -35,7 +35,18 @@ export const useCustomFileMap = (prepareCustomFileMap) => {
           const {
             metadata: { asset_key }
           } = nodeTree;
-          setAssetsKeyToDelete((prevPaths) => [...prevPaths, asset_key]);
+          if (file.isDir) {
+            const assetsToDelete = file.children.reduce((accumulator, asset) => {
+              if (asset.isSaved && !asset.isDir) {
+                accumulator.push(asset.metadata.asset_key);
+              }
+              return accumulator;
+            }, []);
+
+            setAssetsKeyToDelete((prevPaths) => [...prevPaths, ...assetsToDelete]);
+          } else {
+            setAssetsKeyToDelete((prevPaths) => [...prevPaths, asset_key]);
+          }
         }
 
         if (file.parentId) {

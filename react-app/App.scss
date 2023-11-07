@@ -1,0 +1,24 @@
+.filesmanager__app {
+  font-family: sans-serif;
+  text-align: center;
+
+  .title {
+    font-weight: 700;
+    margin: 16px;
+  }
+
+}
+
+.remove-button {
+  background: transparent !important;
+  margin-left: 16px;
+  color: #00466c !important;
+}
+
+.action-cancel {
+  display: none !important;
+}
+
+.show-action-cancel {
+  display: block !important;
+}

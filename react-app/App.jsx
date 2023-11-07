@@ -5,7 +5,7 @@ import { convertTreeToNewFileMapFormat } from '@components/FileManager/utils';
 import ErrorMessage from '@components/ErrorMessage';
 import Spinner from '@components/Spinner';
 
-import './App.css';
+import './App.scss';
 
 const App = () => {
   const { data, error, isLoading } = useSWRImmutable('/api/directories', getDirectories, {
@@ -22,7 +22,7 @@ const App = () => {
   if (isLoading) return <Spinner />;
 
   return (
-    <div className="container">
+    <div className="filesmanager__app">
       <h1 className="title">Files Manager</h1>
       <FileManager rootFolderId={rootFolderId} baseFileMap={formatResponse} />
     </div>

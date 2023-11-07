@@ -208,7 +208,7 @@ const FileManager = (props) => {
 
       {downloadFileErrorMessage && <ErrorMessage message={downloadFileErrorMessage} />}
 
-      <div className="filesmanager-container">
+      <div className="filesmanager__content">
         <FileBrowser
           files={files}
           folderChain={folderChain}

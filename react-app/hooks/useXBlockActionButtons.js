@@ -22,6 +22,8 @@ const useXBlockActionButtons = (buttons, loading, filesMap, pathsToDelete, rootF
       const cancelButton = actionButtonsContainer.querySelector('.action-cancel');
       cancelButton.classList.replace('action-primary', 'remove-button');
 
+      cancelButton.classList.add('show-action-cancel');
+
       const cancelButtons = actionButtonsContainer.querySelectorAll('.action-cancel');
 
       cancelButtons.forEach((cancelButton) => {
