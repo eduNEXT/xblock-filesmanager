@@ -99,7 +99,7 @@ class FilesManagerXBlock(XBlock):
     directories = Dict(
         default=
         {
-            "id": uuid.uuid4().hex,
+            "id": None,
             "name": "Root",
             "type": "directory",
             "path": "Root",
@@ -131,6 +131,11 @@ class FilesManagerXBlock(XBlock):
         scope=Scope.settings,
         help="List of temporary uploaded files."
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        parent_id = uuid.uuid4().hex
+        self.directories["id"] = parent_id
 
     @property
     def block_id(self):
