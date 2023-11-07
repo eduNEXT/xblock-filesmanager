@@ -30,7 +30,7 @@ export const useCustomFileMap = (prepareCustomFileMap) => {
 
       files.forEach((file) => {
         const nodeTree = findNodeByIdInTree(fileMapToTree, file.id) || { metadata: {}, path: '' };
-        // If the node has metadata means that was saved previously
+
         if (file.isSaved) {
           const {
             metadata: { asset_key }
@@ -68,7 +68,7 @@ export const useCustomFileMap = (prepareCustomFileMap) => {
   const moveFiles = useCallback((files, source, destination) => {
     setFileMap((currentFileMap) => {
       const newFileMap = { ...currentFileMap };
-      const moveFileIds = new Set(files.map((f) => f.id));
+      const moveFileIds = new Set(files.map((file) => file.id));
 
       const newSourceChildrenIds = source.childrenIds.filter((id) => !moveFileIds.has(id));
       newFileMap[source.id] = {
@@ -77,7 +77,7 @@ export const useCustomFileMap = (prepareCustomFileMap) => {
         childrenCount: newSourceChildrenIds.length
       };
 
-      const newDestinationChildrenIds = [...destination.childrenIds, ...files.map((f) => f.id)];
+      const newDestinationChildrenIds = [...destination.childrenIds, ...files.map((file) => file.id)];
       newFileMap[destination.id] = {
         ...destination,
         childrenIds: newDestinationChildrenIds,
@@ -244,18 +244,16 @@ export const useFileActionHandler = (
         const folderName = prompt('Provide the name for your new folder:');
         if (folderName) createFolder(folderName);
       } else if (data.id === ChonkyActions.UploadFiles.id) {
-        // moveFiles(data.payload.files, data.payload.source, data.payload.destination);
         addFile();
       } else if (data.id === ChonkyActions.DownloadFiles.id) {
         const { selectedFiles } = data.state;
         if (selectedFiles.length === 1 && selectedFiles[0].isSaved) {
-          // Download the file
           const [fileData] = selectedFiles;
           downloadFile(fileData);
         }
 
         if (selectedFiles.length === 1 && !selectedFiles[0].isSaved) {
-          alert('Th file to download must be saved');
+          alert('The file to download must be saved');
         }
 
         if (selectedFiles.length > 1) {

@@ -12,19 +12,19 @@ const App = () => {
     errorRetryCount: 0
   });
 
-  const { data: apiResponse } = data || {};
-  const { contents } = apiResponse || { contents: {} };
+  const { data: xblockHandlerResponse } = data || {};
+  const { contents } = xblockHandlerResponse || { contents: {} };
   const contentHasId = 'id' in contents && contents.id !== null;
-  const formatResponse = contentHasId ? convertTreeToNewFileMapFormat(contents, true) : {};
+  const directoryTree = contentHasId ? convertTreeToNewFileMapFormat(contents, true) : {};
   const rootFolderId = contentHasId ? contents.id : null;
+  const errorHandlerDirectoriesMessage = gettext('There was an error during processing the directories tree');
 
-  if (error) return <ErrorMessage message="failed to load" />;
+  if (error) return <ErrorMessage message={errorHandlerDirectoriesMessage} />;
   if (isLoading) return <Spinner />;
 
   return (
     <div className="filesmanager__app">
-      <h1 className="title">Files Manager</h1>
-      <FileManager rootFolderId={rootFolderId} baseFileMap={formatResponse} />
+      <FileManager rootFolderId={rootFolderId} baseFileMap={directoryTree} />
     </div>
   );
 };

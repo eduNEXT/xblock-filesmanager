@@ -108,12 +108,12 @@ const FileManager = (props) => {
       const syncContentData = await syncContent(formData);
 
       if (syncContentData.status !== StatusCodes.OK) {
-        throw new Error('Sync content has failed');
+        throw new Error('Sync content has failed: Unexpected status code');
       }
 
-      return Promise.resolve('Synchronizing content successfully');
+      return Promise.resolve('Synchronizing content was successful');
     } catch (error) {
-      return Promise.reject('Error synchronizing content');
+      return Promise.reject('An error has ocurred while  we tried to synchronizing content');
     }
   };
 
@@ -122,16 +122,16 @@ const FileManager = (props) => {
       const createContentData = await deleteContent({ contents: assetsKeyToDelete });
 
       if (createContentData.status !== StatusCodes.OK) {
-        throw new Error('Delete content has failed');
+        throw new Error('Delete content has failed:  Unexpected status code');
       }
 
-      return Promise.resolve('Delete content successfully');
+      return Promise.resolve('Deleting content was successfully');
     } catch (error) {
-      return Promise.reject('Error deleting content');
+      return Promise.reject('An error has ocurred while we tried to delete assets');
     }
   };
 
-  const xblockBottomButtons = useMemo(() => {
+  const xblockActionButtons = useMemo(() => {
     return [
       {
         id: new Date().getTime(),
@@ -171,10 +171,8 @@ const FileManager = (props) => {
     buttonSaveRef.classList.add('disabled-button');
 
     try {
-      // sync content
       await saveContent(formData);
 
-      // delete assets
       if (hasAssetsKeyToDelete) {
         await removeContent(filesToDelete);
       }
@@ -190,7 +188,7 @@ const FileManager = (props) => {
     }
   };
 
-  useXBlockActionButtons(xblockBottomButtons, false, fileMap, assetsKeyToDelete, rootFolderIdFixed, handleSaveButton);
+  useXBlockActionButtons(xblockActionButtons, false, fileMap, assetsKeyToDelete, rootFolderIdFixed, handleSaveButton);
 
   useAddErrorMessageToModal(
     saveSyncErrorMessage ? <ErrorMessage message={saveSyncErrorMessage} className="error-message-edit" /> : null
