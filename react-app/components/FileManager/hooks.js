@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { ChonkyActions, FileHelper } from 'chonky';
 import { v4 as uuidv4 } from 'uuid';
 
-import { convertFileMapToTree, findNodeByIdInTree } from './utils';
+import { convertFileMapToTree, findNodeByIdInTree, extractAssetKeys } from './utils';
 
 export const useCustomFileMap = (prepareCustomFileMap) => {
   const { baseFileMap, rootFolderId } = useMemo(prepareCustomFileMap, []);
@@ -36,14 +36,11 @@ export const useCustomFileMap = (prepareCustomFileMap) => {
             metadata: { asset_key }
           } = nodeTree;
           if (file.isDir) {
-            const assetsToDelete = file.children.reduce((accumulator, asset) => {
-              if (asset.isSaved && !asset.isDir) {
-                accumulator.push(asset.metadata.asset_key);
-              }
-              return accumulator;
-            }, []);
+            const { id: folderId } = file;
+            const folderToFileMapToTree = convertFileMapToTree(folderId, '', fileMap);
+            const assetKeysToDelete = extractAssetKeys(folderToFileMapToTree);
+            setAssetsKeyToDelete((prevPaths) => [...prevPaths, ...assetKeysToDelete]);
 
-            setAssetsKeyToDelete((prevPaths) => [...prevPaths, ...assetsToDelete]);
           } else {
             setAssetsKeyToDelete((prevPaths) => [...prevPaths, asset_key]);
           }

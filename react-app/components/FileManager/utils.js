@@ -127,3 +127,25 @@ export const  findNodeByIdInTree = (object, id) => {
 
   return null;
 }
+
+/**
+ * Recursively extracts asset keys from a tree structure of nodes.
+ *
+ * @param {Object} node - The current node in the tree to process.
+ * @returns {string[]} An array of asset keys found in the tree.
+ */
+export const extractAssetKeys = (node) => {
+  const assetKeys = [];
+
+  if (node.metadata && node.metadata.asset_key) {
+    assetKeys.push(node.metadata.asset_key);
+  }
+
+  if (node.children && node.children.length) {
+    node.children.forEach((child) => {
+      assetKeys.push(...extractAssetKeys(child));
+    });
+  }
+
+  return assetKeys;
+}
