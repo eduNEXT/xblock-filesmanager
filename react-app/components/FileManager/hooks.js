@@ -250,7 +250,8 @@ export const useFileActionHandler = (
   addFile,
   downloadFile,
   deleteFolders,
-  renameFolder
+  renameFolder,
+  downloadFiles
 ) => {
   return useCallback(
     (data) => {
@@ -311,7 +312,7 @@ export const useFileActionHandler = (
         }
 
         if (selectedFiles.length > 1) {
-          alert('You must select a one file to download');
+          downloadFiles(selectedFiles);
         }
       }
     },

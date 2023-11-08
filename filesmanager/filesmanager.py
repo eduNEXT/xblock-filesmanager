@@ -17,10 +17,11 @@ from xblock.core import XBlock
 from xblock.fields import Dict, List, Scope
 from xblock.fragment import Fragment
 from xblockutils.resources import ResourceLoader
+from filesmanager.tasks import create_zip_file_task
+from opaque_keys.edx.keys import AssetKey
 
 try:
     from cms.djangoapps.contentstore.exceptions import AssetNotFoundException
-    from opaque_keys.edx.keys import AssetKey
     from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
     from xmodule.contentstore.content import StaticContent
     from xmodule.contentstore.django import contentstore
@@ -1006,6 +1007,65 @@ class FilesManagerXBlock(XBlock):
             delete_asset(self.course_id, asset_key)
         except AssetNotFoundException as e:
             log.exception(e)
+
+    @XBlock.json_handler
+    def download_content(self, data, suffix=''):
+        """Download the content of a directory.
+
+        Arguments:
+            contents: the path of the directories or files to be downloaded.
+
+        Returns:
+            task_id: the task ID of the async task.
+        """
+        contents = data.get("contents")
+        if not contents:
+            return {
+                "status": "error",
+                "message": "Path not found",
+            }
+        task_result = create_zip_file_task.delay(contents)
+        return {
+            "status": "success",
+            "task_id": task_result.id
+        }
+
+    @XBlock.json_handler
+    def download_status(self, data, suffix=''):
+        """Get the status of the async task.
+
+        Arguments:
+            task_id: the task ID of the async task.
+
+        Returns:
+            status: the status of the async task.
+            result: the result of the async task.
+        """
+        task_id = data.get("task_id")
+        if not task_id:
+            return {
+                "status": "error",
+                "message": "Provide a task ID",
+            }
+        task_result = create_zip_file_task.AsyncResult(task_id)
+        if not task_result:
+            return {
+                "status": "error",
+                "message": "Task not found",
+            }
+        try:
+            status = task_result.status
+            result = task_result.result
+            json.dumps(result)
+        except TypeError as e:
+            log.exception(e)
+            status = "ERROR"
+            result = "Something went wrong. Please try again the download."
+
+        return {
+            "status": status,
+            "result": result
+        }
 
     # TO-DO: change this to create the scenarios you'd like to see in the
     # workbench while developing your XBlock.

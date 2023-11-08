@@ -15,7 +15,7 @@ import xBlockContext from '@constants/xBlockContext';
 import useXBlockActionButtons from '@hooks/useXBlockActionButtons';
 import useFileDownloader from '@hooks/useFileDownloader';
 import useAddErrorMessageToModal from '@hooks/useAddErrorMessageToModal';
-import { syncContent } from '@services/directoriesService';
+import { syncContent, downloadContent, downloadStatus } from '@services/directoriesService';
 import ErrorMessage from '@components/ErrorMessage';
 
 import { useCustomFileMap, useFiles, useFolderChain, useFileActionHandler } from './hooks';
@@ -59,6 +59,43 @@ const FileManager = (props) => {
     downloadFileHook(fullUrl, display_name);
   };
 
+  const downloadFiles = (filesToDownload) => {
+    downloadFilesTemp(filesToDownload)
+  };
+
+  const downloadFilesTemp = async (filesToDownload) => {
+    try {
+        const createContentData = await downloadContent({ contents: filesToDownload });
+        if (createContentData.status !== StatusCodes.OK) {
+          throw new Error('Download content has failed:  Unexpected status code');
+        }
+        let data = createContentData.data;
+        getStatus(data.task_id)
+
+        return Promise.resolve('Download was successful');
+      } catch (error) {
+        return Promise.reject('An error has ocurred while downloading assets');
+      }
+  };
+
+  const getStatus = async (taskID) => {
+    const createContentData = await downloadStatus(taskID);
+    if (createContentData.status !== StatusCodes.OK) {
+        throw new Error('Fetching task status has failed:  Unexpected status code');
+    }
+    let data = createContentData.data;
+    if (data.status === 'SUCCESS') {
+        downloadFileHook(data.result, "download.zip")
+    } else if (data.status === 'ERROR') {
+        onError()
+    } else {
+        setTimeout(() => {
+            getStatus(taskID)
+        }, 1000)
+    }
+    return Promise.resolve('Fetching download was successfully');
+  }
+
   const {
     fileMap,
     currentFolderId,
@@ -99,7 +136,8 @@ const FileManager = (props) => {
     addFile,
     downloadFile,
     deleteFolders,
-    renameFolder
+    renameFolder,
+    downloadFiles
   );
 
   const { xblockId, isEditView } = xBlockContext;
