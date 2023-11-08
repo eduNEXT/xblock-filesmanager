@@ -17,6 +17,8 @@ import sys
 from datetime import datetime
 from subprocess import check_call
 
+from django import setup as django_setup
+
 
 def get_version(*file_paths):
     """
@@ -38,6 +40,9 @@ REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(REPO_ROOT)
 
 VERSION = get_version('../filesmanager', '__init__.py')
+# Configure Django for autodoc usage
+os.environ['DJANGO_SETTINGS_MODULE'] = 'test_settings'
+django_setup()
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -513,6 +518,8 @@ epub_exclude_files = ['search.html']
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3.8', None),
+    'django': ('https://docs.djangoproject.com/en/3.2/', 'https://docs.djangoproject.com/en/3.2/_objects/'),
+    'model_utils': ('https://django-model-utils.readthedocs.io/en/latest/', None),
 }
 
 
