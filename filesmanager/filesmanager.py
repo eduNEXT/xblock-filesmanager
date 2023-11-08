@@ -399,7 +399,10 @@ class FilesManagerXBlock(XBlock):
             self._create_content(contents.get("treeFolders", {}).get("children", []))
         except Exception as e:
             log.exception(e)
-            return Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)
+            return Response(
+                str(e),
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
+            )
         finally:
             self.clean_uploaded_files()
             # self.prefill_directories()
