@@ -1,19 +1,18 @@
 """Definition for the Files Manager XBlock."""
+import json
 import logging
 import os
+from http import HTTPStatus
+from urllib.parse import urljoin
+
 import pkg_resources
-import re
 from django.conf import settings
 from django.utils import translation
 from webob.response import Response
 from xblock.core import XBlock
-from xblock.fields import List, Scope
+from xblock.fields import Dict, List, Scope
 from xblock.fragment import Fragment
 from xblockutils.resources import ResourceLoader
-
-from http import HTTPStatus
-from urllib.parse import urljoin
-
 
 try:
     from cms.djangoapps.contentstore.exceptions import AssetNotFoundException
@@ -96,24 +95,40 @@ class FilesManagerXBlock(XBlock):
     ]
     """
 
-    directories = List(
-        default=[
-            {
-                "name": "unpublished",
-                "type": "directory",
-                "path": "unpublished",
-                "metadata": {},
-                "children": [],
-            }
-        ],
+    directories = Dict(
+        default=
+        {
+            "id": None,
+            "name": "Root",
+            "type": "directory",
+            "path": "Root",
+            "parentId": "",
+            "metadata": {},
+            "children": [
+                # Commented in the meantime while we figure out how to integrate this folder into Chonky
+                # {
+                #     "name": "Unpublished",
+                #     "type": "directory",
+                #     "path": "Root/Unpublished",
+                #     "metadata": {},
+                #     "children": [],
+                # }
+            ],
+        },
         scope=Scope.settings,
-        help="List of directories to be displayed in the Files Manager."
+        help="Directory tree to be displayed in the Files Manager."
     )
 
-    content_ids = List(
+    content_paths = List(
         default=[],
         scope=Scope.settings,
-        help="List of content IDs to be displayed in the Files Manager."
+        help="List of content paths to be displayed in the Files Manager."
+    )
+
+    temporary_uploaded_files = Dict(
+        default={},
+        scope=Scope.settings,
+        help="List of temporary uploaded files."
     )
 
     @property
@@ -268,9 +283,10 @@ class FilesManagerXBlock(XBlock):
             }
         ]
         """
+        # self.prefill_directories()
         return {
             "status": "success",
-            "content": self.directories,
+            "contents": self.directories,
         }
 
     @XBlock.json_handler
@@ -282,11 +298,29 @@ class FilesManagerXBlock(XBlock):
 
         Returns: an empty list of directories.
         """
-        self.initialize_unpublished_directory()
-        self.prefill_directories()
+        self.directories = {
+            "id": self.directories["id"],
+            "name": "Root",
+            "type": "directory",
+            "path": "Root",
+            "parentId": "",
+            "metadata": {},
+            "children": [
+                # Commented in the meantime while we figure out how to integrate this folder into Chonky
+                # {
+                #     "name": "Unpublished",
+                #     "type": "directory",
+                #     "path": "Root/Unpublished",
+                #     "metadata": {},
+                #     "children": [],
+                # }
+            ],
+        }
+        # self.prefill_directories()
+        self.content_paths = []
         return {
             "status": "success",
-            "content": self.directories,
+            "contents": self.directories,
         }
 
     @XBlock.json_handler
@@ -307,55 +341,127 @@ class FilesManagerXBlock(XBlock):
         content, _, _ = self.get_content_by_path(path)
         return {
             "status": "success",
-            "content": content,
-        }
-
-    @XBlock.json_handler
-    def add_directory(self, data, suffix=''):
-        """Add a directory to a target directory.
-
-        The new directory will:
-        - Be added to the target directory, if found. Otherwise, an error will be returned.
-        - Be added to the root directory if no target directory is specified.
-        - Have a unique incremental ID.
-        - Have a path composed by the target directory path and the directory name.
-        - Have an empty list of children.
-
-        Arguments:
-            name: the name and path of the directory to be added.
-            path: the path of the target directory where the new directory will be added.
-        """
-        directory_name = data.get("name")
-        path = data.get("path")
-        target_directory = self.get_target_directory(path)
-        if target_directory is None:
-            return {
-                "status": "error",
-                "message": "Target directory not found",
-            }
-        directory_path = f"{path}/{directory_name}" if path else directory_name
-        if directory_path in self.content_ids:
-            return {
-                "status": "error",
-                "message": "Directory already exists",
-            }
-        self.content_ids.append(directory_path)
-        target_directory.append(
-            {
-                "name": directory_name,
-                "type": "directory",
-                "path": f"{path}/{directory_name}" if path else directory_name,
-                "metadata": {},  # Empty for now but could be used to store the directory data needed by Chonky.
-                "children": [],
-            }
-        )
-        return {
-            "status": "success",
-            "content": target_directory,
+            "contents": content,
         }
 
     @XBlock.handler
-    def upload_files(self, request, suffix=''):  # pylint: disable=unused-argument
+    def sync_content(self, request, suffix=''):
+        """Associate content to the Xblock state and course assets when necessary.
+
+        This handler does the following:
+        - Initialize the directories list with the content of the course assets.
+        - Temporary save the uploaded files so we can reference them later.
+        - Add new content to a target directory or to the root directory.
+        - Clean the temporary uploaded files.
+        - Return the content of the parent directory.
+
+        Arguments:
+            request: the request object containing the content to be added. The content can be
+            directories or a files.
+            Each request must contain the following parameters:
+            - contents: the content to be added with the following format:
+            {
+                "rootFolderId": ...,
+                "treeFolders": {
+                    "id": "<rootFolderId>",
+                    "name": "Root",
+                    "type": "directory",
+                    "path": "Root",
+                    "parentId": "",
+                    "metadata": {},
+                    "children": [
+                        {
+                            "id": <folderId>,
+                            "name": "Folder 1",
+                            "type": "directory",
+                            "path": "Root/Folder 1",
+                            "parentId": "<rootFolderId>",
+                            "children": [
+                                {
+                                    "id": <fileId>,
+                                    "parentId": "<folderId>",
+                                    "name": "File 1",
+                                    "type": "file",
+                                    "path": "Root/Folder 1/File 1",
+                                }
+                            ]
+                        },
+                    ]
+            }
+
+            - file(s): file(s) to be uploaded, in case the content to be added contains files.
+        """
+        try:
+            self.initialize_directories()
+            self.temporary_save_upload_files(request.params.items())
+            contents = json.loads(request.params.get("contents", "[]"))
+            self.directories["id"] = contents.get("rootFolderId", "")
+            self._create_content(contents.get("treeFolders", {}).get("children", []))
+        except Exception as e:
+            log.exception(e)
+            return Response(
+                str(e),
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
+            )
+        finally:
+            self.clean_uploaded_files()
+            # self.prefill_directories()
+        return Response(
+            json_body=self.get_formatted_content(),
+            status=HTTPStatus.OK,
+        )
+
+    def initialize_directories(self):
+        """Initialize the directories list with the content of the course assets.
+
+        The directory data structure is initialized every time the sync_content method is called.
+
+        Returns: None.
+        """
+        self.directories = {
+            "id": None,
+            "name": "Root",
+            "type": "directory",
+            "path": "Root",
+            "parentId": "",
+            "metadata": {},
+            "children": [
+                # Commented in the meantime while we figure out how to integrate this folder into Chonky
+                # {
+                #     "name": "Unpublished",
+                #     "type": "directory",
+                #     "path": "Root/Unpublished",
+                #     "metadata": {},
+                #     "children": [],
+                # }
+            ],
+        }
+        self.content_paths = []
+
+    def _create_content(self, contents):
+        """Add new content to a target directory or to the root directory.
+
+        Arguments:
+            contents: the content to be added.
+        """
+        target_directory = self.directories
+        for content in contents:
+            path = content.get("path").rsplit("/", 1)[0]
+            target_directory = self.get_target_directory(path)
+            if target_directory is None:
+                raise Exception("Target directory not found")
+            if content.get("type") == "directory":
+                self.create_directory(content, target_directory)
+            elif content.get("type") == "file":
+                self.upload_file_to_directory(content, target_directory)
+            else:
+                raise Exception("Content type not found")
+        return {
+            "status": "success",
+            "contents": target_directory,
+        }
+
+    def temporary_save_upload_files(self, uploaded_files):
         """Handler for file upload to the course assets.
 
         Arguments:
@@ -364,97 +470,101 @@ class FilesManagerXBlock(XBlock):
 
         Returns: the content of the target directory.
         """
-        # Temporary fix for supporting both contentstore assets management versions (master / Palm)
+        for content_type, file in uploaded_files:
+            if not content_type.startswith("file"):
+                continue
+            self.temporary_uploaded_files[file.file.name] = file
+
+    def clean_uploaded_files(self):
+        """Clean the temporary uploaded files.
+
+        Returns: None.
+        """
+        self.temporary_uploaded_files = {}
+
+    def generate_content_path(self, base_path, name=None):
+        """Generate a new file name if the file name already exists.
+        Args:
+            base_name (str): The content name to check.
+        Returns:
+            str: The new file name.
+        """
+        if base_path in self.content_paths:
+            base_path = f"{base_path} ({len(self.content_paths)})"
+            name = f"{name} ({len(self.content_paths)})"
+        return base_path, name
+
+    def upload_file_to_directory(self, file, target_directory):
+        """Upload a file to a directory.
+
+        Arguments:
+            file: the file to be uploaded.
+            target_directory: the target directory where the file will be uploaded.
+
+        Returns: the content of the target directory.
+        """
         try:
             from cms.djangoapps.contentstore.views.assets import \
                 update_course_run_asset  # pylint: disable=import-outside-toplevel
         except ImportError:
             from cms.djangoapps.contentstore.asset_storage_handler import \
                 update_course_run_asset  # pylint: disable=import-outside-toplevel
-        target_path = request.params.get("path")
-        target_directory = self.get_target_directory(target_path)
-        if target_directory is None:
-            return Response(
-                status=HTTPStatus.NOT_FOUND,
-                json_body={
-                    "status": "error",
-                    "message": "Target directory not found",
-                }
-            )
 
-        for content_type, file in request.params.items():
-            if not content_type.startswith("file"):
-                continue
-            file_path = f"{target_path}/{file.filename}" if target_path else file.filename
-            if file_path in self.content_ids:
-                return Response(
-                    status=HTTPStatus.CONFLICT,
-                    json_body={
-                        "status": "error",
-                        "message": "File already exists",
-                    }
-                )
-            try:
-                content = update_course_run_asset(self.course_id, file.file)
-                self.content_ids.append(file_path)
-                target_directory.append(
-                    {
-                        "name": file.filename,
-                        "type": "file",
-                        "path": file_path,
-                        "metadata": self.get_asset_json_from_content(content),
-                    }
-                )
-            except Exception as e:  # pylint: disable=broad-except
-                log.exception(e)
-                return Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)
+        file_object = self.temporary_uploaded_files.pop(file.get("name"), None)
+        file_path, name = file.get("path"), file.get("name")
+        metadata = file.get("metadata", {})
 
-        return Response(
-            status=HTTPStatus.OK,
-            json_body=target_directory,
+        if file_object:
+            file_path, name = self.generate_content_path(file_path, file_object.filename)
+            file_object.file._set_name(name)
+            content = update_course_run_asset(self.course_id, file_object.file)
+            metadata = self.get_asset_json_from_content(content)
+
+        target_directory.append(
+            {
+                "id": file.get("id"),
+                "parentId": file.get("parentId", ""),
+                "name": name,
+                "type": "file",
+                "path": file_path,
+                "metadata": metadata,
+            }
         )
+        self.content_paths.append(file_path)
 
-    @XBlock.json_handler
-    def reorganize_content(self, data, suffix=''):
-        """Reorganize a content from a source path to a target path.
+    def create_directory(self, directory, target_directory):
+        """Create a directory.
+
+         The new directory will:
+        - Be added to the target directory, if found. Otherwise, an error will be returned.
+        - Be added to the root directory if no target directory is specified.
+        - Have a path composed by the target directory path and the directory name, this path
+        will be unique.
+        - Have an empty list of children unless the directory from the request contains children.
 
         Arguments:
-            target_path: the path of the target directory where the content will be moved.
-            source_path: the path of the source directory where the content is located.
-            target_index: the index where the content will be inserted in the target directory.
-
-        Returns: the content of the target directory.
+            directory: the directory to be created.
+            target_directory: the target directory where the new directory will be created.
         """
-        target_path = data.get("target_path")
-        source_path = data.get("source_path")
-        target_index = data.get("target_index")
-        if not target_path or not source_path:
-            return {
-                "status": "error",
-                "message": "Path not found",
+        directory_path, name = self.generate_content_path(directory["path"], directory["name"])
+        target_directory.append(
+            {
+                "id": directory.get("id"),
+                "parentId": directory.get("parentId", ""),
+                "name": name,
+                "type": "directory",
+                "path": directory_path,
+                "metadata": {},
+                "children": [],
             }
-        content, index, source_parent_directory = self.get_content_by_path(source_path)
-        target_content, _, target_parent_directory = self.get_content_by_path(target_path)
-        if not content or not target_content:
-            return {
-                "status": "error",
-                "message": "Content not found",
-            }
-        new_content_path = f"{target_content['path']}/{content['name']}"
-        del source_parent_directory[index]
-        if target_index is None:
-            target_content["children"].append(content)
-        else:
-            target_index = 0 if not target_index else int(target_index)
-            new_target_content_directory_children = target_content["children"][:target_index]
-            new_target_content_directory_children.append(content)
-            new_target_content_directory_children.extend(target_content["children"][target_index:])
-            target_content["children"] = new_target_content_directory_children
-        self.update_content_path(content, new_content_path)
-        return {
-            "status": "success",
-            "content": target_parent_directory,
-        }
+        )
+        self.content_paths.append(directory_path)
+
+        for child in directory.get("children", []):
+            if child.get("type") == "directory":
+                self.create_directory(child, target_directory[-1]["children"])
+            else:
+                self.upload_file_to_directory(child, target_directory[-1]["children"])
 
     @XBlock.json_handler
     def delete_content(self, data, suffix=''):
@@ -465,50 +575,28 @@ class FilesManagerXBlock(XBlock):
 
         Returns: the content of the parent directory.
         """
-        paths = data.get("paths")
-        if not paths:
+        contents = data.get("contents")
+        if not contents:
             return {
                 "status": "error",
                 "message": "Path not found",
             }
-        for path in paths:
-            content, index, parent_directory = self.get_content_by_path(path)
+        for content in contents:
             if content:
-                del parent_directory[index]
-                self.delete_content_from_assets(content)
+                self.delete_asset(content)
         return {
             "status": "success",
         }
 
-    @XBlock.json_handler
-    def fill_directories(self, data, suffix=''):
-        """Fill the directories list with the content of the course assets.
+    def get_formatted_content(self):
+        """Get the formatted content of the directories.
 
-        This unorganized content will be added to the unpublished directory, which is the first
-        directory in the directory list.
-
-        Returns: None.
+        Returns: the formatted content of the directories.
         """
-        self.prefill_directories()
         return {
-            "status": "success",
-            "content": self.directories,
+            "rootFolderId": self.directories["id"],
+            "treeFolders": self.directories,
         }
-
-    def initialize_unpublished_directory(self):
-        """Initialize the unpublished directory.
-
-        Returns: None.
-        """
-        self.directories = [
-            {
-                "name": "unpublished",
-                "type": "directory",
-                "path": "unpublished",
-                "metadata": {},
-                "children": [],
-            }
-        ]
 
     def prefill_directories(self):
         """Prefill the directories list with the content of the course assets.
@@ -563,7 +651,6 @@ class FilesManagerXBlock(XBlock):
             current_page += 1
         return serialized_course_assets
 
-
     def get_target_directory(self, path):
         """Get the target directory for a given path.
 
@@ -572,7 +659,7 @@ class FilesManagerXBlock(XBlock):
 
         Returns: the target directory if found, the root directory otherwise.
         """
-        target_directory = self.directories
+        target_directory = self.directories["children"]
         if path:
             target_directory, _, _ = self.get_content_by_path(path)
             if not target_directory:
@@ -652,8 +739,10 @@ class FilesManagerXBlock(XBlock):
 
         Returns: the content, the index of the content in the parent directory and the parent directory.
         """
+        if path == "Root":
+            return self.directories, None, None
         path_tree = path.split("/")
-        parent_directory = self.directories
+        parent_directory = self.directories["children"]
         for directory in path_tree:
             for index, content in enumerate(parent_directory):
                 if content["path"] == path:
@@ -662,39 +751,6 @@ class FilesManagerXBlock(XBlock):
                     parent_directory = content["children"]
                     break
         return None, None, None
-
-    def update_content_path(self, content, path):
-        """Update the path of a content.
-
-        Arguments:
-            content: the content to be updated.
-            path: the new path of the content.
-
-        Returns: the updated content.
-        """
-        content["path"] = path
-        if content.get("type") == "directory":
-            for child in content.get("children", []):
-                self.update_content_path(child, f"{path}/{child['name']}")
-
-    def delete_content_from_assets(self, content):
-        """Delete a content from the course assets.
-
-        Arguments:
-            content: the content to be deleted.
-
-        Returns: None.
-        """
-        if content.get("type") == "file":
-            if asset_key := content.get("metadata", {}).get("asset_key"):
-                self.delete_asset(asset_key)
-                return
-        for child in content.get("children", []):
-            if asset_key := child.get("metadata", {}).get("asset_key"):
-                self.delete_asset(asset_key)
-                continue
-            if child.get("type") == "directory":
-                self.delete_content_from_assets(child)
 
     def delete_asset(self, asset_key):
         """Delete an asset from the course assets.
