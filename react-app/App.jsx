@@ -17,7 +17,7 @@ const App = () => {
   const contentHasId = 'id' in contents && contents.id !== null;
   const directoryTree = contentHasId ? convertTreeToNewFileMapFormat(contents, true) : {};
   const rootFolderId = contentHasId ? contents.id : null;
-  const errorHandlerDirectoriesMessage = gettext('There was an error during processing the directories tree');
+  const errorHandlerDirectoriesMessage = gettext('There was an error while processing the directories tree');
 
   if (error) return <ErrorMessage message={errorHandlerDirectoriesMessage} />;
   if (isLoading) return <Spinner />;
