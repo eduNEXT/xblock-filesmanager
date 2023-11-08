@@ -117,23 +117,6 @@ def is_requirement(line):
     return line and line.strip() and not line.startswith(("-r", "#", "-e", "git+", "-c"))
 
 
-def package_data(pkg, roots):
-    """
-    Declare package_data based on `roots`.
-
-    All of the files under each of the `roots` will be declared as package
-    data for package `pkg`.
-
-    """
-    data = []
-    for root in roots:
-        for dirname, _, files in os.walk(os.path.join(pkg, root)):
-            for fname in files:
-                data.append(os.path.relpath(os.path.join(dirname, fname), pkg))
-
-    return {pkg: data}
-
-
 VERSION = get_version('filesmanager', '__init__.py')
 
 if sys.argv[-1] == 'tag':
@@ -149,7 +132,6 @@ setup(
     name='xblock-filesmanager',
     version=VERSION,
     description="""FilesManager Xblock for Open edX""",
-    long_description_content_type="text/x-rst",
     long_description=README + '\n\n' + CHANGELOG,
     author='eduNEXT',
     author_email='technical@edunext.co',
@@ -158,7 +140,17 @@ setup(
         include=['filesmanager', 'filesmanager.*'],
         exclude=["*tests"],
     ),
-
+    entry_points={
+        'xblock.v1': [
+            'filesmanager = filesmanager.filesmanager:FilesManagerXBlock',
+        ],
+        'lms.djangoapp': [
+            'filesmanager = filesmanager.apps:FilesManagerConfig',
+        ],
+        'cms.djangoapp': [
+            'filesmanager = filesmanager.apps:FilesManagerConfig',
+        ],
+    },
     include_package_data=True,
     install_requires=load_requirements('requirements/base.in'),
     python_requires=">=3.8",
@@ -167,16 +159,12 @@ setup(
     keywords='Python edx',
     classifiers=[
         'Development Status :: 3 - Alpha',
+        'Framework :: Django',
+        'Framework :: Django :: 3.2',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)',
         'Natural Language :: English',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.8',
     ],
-    entry_points={
-        'xblock.v1': [
-            'filesmanager = filesmanager:FilesManagerXBlock',
-        ]
-    },
-    package_data=package_data("filesmanager", ["static", "public"]),
 )
