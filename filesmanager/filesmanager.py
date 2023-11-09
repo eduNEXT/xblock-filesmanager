@@ -427,7 +427,7 @@ class FilesManagerXBlock(XBlock):
             self.temporary_save_upload_files(request.params.items())
             contents = json.loads(request.params.get("contents", "[]"))
             self.directories["id"] = contents.get("rootFolderId", "")
-            self._create_content(contents.get("treeFolders", {}).get("children", []))
+            self._sync_content(contents.get("treeFolders", {}).get("children", []))
         except Exception as e:
             log.exception(e)
             return Response(
@@ -463,7 +463,7 @@ class FilesManagerXBlock(XBlock):
             "Root",
         ]
 
-    def _create_content(self, contents):
+    def _sync_content(self, contents):
         """Add new content to a target directory or to the root directory.
 
         Arguments:
@@ -481,6 +481,8 @@ class FilesManagerXBlock(XBlock):
                 self.upload_file_to_directory(content, target_directory)
             else:
                 raise Exception("Content type not found")
+        if not self.get_content_by_path("Root/Unpublished")[0]:
+            raise Exception("Unpublished directory cannot be removed from the root directory")
         return {
             "status": "success",
             "contents": target_directory,
