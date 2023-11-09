@@ -110,7 +110,7 @@ class FilesManagerXBlock(XBlock):
             "children": [
                 {
                     "id": "unpublished",
-                    "parentId": "",
+                    "parentId": "root",
                     "name": "Unpublished",
                     "type": "directory",
                     "path": "Root/Unpublished",
@@ -422,21 +422,17 @@ class FilesManagerXBlock(XBlock):
 
             - file(s): file(s) to be uploaded, in case the content to be added contains files.
         """
-        try:
-            self.initialize_directories()
-            self.temporary_save_upload_files(request.params.items())
-            contents = json.loads(request.params.get("contents", "[]"))
-            self.directories["id"] = contents.get("rootFolderId", "")
-            self._sync_content(contents.get("treeFolders", {}).get("children", []))
-        except Exception as e:
-            log.exception(e)
-            return Response(
-                str(e),
-                status=HTTPStatus.INTERNAL_SERVER_ERROR,
-            )
-        finally:
-            self.clean_uploaded_files()
-            self.fill_unpublished()
+        self.initialize_directories()
+        self.temporary_save_upload_files(request.params.items())
+
+        contents = json.loads(request.params.get("contents", "[]"))
+        self.directories["id"] = contents.get("rootFolderId", "")
+
+        self._sync_content(contents.get("treeFolders", {}).get("children", []))
+
+        self.clean_uploaded_files()
+        self.fill_unpublished()
+
         return Response(
             json_body=self.get_formatted_content(),
             status=HTTPStatus.OK,
