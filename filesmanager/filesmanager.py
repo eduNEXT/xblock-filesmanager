@@ -101,7 +101,7 @@ class FilesManagerXBlock(XBlock):
     directories = Dict(
         default=
         {
-            "id": None,
+            "id": "root",
             "name": "Root",
             "type": "directory",
             "path": "Root",
@@ -301,7 +301,8 @@ class FilesManagerXBlock(XBlock):
             }
         ]
         """
-        if self.current_user_is_student:
+        # When outside the component edit view where there's anonymous user ID, remove unpublished directory
+        if self.get_current_user().opt_attrs.get(ATTR_KEY_ANONYMOUS_USER_ID):
             dirs_for_student = deepcopy(self.directories)
             for directory in dirs_for_student["children"]:
                 if directory["id"] == "unpublished":
@@ -311,9 +312,8 @@ class FilesManagerXBlock(XBlock):
                 "status": "success",
                 "contents": dirs_for_student,
             }
-        # When in the component edit view where there's no anonymous user ID, prefill directories with course assets
-        if not self.get_current_user().opt_attrs.get(ATTR_KEY_ANONYMOUS_USER_ID):
-            self.fill_unpublished()
+
+        self.fill_unpublished()
         return {
             "status": "success",
             "contents": self.directories,
@@ -451,7 +451,7 @@ class FilesManagerXBlock(XBlock):
         Returns: None.
         """
         self.directories = {
-            "id": None,
+            "id": "root",
             "name": "Root",
             "type": "directory",
             "path": "Root",
@@ -639,7 +639,7 @@ class FilesManagerXBlock(XBlock):
             if not content:
                 unpublished_directory["children"].append(
                     {
-                        "id": uuid.uuid4().hex,
+                        "id": course_asset["id"],
                         "parentId": unpublished_directory["id"],
                         "name": course_asset["display_name"],
                         "type": "file",
