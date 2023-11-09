@@ -149,14 +149,6 @@ class FilesManagerXBlock(XBlock):
         """
         return str(self.scope_ids.usage_id.block_id)
 
-    @property
-    def current_user_is_student(self):
-        """
-        Check if the user is a student.
-        """
-        current_user = self.runtime.service(self, "user").get_current_user()
-        return current_user.opt_attrs.get("edx-platform.user_role") == "student"
-
     def get_current_user(self):
         """
         Get the current user.
