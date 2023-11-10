@@ -4,30 +4,105 @@
 #
 #    make upgrade
 #
+certifi==2023.7.22
+    # via requests
+cffi==1.16.0
+    # via cryptography
+charset-normalizer==3.3.2
+    # via requests
+cryptography==41.0.5
+    # via secretstorage
 distlib==0.3.7
     # via virtualenv
-filelock==3.12.4
+docutils==0.20.1
+    # via readme-renderer
+filelock==3.13.1
     # via
     #   tox
     #   virtualenv
+idna==3.4
+    # via requests
+importlib-metadata==6.8.0
+    # via
+    #   keyring
+    #   twine
+importlib-resources==6.1.1
+    # via keyring
+jaraco-classes==3.3.0
+    # via keyring
+jeepney==0.8.0
+    # via
+    #   keyring
+    #   secretstorage
+keyring==24.2.0
+    # via twine
+markdown-it-py==3.0.0
+    # via rich
+mdurl==0.1.2
+    # via markdown-it-py
+more-itertools==10.1.0
+    # via jaraco-classes
+nh3==0.2.14
+    # via readme-renderer
 packaging==23.2
-    # via tox
+    # via
+    #   pyproject-api
+    #   tox
+pkginfo==1.9.6
+    # via twine
 platformdirs==3.11.0
-    # via virtualenv
+    # via
+    #   -c requirements/constraints.txt
+    #   tox
+    #   virtualenv
 pluggy==1.3.0
     # via tox
 py==1.11.0
     # via tox
+pycparser==2.21
+    # via cffi
+pygments==2.16.1
+    # via
+    #   readme-renderer
+    #   rich
+readme-renderer==42.0
+    # via twine
+requests==2.31.0
+    # via
+    #   requests-toolbelt
+    #   twine
+requests-toolbelt==1.0.0
+    # via twine
+rfc3986==2.0.0
+    # via twine
+rich==13.6.0
+    # via twine
+secretstorage==3.3.3
+    # via keyring
 six==1.16.0
     # via tox
 tomli==2.0.1
-    # via tox
+    # via
+    #   pyproject-api
+    #   tox
 tox==3.28.0
     # via
-    #   -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
     #   -r requirements/ci.in
     #   tox-battery
 tox-battery==0.6.2
     # via -r requirements/ci.in
-virtualenv==20.24.5
+twine==4.0.2
+    # via -r requirements/ci.in
+typing-extensions==4.8.0
+    # via rich
+urllib3==1.26.18
+    # via
+    #   -c requirements/constraints.txt
+    #   requests
+    #   twine
+virtualenv==20.24.6
     # via tox
+zipp==3.17.0
+    # via
+    #   importlib-metadata
+    #   importlib-resources
