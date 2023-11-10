@@ -852,7 +852,7 @@ class FilesManagerXBlock(XBlock):
         ]
 
     @staticmethod
-    def _get_statici18n_js_url():
+    def _get_statici18n_js_url(): # pragma: no cover
         """
         Returns the Javascript translation file for the currently selected language, if any.
         Defaults to English if available.

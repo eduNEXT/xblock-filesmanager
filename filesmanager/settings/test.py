@@ -1,3 +1,7 @@
+"""
+Settings for the Files Manager XBlock for testing purposes.
+"""
+
 # SECURITY WARNING: keep the secret key used in production secret!
 DATABASES = {
     "default": {
