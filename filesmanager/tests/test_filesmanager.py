@@ -11,30 +11,6 @@ from django.test.utils import override_settings
 from filesmanager.filesmanager import FilesManagerXBlock
 
 
-CONTENT = {
-    "rootFolderId": "root",
-    "treeFolders": {
-        "id": "root",
-        "name": "Root",
-        "type": "directory",
-        "path": "Root",
-        "metadata": {},
-        "parentId": "",
-        "children": [
-            {
-                "id": "unpublished",
-                "name": "Unpublished",
-                "type": "directory",
-                "path": "Root/Unpublished",
-                "metadata": {},
-                "parentId": "root",
-                "children": [],
-            }
-        ],
-    },
-}
-
-
 class FilesManagerXBlockTestMixin(TestCase):
     """
     Mixin for the FilesManagerXBlock test suite.
@@ -121,7 +97,7 @@ class TestFilesManagerXBlockHandlers(FilesManagerXBlockTestMixin):
 
         self.xblock.fill_unpublished.assert_not_called()
         self.assertEqual(HTTPStatus.OK, response.status_code)
-        self.assertEqual(expected_result, response.json)
+        self.assertEqual(expected_result, response.json)  # pylint: disable=no-member
 
     def test_get_directories_non_anonymous_user(self):
         """
@@ -141,7 +117,7 @@ class TestFilesManagerXBlockHandlers(FilesManagerXBlockTestMixin):
 
         self.xblock.fill_unpublished.assert_called()
         self.assertEqual(HTTPStatus.OK, response.status_code)
-        self.assertEqual(expected_result, response.json)
+        self.assertEqual(expected_result, response.json)  # pylint: disable=no-member
 
     def test_sync_content(self):
         """
@@ -151,7 +127,29 @@ class TestFilesManagerXBlockHandlers(FilesManagerXBlockTestMixin):
             - The view returns 200 status code.
             - The directories and files are synced.
         """
-        self.request.params = {"contents": json.dumps(CONTENT)}
+        content = {
+            "rootFolderId": "root",
+            "treeFolders": {
+                "id": "root",
+                "name": "Root",
+                "type": "directory",
+                "path": "Root",
+                "metadata": {},
+                "parentId": "",
+                "children": [
+                    {
+                        "id": "unpublished",
+                        "name": "Unpublished",
+                        "type": "directory",
+                        "path": "Root/Unpublished",
+                        "metadata": {},
+                        "parentId": "root",
+                        "children": [],
+                    }
+                ],
+            },
+        }
+        self.request.params = {"contents": json.dumps(content)}
         expected_result = {
             "rootFolderId": self.xblock.directories["id"],
             "treeFolders": self.xblock.directories,
@@ -164,7 +162,7 @@ class TestFilesManagerXBlockHandlers(FilesManagerXBlockTestMixin):
             self.request.params.items()
         )
         self.xblock._sync_content.assert_called_once_with(  # pylint: disable=protected-access
-            CONTENT["treeFolders"]["children"]
+            content["treeFolders"]["children"]
         )
         self.xblock.clean_uploaded_files.assert_called_once()
         self.xblock.fill_unpublished.assert_called_once()
@@ -188,7 +186,9 @@ class TestFilesManagerXBlockHandlers(FilesManagerXBlockTestMixin):
             [call(content) for content in contents]
         )
         self.assertEqual(HTTPStatus.OK, response.status_code)
-        self.assertEqual({"status": "success"}, response.json)
+        self.assertEqual(
+            {"status": "success"}, response.json # pylint: disable=no-member
+        )
 
     def test_delete_content_without_contents(self):
         """
@@ -205,7 +205,8 @@ class TestFilesManagerXBlockHandlers(FilesManagerXBlockTestMixin):
         self.xblock.delete_asset.assert_not_called()
         self.assertEqual(HTTPStatus.OK, response.status_code)
         self.assertEqual(
-            {"status": "error", "message": "Path not found"}, response.json
+            {"status": "error", "message": "Path not found"},
+            response.json,  # pylint: disable=no-member
         )
 
 

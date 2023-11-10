@@ -272,7 +272,7 @@ class FilesManagerXBlock(XBlock):
         return frag
 
     @XBlock.json_handler
-    def get_directories(self, data, suffix=''):
+    def get_directories(self, data, suffix=''): # pylint: disable=unused-argument
         """Get the list of directories.
 
 
@@ -313,7 +313,7 @@ class FilesManagerXBlock(XBlock):
         }
 
     @XBlock.json_handler
-    def clear_directories(self, data, suffix=''):
+    def clear_directories(self, data, suffix=''): # pylint: disable=unused-argument
         """Clear the list of directories without removing files from course assets.
 
         All the directories will be removed except the unpublished directory,
@@ -348,7 +348,7 @@ class FilesManagerXBlock(XBlock):
         }
 
     @XBlock.json_handler
-    def get_content(self, data, suffix=''):
+    def get_content(self, data, suffix=''): # pylint: disable=unused-argument
         """Get the content of a directory.
 
         Arguments:
@@ -369,7 +369,7 @@ class FilesManagerXBlock(XBlock):
         }
 
     @XBlock.handler
-    def sync_content(self, request, suffix=''):
+    def sync_content(self, request, suffix=''): # pylint: disable=unused-argument
         """Associate content to the Xblock state and course assets when necessary.
 
         This handler does the following:
@@ -575,7 +575,7 @@ class FilesManagerXBlock(XBlock):
 
         if file_object:
             file_path, name = self.generate_content_path(file_path, file_object.filename)
-            file_object.file._set_name(name)
+            file_object.file._set_name(name) # pylint: disable=protected-access
             content = update_course_run_asset(self.course_id, file_object.file)
             metadata = self.get_asset_json_from_content(content)
 
@@ -626,7 +626,7 @@ class FilesManagerXBlock(XBlock):
                 self.upload_file_to_directory(child, target_directory[-1]["children"])
 
     @XBlock.json_handler
-    def delete_content(self, data, suffix=''):
+    def delete_content(self, data, suffix=''): # pylint: disable=unused-argument
         """Delete a content from the course assets.
 
         Arguments:
@@ -725,7 +725,7 @@ class FilesManagerXBlock(XBlock):
         if path:
             target_directory, _, _ = self.get_content_by_path(path)
             if not target_directory:
-                return
+                return None
             target_directory = target_directory["children"]
         return target_directory
 
@@ -830,7 +830,7 @@ class FilesManagerXBlock(XBlock):
         asset_key = AssetKey.from_string(asset_key)
         try:
             delete_asset(self.course_id, asset_key)
-        except AssetNotFoundException as e:  # pylint: disable=broad-except
+        except AssetNotFoundException as e:
             log.exception(e)
 
     # TO-DO: change this to create the scenarios you'd like to see in the
