@@ -306,6 +306,7 @@ class FilesManagerXBlock(XBlock):
             }
 
         self.fill_unpublished()
+        self.sync_with_course_assets()
         return {
             "status": "success",
             "contents": self.directories,
@@ -475,6 +476,49 @@ class FilesManagerXBlock(XBlock):
             "status": "success",
             "contents": target_directory,
         }
+
+    def sync_with_course_assets(self):
+        """Sync files according to the course assets.
+
+        This method does the following:
+        - Get all files from the course assets.
+        - Get all files from the directories list.
+        - Compare the files from the course assets with the files from the directories list.
+        - Remove the files that are in the directory list but not in the course assets.
+        """
+        course_assets_files = self.get_all_serialized_assets()
+        directories_files = self.get_all_files(self.directories["children"])
+        for file in directories_files:
+            if file["metadata"] not in course_assets_files:
+                self.delete_file_from_directory(file)
+
+    def delete_file_from_directory(self, file):
+        """Delete an file from a directory.
+
+        Arguments:
+            file: the file to be deleted.
+
+        Returns: None.
+        """
+        content, index, parent_directory = self.get_content_by_path(file["path"])
+        if content:
+            del parent_directory[index]
+
+    def get_all_files(self, directory):
+        """Get all the files from a directory.
+
+        Arguments:
+            directory: the directory to be scanned.
+
+        Returns: the list of files.
+        """
+        files = []
+        for content in directory:
+            if content["type"] == "file":
+                files.append(content)
+            else:
+                files.extend(self.get_all_files(content["children"]))
+        return files
 
     def temporary_save_upload_files(self, uploaded_files):
         """Handler for file upload to the course assets.
