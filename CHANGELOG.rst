@@ -16,6 +16,17 @@ Unreleased
 
 *
 
+0.2.0 – 2023-11-13
+**********************************************
+
+Added
+=====
+
+* Webpack bundle from React app Chonky.
+* Add file manager handlers for dummy lib in studio view and then for Chonky.
+* Add an unpublished directory for unorganized course assets.
+* Sync directory data structure to accommodate Chonky definitions.
+
 0.1.0 – 2023-08-22
 **********************************************
 
