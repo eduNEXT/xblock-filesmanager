@@ -2,6 +2,7 @@
 import json
 import logging
 import os
+from copy import deepcopy
 from http import HTTPStatus
 from urllib.parse import urljoin
 
@@ -29,8 +30,10 @@ except ImportError:
 
 log = logging.getLogger(__name__)
 COURSE_ASSETS_PAGE_SIZE = 100
+ATTR_KEY_ANONYMOUS_USER_ID = 'edx-platform.anonymous_user_id'
 
 
+@XBlock.wants("user")
 class FilesManagerXBlock(XBlock):
     """
     Xblock to manage files which live in the course assets.
@@ -98,21 +101,22 @@ class FilesManagerXBlock(XBlock):
     directories = Dict(
         default=
         {
-            "id": None,
+            "id": "root",
             "name": "Root",
             "type": "directory",
             "path": "Root",
             "parentId": "",
             "metadata": {},
             "children": [
-                # Commented in the meantime while we figure out how to integrate this folder into Chonky
-                # {
-                #     "name": "Unpublished",
-                #     "type": "directory",
-                #     "path": "Root/Unpublished",
-                #     "metadata": {},
-                #     "children": [],
-                # }
+                {
+                    "id": "unpublished",
+                    "parentId": "root",
+                    "name": "Unpublished",
+                    "type": "directory",
+                    "path": "Root/Unpublished",
+                    "metadata": {},
+                    "children": [],
+                }
             ],
         },
         scope=Scope.settings,
@@ -144,6 +148,12 @@ class FilesManagerXBlock(XBlock):
         Return the usage_id of the block parsed which means all after '@' symbol.
         """
         return str(self.scope_ids.usage_id.block_id)
+
+    def get_current_user(self):
+        """
+        Get the current user.
+        """
+        return self.runtime.service(self, "user").get_current_user()
 
     def read_file(self, path: str):
         """Helper for reading a file using a relative path"""
@@ -283,7 +293,19 @@ class FilesManagerXBlock(XBlock):
             }
         ]
         """
-        # self.prefill_directories()
+        # When outside the component edit view where there's anonymous user ID, remove unpublished directory
+        if self.get_current_user().opt_attrs.get(ATTR_KEY_ANONYMOUS_USER_ID):
+            dirs_for_student = deepcopy(self.directories)
+            for directory in dirs_for_student["children"]:
+                if directory["id"] == "unpublished":
+                    dirs_for_student["children"].remove(directory)
+                    break
+            return {
+                "status": "success",
+                "contents": dirs_for_student,
+            }
+
+        self.fill_unpublished()
         return {
             "status": "success",
             "contents": self.directories,
@@ -306,17 +328,18 @@ class FilesManagerXBlock(XBlock):
             "parentId": "",
             "metadata": {},
             "children": [
-                # Commented in the meantime while we figure out how to integrate this folder into Chonky
-                # {
-                #     "name": "Unpublished",
-                #     "type": "directory",
-                #     "path": "Root/Unpublished",
-                #     "metadata": {},
-                #     "children": [],
-                # }
+                {
+                    "id": "unpublished",
+                    "parentId": self.directories["id"],
+                    "name": "Unpublished",
+                    "type": "directory",
+                    "path": "Root/Unpublished",
+                    "metadata": {},
+                    "children": [],
+                }
             ],
         }
-        # self.prefill_directories()
+        self.fill_unpublished()
         self.content_paths = []
         return {
             "status": "success",
@@ -391,21 +414,17 @@ class FilesManagerXBlock(XBlock):
 
             - file(s): file(s) to be uploaded, in case the content to be added contains files.
         """
-        try:
-            self.initialize_directories()
-            self.temporary_save_upload_files(request.params.items())
-            contents = json.loads(request.params.get("contents", "[]"))
-            self.directories["id"] = contents.get("rootFolderId", "")
-            self._create_content(contents.get("treeFolders", {}).get("children", []))
-        except Exception as e:
-            log.exception(e)
-            return Response(
-                str(e),
-                status=HTTPStatus.INTERNAL_SERVER_ERROR,
-            )
-        finally:
-            self.clean_uploaded_files()
-            # self.prefill_directories()
+        self.initialize_directories()
+        self.temporary_save_upload_files(request.params.items())
+
+        contents = json.loads(request.params.get("contents", "[]"))
+        self.directories["id"] = contents.get("rootFolderId", "")
+
+        self._sync_content(contents.get("treeFolders", {}).get("children", []))
+
+        self.clean_uploaded_files()
+        self.fill_unpublished()
+
         return Response(
             json_body=self.get_formatted_content(),
             status=HTTPStatus.OK,
@@ -415,30 +434,24 @@ class FilesManagerXBlock(XBlock):
         """Initialize the directories list with the content of the course assets.
 
         The directory data structure is initialized every time the sync_content method is called.
+        While initializing, the root/unpublished directory is created.
 
         Returns: None.
         """
         self.directories = {
-            "id": None,
+            "id": "root",
             "name": "Root",
             "type": "directory",
             "path": "Root",
             "parentId": "",
             "metadata": {},
-            "children": [
-                # Commented in the meantime while we figure out how to integrate this folder into Chonky
-                # {
-                #     "name": "Unpublished",
-                #     "type": "directory",
-                #     "path": "Root/Unpublished",
-                #     "metadata": {},
-                #     "children": [],
-                # }
-            ],
+            "children": [],
         }
-        self.content_paths = []
+        self.content_paths = [
+            "Root",
+        ]
 
-    def _create_content(self, contents):
+    def _sync_content(self, contents):
         """Add new content to a target directory or to the root directory.
 
         Arguments:
@@ -456,6 +469,8 @@ class FilesManagerXBlock(XBlock):
                 self.upload_file_to_directory(content, target_directory)
             else:
                 raise Exception("Content type not found")
+        if not self.get_content_by_path("Root/Unpublished")[0]:
+            raise Exception("Unpublished directory cannot be removed from the root directory")
         return {
             "status": "success",
             "contents": target_directory,
@@ -598,7 +613,7 @@ class FilesManagerXBlock(XBlock):
             "treeFolders": self.directories,
         }
 
-    def prefill_directories(self):
+    def fill_unpublished(self):
         """Prefill the directories list with the content of the course assets.
 
         This unorganized content will be added to the unpublished directory, which is the first
@@ -606,16 +621,19 @@ class FilesManagerXBlock(XBlock):
 
         Returns: None.
         """
-        unpublished_directory = self.directories[0]
+        unpublished_directory = self.get_content_by_path("Root/Unpublished")[0]
+        unpublished_directory["parentId"] = self.directories["id"]
         all_course_assets = self.get_all_serialized_assets()
         for course_asset in all_course_assets:
-            content, _, _ = self.get_content_by_name(course_asset["display_name"], self.directories)
+            content, _, _ = self.get_content_by_name(course_asset["display_name"], self.directories["children"])
             if not content:
                 unpublished_directory["children"].append(
                     {
+                        "id": course_asset["id"],
+                        "parentId": unpublished_directory["id"],
                         "name": course_asset["display_name"],
                         "type": "file",
-                        "path": f"unpublished/{course_asset['display_name']}",
+                        "path": f"Root/Unpublished/{course_asset['display_name']}",
                         "metadata": course_asset,
                     }
                 )
