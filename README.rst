@@ -94,6 +94,10 @@ Upload files
    In addition, instructors can preview files and folders that have been added
    to the component before publishing the changes in the course.
 
+   **NOTE:** The files uploaded to the component will be available in the course assets, However
+   the name of them will be changed to a random string. This is done to avoid conflicts
+   with files that have the same name.
+
 Delete files
 ============
 To delete a file, the following must be taken into account:
