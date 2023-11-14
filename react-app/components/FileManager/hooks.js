@@ -172,16 +172,6 @@ export const useCustomFileMap = (prepareCustomFileMap) => {
     setFileMap((currentFileMap) => {
       const newFileMap = _.cloneDeep(currentFileMap);
       const parentName = newFileMap[currentFolderIdRef.current].name || '';
-      const currentFolderKeys = Object.keys(newFileMap);
-      const parentId = currentFolderIdRef.current;
-
-      const isFileAdded = currentFolderKeys.some(
-        (key) => newFileMap[key].name === fileName && newFileMap[key].parentId === parentId
-      );
-
-      if (isFileAdded) {
-        return newFileMap;
-      }
 
       const newFileId = uuidv4();
       const newFileContent = {
