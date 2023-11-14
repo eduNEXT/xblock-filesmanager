@@ -7,8 +7,8 @@ Purpose
 *******
 
 Files Manager XBlock is a pluggable extension to the Open edX platform that
-allows course creators to add a file manager to manage files and folders, and
-students to view and download them.
+allows course creators to add a file manager to upload/download files and
+create, delete and download folders, and students to view and download them.
 
 It leverages the `chonky component`_ to provide a intuituve and complete file
 manager that allows users to upload, download, delete and move files and
@@ -58,7 +58,9 @@ Using the Files Manager Component
 
 1. Go to edit section of the component from Studio.
 2. Create your folders structure by clicking on the **Create folder** button.
-3. Upload files by clicking on the **Upload files** button.
+3. Upload files by clicking on the **Upload files** button. The uploaded files
+   are added to the course assets, and they can be viewed from **Content** >
+   **Files** in Studio.
 
    .. image:: https://github.com/eduNEXT/xblock-filesmanager/assets/64033729/87b8a552-a8a2-4879-89b0-5fff0d308dab
       :alt: Files Manager Component
@@ -66,17 +68,17 @@ Using the Files Manager Component
    **NOTE:** The soported files types are the same as the ones supported by the
    Open edX platform.
 
-The instructors have an **Unpublished** folder where they can view the files
+The instructors have an **Unpublished** folder where they can view files
 into the course assets that have not been categorized yet in the component.
-This folder is not visible to the students. In addition, the instructors can
-preview the files and folders that have been added to the component before
+This folder is not visible to the students. In addition, instructors can
+preview files and folders that have been added to the component before
 publishing the changes in the course.
 
 
 View from the Learning Management System (LMS)
 **********************************************
 
-The students can view and download the files and folders that have been added to the
+The students can view and download files and folders that have been added to the
 component from the LMS. The download can be individual or multiple (as a zip file).
 
 .. image:: https://github.com/eduNEXT/xblock-filesmanager/assets/64033729/fb174233-0b5e-4506-8335-e7197121f2f6
@@ -91,7 +93,7 @@ interactive components.
 
 .. _XBlock: https://openedx.org/r/xblock
 
-You can see the Images Gallery component in action in the XBlock Workbench.
+You can see the Files Manager component in action in the XBlock Workbench.
 Running the Workbench requires having docker running.
 
 .. code:: bash
@@ -104,7 +106,7 @@ Running the Workbench requires having docker running.
     make install
     make dev.run
 
-Once the process is done, you can interact with the Images Gallery XBlock in
+Once the process is done, you can interact with the Files Manager XBlock in
 the Workbench by navigating to http://localhost:8000
 
 For details regarding how to deploy this or any other XBlock in the Open edX
