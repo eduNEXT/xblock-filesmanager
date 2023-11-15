@@ -26,6 +26,7 @@ class FilesManagerXBlockTestMixin(TestCase):
             scope_ids=Mock(),
         )
         self.xblock.fill_unpublished = Mock()
+        self.xblock.sync_with_course_assets = Mock()
         self.xblock.get_current_user = Mock()
         self.xblock.initialize_directories = Mock()
         self.xblock.temporary_save_upload_files = Mock()
@@ -116,6 +117,7 @@ class TestFilesManagerXBlockHandlers(FilesManagerXBlockTestMixin):
         response = self.xblock.get_directories(self.request)
 
         self.xblock.fill_unpublished.assert_called()
+        self.xblock.sync_with_course_assets.assert_called()
         self.assertEqual(HTTPStatus.OK, response.status_code)
         self.assertEqual(expected_result, response.json)  # pylint: disable=no-member
 
