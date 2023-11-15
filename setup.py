@@ -149,6 +149,7 @@ setup(
     name='xblock-filesmanager',
     version=VERSION,
     description="""FilesManager Xblock for Open edX""",
+    long_description_content_type="text/x-rst",
     long_description=README + '\n\n' + CHANGELOG,
     author='eduNEXT',
     author_email='technical@edunext.co',

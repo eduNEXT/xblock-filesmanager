@@ -1,3 +1,9 @@
 [run]
 branch = True
+data_file = .coverage
 source = filesmanager
+omit =
+    tests
+    filesmanager/settings
+    filesmanager/locale
+    filesmanager/static
