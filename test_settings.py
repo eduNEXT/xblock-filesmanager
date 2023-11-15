@@ -39,8 +39,6 @@ LOCALE_PATHS = [
     root('filesmanager', 'conf', 'locale'),
 ]
 
-ROOT_URLCONF = 'filesmanager.urls'
-
 SECRET_KEY = 'insecure-secret-key'
 
 MIDDLEWARE = (
