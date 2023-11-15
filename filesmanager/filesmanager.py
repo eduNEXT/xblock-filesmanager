@@ -1,4 +1,5 @@
 """Definition for the Files Manager XBlock."""
+import datetime
 import json
 import logging
 import os
@@ -745,9 +746,10 @@ class FilesManagerXBlock(XBlock):
             "display_name": content.name,
             "url": str(asset_url),
             "content_type": content.content_type,
-            "file_size": content.length,
+            "file_size": int(content.length),
             "external_url": urljoin(configuration_helpers.get_value('LMS_ROOT_URL', settings.LMS_ROOT_URL), asset_url),
             "thumbnail": urljoin(configuration_helpers.get_value('LMS_ROOT_URL', settings.LMS_ROOT_URL), thumbnail_url),
+            "uploaded_at": datetime.datetime.now().isoformat()
         }
 
     def get_asset_json_from_dict(self, asset):
