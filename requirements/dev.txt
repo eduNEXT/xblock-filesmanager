@@ -17,11 +17,11 @@ astroid==3.0.1
     #   -r requirements/quality.txt
     #   pylint
     #   pylint-celery
-boto3==1.28.83
+boto3==1.29.0
     # via
     #   -r requirements/quality.txt
     #   fs-s3fs
-botocore==1.31.83
+botocore==1.32.0
     # via
     #   -r requirements/quality.txt
     #   boto3
@@ -69,7 +69,7 @@ cryptography==41.0.5
     # via
     #   -r requirements/ci.txt
     #   secretstorage
-diff-cover==8.0.0
+diff-cover==8.0.1
     # via -r requirements/dev.in
 dill==0.3.7
     # via
@@ -164,7 +164,7 @@ jmespath==1.0.1
     #   -r requirements/quality.txt
     #   boto3
     #   botocore
-keyring==24.2.0
+keyring==24.3.0
     # via
     #   -r requirements/ci.txt
     #   twine
@@ -236,6 +236,7 @@ pkginfo==1.9.6
     #   twine
 platformdirs==3.11.0
     # via
+    #   -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
     #   -c requirements/constraints.txt
     #   -r requirements/ci.txt
     #   -r requirements/quality.txt
@@ -340,7 +341,7 @@ rfc3986==2.0.0
     # via
     #   -r requirements/ci.txt
     #   twine
-rich==13.6.0
+rich==13.7.0
     # via
     #   -r requirements/ci.txt
     #   twine
@@ -394,7 +395,7 @@ tomli==2.0.1
     #   pyproject-hooks
     #   pytest
     #   tox
-tomlkit==0.12.2
+tomlkit==0.12.3
     # via
     #   -r requirements/quality.txt
     #   pylint
