@@ -34,7 +34,7 @@ class FilesManagerXBlockTestMixin(TestCase):
         self.xblock.clean_uploaded_files = Mock()
         self.xblock.delete_asset = Mock()
         self.xblock.content_paths = []
-        self.xblock.temporary_uploaded_files = {}
+        self.xblock.temporary_uploaded_files = []
         self.xblock.directories = {
             "id": "root",
             "name": "Root",
@@ -261,7 +261,7 @@ class TestFilesManagerXBlockUtilities(TestCase):
                 }
             ],
         }
-        self.xblock.temporary_uploaded_files = {}
+        self.xblock.temporary_uploaded_files = []
         self.xblock.content_paths = []
         self.xblock.course_id = Mock()
 
@@ -381,8 +381,8 @@ class TestFilesManagerXBlockUtilities(TestCase):
 
         self.xblock.temporary_save_upload_files(uploaded_files)
 
-        self.assertIn("file1", self.xblock.temporary_uploaded_files)
-        self.assertIn("file2", self.xblock.temporary_uploaded_files)
+        self.assertIn(file1, self.xblock.temporary_uploaded_files)
+        self.assertIn(file2, self.xblock.temporary_uploaded_files)
 
     def test_temporary_save_upload_files_without_file(self):
         """
@@ -411,7 +411,7 @@ class TestFilesManagerXBlockUtilities(TestCase):
 
         self.xblock.temporary_save_upload_files(uploaded_files)
 
-        self.assertIn("file1", self.xblock.temporary_uploaded_files)
+        self.assertIn(file1, self.xblock.temporary_uploaded_files)
         self.assertNotIn("non-file1", self.xblock.temporary_uploaded_files)
 
     def test_generate_content_path_without_existing_path(self):
@@ -436,14 +436,14 @@ class TestFilesManagerXBlockUtilities(TestCase):
         Expected result:
             - The base path and name are returned with a suffix.
         """
-        base_path = "path/to/content"
-        name = "content"
+        base_path = "path/to/content.txt"
+        name = "content.txt"
         self.xblock.content_paths.append(base_path)
 
         new_base_path, new_name = self.xblock.generate_content_path(base_path, name)
 
-        self.assertEqual(f"{base_path} (1)", new_base_path)
-        self.assertEqual(f"{name} (1)", new_name)
+        self.assertEqual("path/to/content (1).txt", new_base_path)
+        self.assertEqual("content (1).txt", new_name)
 
     def test_generate_content_path_with_multiple_existing_paths(self):
         """
@@ -452,14 +452,15 @@ class TestFilesManagerXBlockUtilities(TestCase):
         Expected result:
             - The base path and name are returned with a suffix.
         """
-        base_path = "path/to/content"
-        name = "content"
-        self.xblock.content_paths.extend([base_path, base_path])
+        base_path = "path/to/content.txt"
+        base_path2 = "path/to/content (1).txt"
+        name = "content.txt"
+        self.xblock.content_paths.extend([base_path, base_path2])
 
         new_base_path, new_name = self.xblock.generate_content_path(base_path, name)
 
-        self.assertEqual(f"{base_path} (2)", new_base_path)
-        self.assertEqual(f"{name} (2)", new_name)
+        self.assertEqual("path/to/content (2).txt", new_base_path)
+        self.assertEqual("content (2).txt", new_name)
 
     def test_create_directory(self):
         """
