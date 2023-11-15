@@ -56,23 +56,81 @@ From Studio, you can add the Files Manager Component to a course unit.
 Using the Files Manager Component
 *********************************
 
+Create folders
+==============
 1. Go to edit section of the component from Studio.
 2. Create your folders structure by clicking on the **Create folder** button.
-3. Upload files by clicking on the **Upload files** button. The uploaded files
-   are added to the course assets, and they can be viewed from **Content** >
-   **Files** in Studio.
 
-   .. image:: https://github.com/eduNEXT/xblock-filesmanager/assets/64033729/87b8a552-a8a2-4879-89b0-5fff0d308dab
-      :alt: Files Manager Component
+   .. image:: https://github.com/eduNEXT/xblock-filesmanager/assets/64033729/27fa71a1-0bd7-4c64-9ff1-c8275bf40ace
+      :alt: Create folder
+
+Upload files
+============
+1. Go to edit section of the component from Studio.
+2. Upload files by clicking on the **Upload files** button.
+
+   .. image:: https://github.com/eduNEXT/xblock-filesmanager/assets/64033729/5f9af287-8c79-4867-8624-9e2ac610c6ae
+      :alt: Upload files
 
    **NOTE:** The soported files types are the same as the ones supported by the
    Open edX platform.
 
-The instructors have an **Unpublished** folder where they can view files
-into the course assets that have not been categorized yet in the component.
-This folder is not visible to the students. In addition, instructors can
-preview files and folders that have been added to the component before
-publishing the changes in the course.
+3. The uploaded files are added to the course assets, and they can be viewed
+   from **Content** > **Files** in Studio.
+
+   .. image:: https://github.com/eduNEXT/xblock-filesmanager/assets/64033729/36d6b09d-b2e7-496e-9677-b24d61f5998c
+      :alt: Files in Course Assets
+
+4. The instructors have an **Unpublished** folder where they can view files
+   into the course assets that have not been categorized yet in the component.
+   This folder is not visible to the students.
+
+   .. image:: https://github.com/eduNEXT/xblock-filesmanager/assets/64033729/ca4c27d7-5797-4293-bcd3-38a3845b72e7
+      :alt: Course Assets Unpublished folder
+
+   .. image:: https://github.com/eduNEXT/xblock-filesmanager/assets/64033729/bd7d838a-71ba-4296-94f8-613cc3da5c69
+      :alt: Unpublished folder
+
+   In addition, instructors can preview files and folders that have been added
+   to the component before publishing the changes in the course.
+
+Delete files
+============
+To delete a file, the following must be taken into account:
+
+1. The deletion of files directly from the Files Manager component is
+   restricted. If you want to delete a file, you must do it from the course
+   assets.
+
+   .. image:: https://github.com/eduNEXT/xblock-filesmanager/assets/64033729/5fab112b-4e87-453f-801d-8ab51eb55c7a
+      :alt: Delete file
+
+   .. image:: https://github.com/eduNEXT/xblock-filesmanager/assets/64033729/144d9e6f-db54-42fc-a387-46f818802258
+      :alt: Delete file from course assets
+
+   .. image:: https://github.com/eduNEXT/xblock-filesmanager/assets/64033729/1a59c707-1a03-4f8f-bf5b-812f8274dece
+      :alt: File removed from Files Manager component
+
+2. To unpublish a file that you uploaded in the Files Manager component, you
+   must move that file to the **Unpublished** folder. This action will not
+   delete the file from the course assets, but it will remove it from the
+   student view.
+
+   .. image:: https://github.com/eduNEXT/xblock-filesmanager/assets/64033729/0e9718ee-e53f-488e-a386-dddcfa782113
+        :alt: Unpublish file
+
+   .. image:: https://github.com/eduNEXT/xblock-filesmanager/assets/64033729/fa24c3a5-9d8e-4ce0-8d0a-25295a1a36df
+        :alt: Move file to Unpublished folder
+
+3. To publish a file you must move that file from the **Unpublished** folder to
+   the destination folder. This action allow that file to be visible from the
+   student view.
+
+   .. image:: https://github.com/eduNEXT/xblock-filesmanager/assets/64033729/ec4b618f-5afe-47c5-9f0a-27b04cabfe94
+        :alt: Publish file
+
+   .. image:: https://github.com/eduNEXT/xblock-filesmanager/assets/64033729/cc575d43-d1be-4e62-bfb7-8cd05d9c5dfe
+       :alt: Move file to destination folder
 
 
 View from the Learning Management System (LMS)
@@ -81,7 +139,7 @@ View from the Learning Management System (LMS)
 The students can view and download files and folders that have been added to the
 component from the LMS. The download can be individual or multiple (as a zip file).
 
-.. image:: https://github.com/eduNEXT/xblock-filesmanager/assets/64033729/fb174233-0b5e-4506-8335-e7197121f2f6
+.. image:: https://github.com/eduNEXT/xblock-filesmanager/assets/64033729/ef7f3f96-d2d9-4db0-81f9-150eed7effeb
    :alt: View from the LMS
 
 
