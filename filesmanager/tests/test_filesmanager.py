@@ -145,7 +145,25 @@ class TestFilesManagerXBlockHandlers(FilesManagerXBlockTestMixin):
                         "metadata": {},
                         "parentId": "root",
                         "children": [],
-                    }
+                    },
+                    {
+                        "id": "test-directory-id",
+                        "name": "TestDirectory",
+                        "type": "directory",
+                        "path": "Root/TestDirectory",
+                        "metadata": {},
+                        "parentId": "root",
+                        "children": [
+                            {
+                                "id": "test-file-id",
+                                "name": "TestFile",
+                                "type": "file",
+                                "path": "Root/TestDirectory/TestFile",
+                                "metadata": {},
+                                "parentId": "test-directory-id",
+                            }
+                        ],
+                    },
                 ],
             },
         }
@@ -187,7 +205,7 @@ class TestFilesManagerXBlockHandlers(FilesManagerXBlockTestMixin):
         )
         self.assertEqual(HTTPStatus.OK, response.status_code)
         self.assertEqual(
-            {"status": "success"}, response.json # pylint: disable=no-member
+            {"status": "success"}, response.json  # pylint: disable=no-member
         )
 
     def test_delete_content_without_contents(self):
@@ -485,20 +503,22 @@ class TestFilesManagerXBlockUtilities(TestCase):
             "metadata": {},
             "children": [
                 {
-                    "id": "test-file-id",
-                    "name": "TestFile",
-                    "type": "file",
-                    "path": "Root/TestDirectory/TestFile",
+                    "id": "test-directory-2-id",
+                    "name": "TestDirectory2",
+                    "type": "directory",
+                    "path": "Root/TestDirectory/TestDirectory2",
                     "metadata": {},
                     "parentId": "test-directory-id",
+                    "children": [],
                 }
             ],
         }
 
         self.xblock.create_directory(directory, self.xblock.directories["children"])
 
-        self.xblock.upload_file_to_directory.assert_called_once()
+        self.xblock.upload_file_to_directory.assert_not_called()
         self.assertIn(directory["path"], self.xblock.content_paths)
+        self.assertIn(directory, self.xblock.directories["children"])
 
     def test_get_formatted_content(self):
         """
@@ -710,7 +730,6 @@ class TestFilesManagerXBlockUtilities(TestCase):
         content.content_type = "test-content_type"
         content.length = 100
         content.get_id.return_value = "test-id"
-
         expected_result = {
             "id": "test-id",
             "asset_key": "test-location",
@@ -752,7 +771,6 @@ class TestFilesManagerXBlockUtilities(TestCase):
             "asset_key": "test-asset-key",
             "displayname": "test-display-name",
         }
-
         expected_result = {
             "id": "test-id",
             "asset_key": "test-asset-key",
@@ -877,7 +895,6 @@ class TestFilesManagerXBlockUtilities(TestCase):
             - The method returns the root directory, None, None.
         """
         path = "Root"
-
         expected_result = (self.xblock.directories, None, None)
 
         result = self.xblock.get_content_by_path(path)
@@ -911,7 +928,6 @@ class TestFilesManagerXBlockUtilities(TestCase):
             - The method returns (None, None, None).
         """
         path = "Root/Nonexistent"
-
         expected_result = (None, None, None)
 
         result = self.xblock.get_content_by_path(path)
