@@ -12,13 +12,14 @@ import pkg_resources
 from django.conf import settings
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.utils import translation
+from opaque_keys.edx.keys import AssetKey
 from webob.response import Response
 from xblock.core import XBlock
 from xblock.fields import Dict, List, Scope
 from xblock.fragment import Fragment
 from xblockutils.resources import ResourceLoader
+
 from filesmanager.tasks import create_zip_file_task
-from opaque_keys.edx.keys import AssetKey
 
 try:
     from cms.djangoapps.contentstore.exceptions import AssetNotFoundException
@@ -30,7 +31,6 @@ except ImportError:
     configuration_helpers = None
     StaticContent = None
     contentstore = None
-    AssetKey = None
 
 log = logging.getLogger(__name__)
 COURSE_ASSETS_PAGE_SIZE = 100
@@ -1009,7 +1009,7 @@ class FilesManagerXBlock(XBlock):
             log.exception(e)
 
     @XBlock.json_handler
-    def download_content(self, data, suffix=''):
+    def download_content(self, data, suffix=''):  # pylint: disable=unused-argument
         """Download the content of a directory.
 
         Arguments:
@@ -1031,7 +1031,7 @@ class FilesManagerXBlock(XBlock):
         }
 
     @XBlock.json_handler
-    def download_status(self, data, suffix=''):
+    def download_status(self, data, suffix=''):  # pylint: disable=unused-argument
         """Get the status of the async task.
 
         Arguments:

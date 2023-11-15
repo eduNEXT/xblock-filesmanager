@@ -49,6 +49,8 @@ django-statici18n==2.4.0
     # via -r requirements/base.in
 edx-i18n-tools==1.3.0
     # via -r requirements/base.in
+edx-opaque-keys==2.5.1
+    # via -r requirements/base.in
 fs==2.4.16
     # via
     #   fs-s3fs
@@ -81,10 +83,14 @@ openedx-django-pyfs==3.4.0
     # via xblock
 path==16.7.1
     # via edx-i18n-tools
+pbr==6.0.0
+    # via stevedore
 polib==1.2.0
     # via edx-i18n-tools
 prompt-toolkit==3.0.41
     # via click-repl
+pymongo==3.13.0
+    # via edx-opaque-keys
 python-dateutil==2.8.2
     # via
     #   botocore
@@ -111,9 +117,12 @@ six==1.16.0
     #   python-dateutil
 sqlparse==0.4.4
     # via django
+stevedore==5.1.0
+    # via edx-opaque-keys
 typing-extensions==4.8.0
     # via
     #   asgiref
+    #   edx-opaque-keys
     #   kombu
 tzdata==2023.3
     # via
