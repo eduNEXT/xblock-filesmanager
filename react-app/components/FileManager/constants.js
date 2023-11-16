@@ -20,6 +20,7 @@ export const prepareCustomFileMap = () => {
 // Custom action
 export const deleteFolderAction = defineFileAction({
   id: 'delete_folder',
+  hotkeys: ['delete', 'ctrl+backspace'],
   button: {
     name: 'Delete folders',
     toolbar: false,

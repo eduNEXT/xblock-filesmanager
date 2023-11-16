@@ -262,7 +262,7 @@ export const useFileActionHandler = (
       } else if (data.id === 'delete_folder') {
         const hasPublishFolder = data.state.selectedFiles.some(({ id }) => id === 'unpublished');
         if (hasPublishFolder) {
-          alert('You can not delete unpublish folder');
+          alert('You can not delete Unpublished folder');
         } else {
           deleteFolders(data.state.selectedFiles);
         }
