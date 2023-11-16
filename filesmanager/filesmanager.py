@@ -490,7 +490,7 @@ class FilesManagerXBlock(XBlock):
         course_assets_ids = [asset["id"] for asset in self.get_all_serialized_assets()]
         directories_files = self.get_all_files(self.directories["children"])
         for file in directories_files:
-            if file["metadata"]["id"] not in course_assets_ids:
+            if file["metadata"].get("id") not in course_assets_ids:
                 self.delete_file_from_directory(file)
 
     def delete_file_from_directory(self, file):
@@ -746,7 +746,7 @@ class FilesManagerXBlock(XBlock):
             "display_name": content.name,
             "url": str(asset_url),
             "content_type": content.content_type,
-            "file_size": int(content.length),
+            "file_size": int(content.length) if content.length else 0,
             "external_url": urljoin(configuration_helpers.get_value('LMS_ROOT_URL', settings.LMS_ROOT_URL), asset_url),
             "thumbnail": urljoin(configuration_helpers.get_value('LMS_ROOT_URL', settings.LMS_ROOT_URL), thumbnail_url),
             "uploaded_at": datetime.now().isoformat()
