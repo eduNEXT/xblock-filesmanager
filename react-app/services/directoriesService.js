@@ -16,9 +16,3 @@ export const syncContent = (formData) => {
     }
   });
 }
-
-export const deleteContent = (assetKeysToDelete) => {
-  const { element: globalElement } = xBlockContext;
-  const createContentHandler = xBlockContext.runtime.handlerUrl(globalElement, 'delete_content');
-  return apiConfig.post(createContentHandler, assetKeysToDelete);
-}

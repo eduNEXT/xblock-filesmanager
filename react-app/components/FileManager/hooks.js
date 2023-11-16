@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { ChonkyActions, FileHelper } from 'chonky';
 import { v4 as uuidv4 } from 'uuid';
+import _ from 'lodash';
 
 import { convertFileMapToTree, findNodeByIdInTree, extractAssetKeys } from './utils';
 
@@ -40,7 +41,6 @@ export const useCustomFileMap = (prepareCustomFileMap) => {
             const folderToFileMapToTree = convertFileMapToTree(folderId, '', fileMap);
             const assetKeysToDelete = extractAssetKeys(folderToFileMapToTree);
             setAssetsKeyToDelete((prevPaths) => [...prevPaths, ...assetKeysToDelete]);
-
           } else {
             setAssetsKeyToDelete((prevPaths) => [...prevPaths, asset_key]);
           }
@@ -62,9 +62,33 @@ export const useCustomFileMap = (prepareCustomFileMap) => {
     });
   }, []);
 
+  const deleteFolders = useCallback((folders) => {
+    setFileMap((currentFileMap) => {
+      const newFileMap = _.cloneDeep(currentFileMap);
+
+      folders.forEach((file) => {
+        const folderId = file.id;
+        delete newFileMap[folderId];
+
+        if (file.parentId) {
+          const parent = newFileMap[file.parentId];
+          const newChildrenIds = parent.childrenIds.filter((id) => id !== file.id);
+
+          newFileMap[file.parentId] = {
+            ...parent,
+            childrenIds: newChildrenIds,
+            childrenCount: newChildrenIds.length
+          };
+        }
+      });
+
+      return newFileMap;
+    });
+  }, []);
+
   const moveFiles = useCallback((files, source, destination) => {
     setFileMap((currentFileMap) => {
-      const newFileMap = { ...currentFileMap };
+      const newFileMap = _.cloneDeep(currentFileMap);
       const moveFileIds = new Set(files.map((file) => file.id));
 
       const newSourceChildrenIds = source.childrenIds.filter((id) => !moveFileIds.has(id));
@@ -94,7 +118,7 @@ export const useCustomFileMap = (prepareCustomFileMap) => {
 
   const createFolder = useCallback((folderName) => {
     setFileMap((currentFileMap) => {
-      const newFileMap = { ...currentFileMap };
+      const newFileMap = _.cloneDeep(currentFileMap);
       const parentId = currentFolderIdRef.current;
       const currentFolderKeys = Object.keys(newFileMap);
       const parentName = newFileMap[currentFolderIdRef.current].name || '';
@@ -136,7 +160,7 @@ export const useCustomFileMap = (prepareCustomFileMap) => {
 
   const createFile = useCallback((fileName, file) => {
     setFileMap((currentFileMap) => {
-      const newFileMap = { ...currentFileMap };
+      const newFileMap = _.cloneDeep(currentFileMap);
       const parentName = newFileMap[currentFolderIdRef.current].name || '';
       const currentFolderKeys = Object.keys(newFileMap);
       const parentId = currentFolderIdRef.current;
@@ -185,7 +209,8 @@ export const useCustomFileMap = (prepareCustomFileMap) => {
     deleteFiles,
     moveFiles,
     createFolder,
-    createFile
+    createFile,
+    deleteFolders
   };
 };
 
@@ -222,7 +247,8 @@ export const useFileActionHandler = (
   moveFiles,
   createFolder,
   addFile,
-  downloadFile
+  downloadFile,
+  deleteFolders
 ) => {
   return useCallback(
     (data) => {
@@ -232,6 +258,13 @@ export const useFileActionHandler = (
         if (fileToOpen && FileHelper.isDirectory(fileToOpen)) {
           setCurrentFolderId(fileToOpen.id);
           return;
+        }
+      } else if (data.id === 'delete_folder') {
+        const hasPublishFolder = data.state.selectedFiles.some(({ id }) => id === 'unpublished');
+        if (hasPublishFolder) {
+          alert('You can not delete Unpublished folder');
+        } else {
+          deleteFolders(data.state.selectedFiles);
         }
       } else if (data.id === ChonkyActions.DeleteFiles.id) {
         deleteFiles(data.state.selectedFilesForAction);

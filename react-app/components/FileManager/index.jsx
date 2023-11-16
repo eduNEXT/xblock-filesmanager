@@ -6,7 +6,10 @@ import {
   FileList,
   FileNavbar,
   FileToolbar,
-  setChonkyDefaults
+  setChonkyDefaults,
+  ChonkyIconName,
+  FileViewMode,
+  defineFileAction
 } from 'chonky';
 import _ from 'lodash';
 import { ChonkyIconFA } from 'chonky-icon-fontawesome';
@@ -16,12 +19,12 @@ import xBlockContext from '@constants/xBlockContext';
 import useXBlockActionButtons from '@hooks/useXBlockActionButtons';
 import useFileDownloader from '@hooks/useFileDownloader';
 import useAddErrorMessageToModal from '@hooks/useAddErrorMessageToModal';
-import { syncContent, deleteContent } from '@services/directoriesService';
+import { syncContent } from '@services/directoriesService';
 import ErrorMessage from '@components/ErrorMessage';
 
 import { useCustomFileMap, useFiles, useFolderChain, useFileActionHandler } from './hooks';
 import { convertFileMapToTree } from './utils';
-import { prepareCustomFileMap } from './constants';
+import { prepareCustomFileMap, defaultFileActions, customFileActions } from './constants';
 
 import './styles.css';
 
@@ -68,7 +71,8 @@ const FileManager = (props) => {
     deleteFiles,
     moveFiles,
     createFolder,
-    createFile
+    createFile,
+    deleteFolders
   } = useCustomFileMap(rootFolderId ? fileMapData : prepareCustomFileMap);
 
   const handleFileChange = (event) => {
@@ -94,14 +98,11 @@ const FileManager = (props) => {
     moveFiles,
     createFolder,
     addFile,
-    downloadFile
+    downloadFile,
+    deleteFolders
   );
 
   const { xblockId, isEditView } = xBlockContext;
-
-  const fileActions = isEditView
-    ? [ChonkyActions.CreateFolder, ChonkyActions.UploadFiles, ChonkyActions.DeleteFiles, ChonkyActions.DownloadFiles]
-    : [ChonkyActions.DownloadFiles];
 
   const saveContent = async (formData) => {
     try {
@@ -114,20 +115,6 @@ const FileManager = (props) => {
       return Promise.resolve('Synchronizing content was successful');
     } catch (error) {
       return Promise.reject('An error has ocurred while  we tried to synchronizing content');
-    }
-  };
-
-  const removeContent = async (assetsKeyToDelete) => {
-    try {
-      const createContentData = await deleteContent({ contents: assetsKeyToDelete });
-
-      if (createContentData.status !== StatusCodes.OK) {
-        throw new Error('Delete content has failed:  Unexpected status code');
-      }
-
-      return Promise.resolve('Deleting content was successfully');
-    } catch (error) {
-      return Promise.reject('An error has ocurred while we tried to delete assets');
     }
   };
 
@@ -173,10 +160,6 @@ const FileManager = (props) => {
     try {
       await saveContent(formData);
 
-      if (hasAssetsKeyToDelete) {
-        await removeContent(filesToDelete);
-      }
-
       setReloadPage(true);
     } catch (error) {
       const errorMessage = gettext('An unexpected error has occurred');
@@ -194,6 +177,37 @@ const FileManager = (props) => {
     saveSyncErrorMessage ? <ErrorMessage message={saveSyncErrorMessage} className="error-message-edit" /> : null
   );
 
+  const fileBrowserRef = useRef(null);
+  const [fileSelection, setFileSelection] = useState(null);
+  const [hasFilesSelected, setHasFilesSelected] = useState(false);
+  const disabledActions = hasFilesSelected ? [ChonkyActions.DownloadFiles.id] : undefined;
+  const fileActionsList = hasFilesSelected ? defaultFileActions : customFileActions;
+
+  const fileActions = isEditView ? fileActionsList : [ChonkyActions.DownloadFiles];
+
+  const checkFileSelection = () => {
+    if (fileBrowserRef.current) {
+      const newFileSelection = fileBrowserRef.current.getFileSelection();
+      if (!_.isEqual(newFileSelection, fileSelection)) {
+        const selections = Array.from(newFileSelection);
+        const hasFilesSelected = selections.some((fileId) => !fileMap[fileId].isDir);
+        setHasFilesSelected(hasFilesSelected);
+        setFileSelection(newFileSelection);
+      }
+    }
+  };
+
+  useEffect(() => {
+    // Initially check file selection
+    checkFileSelection();
+
+    // On each render, check for changes in file selection
+    const interval = setInterval(checkFileSelection, 500);
+
+    // Clean-up interval on unmount or changes to the fileSelection dependency
+    return () => clearInterval(interval);
+  }, [fileSelection, fileBrowserRef, fileMap]);
+
   useEffect(() => {
     if (reloadPage) {
       window.location.reload();
@@ -208,10 +222,11 @@ const FileManager = (props) => {
 
       <div className="filesmanager__content">
         <FileBrowser
+          ref={fileBrowserRef}
           files={files}
           folderChain={folderChain}
           fileActions={fileActions}
-          disableDefaultFileActions={isLoadingDownloadFile ? [ChonkyActions.DownloadFiles.id] : undefined}
+          disableDefaultFileActions={isLoadingDownloadFile ? [ChonkyActions.DownloadFiles.id] : disabledActions}
           onFileAction={handleFileAction}
           defaultFileViewActionId={ChonkyActions.EnableListView.id}
           clearSelectionOnOutsideClick={false}
