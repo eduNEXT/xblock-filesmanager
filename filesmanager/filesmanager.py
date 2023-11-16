@@ -746,7 +746,7 @@ class FilesManagerXBlock(XBlock):
             "display_name": content.name,
             "url": str(asset_url),
             "content_type": content.content_type,
-            "file_size": int(content.length),
+            "file_size": int(content.length) if content.length else 0,
             "external_url": urljoin(configuration_helpers.get_value('LMS_ROOT_URL', settings.LMS_ROOT_URL), asset_url),
             "thumbnail": urljoin(configuration_helpers.get_value('LMS_ROOT_URL', settings.LMS_ROOT_URL), thumbnail_url),
             "uploaded_at": datetime.now().isoformat()
