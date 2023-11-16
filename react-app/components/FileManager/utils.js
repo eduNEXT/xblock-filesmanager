@@ -42,8 +42,8 @@ const convertTreeToNewFileMap = (node, parent = null, newFileMapObject, isSaved 
   } else {
     // Assuming you want to add size and modDate for files
     if (node.metadata) {
-      fileMapEntry.size = node.metadata.file_size;
-      //fileMapEntry.modDate = node.metadata.modDate;
+      fileMapEntry.size = node.metadata.file_size || 0;
+      fileMapEntry.modDate = node.metadata.uploaded_at || undefined;
     }
   }
 

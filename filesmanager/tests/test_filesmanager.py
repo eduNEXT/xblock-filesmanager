@@ -709,8 +709,10 @@ class TestFilesManagerXBlockUtilities(TestCase):
     @override_settings(LMS_ROOT_URL="lms-root-url")
     @patch("filesmanager.filesmanager.StaticContent")
     @patch("filesmanager.filesmanager.configuration_helpers")
+    @patch("filesmanager.filesmanager.datetime")
     def test_get_asset_json_from_content(
         self,
+        mock_datetime: Mock,
         mock_configuration_helpers: Mock,
         mock_static_content: Mock,
     ):
@@ -725,6 +727,7 @@ class TestFilesManagerXBlockUtilities(TestCase):
             "asset_url",
             "thumbnail_url",
         ]
+        mock_datetime.now.return_value.isoformat.return_value = "test-isoformat"
         content = Mock()
         content.location = "test-location"
         content.thumbnail_location = "test-thumbnail_location"
@@ -741,6 +744,7 @@ class TestFilesManagerXBlockUtilities(TestCase):
             "file_size": 100,
             "external_url": "http://localhost/asset_url",
             "thumbnail": "http://localhost/thumbnail_url",
+            "uploaded_at": "test-isoformat"
         }
 
         result = self.xblock.get_asset_json_from_content(content)
