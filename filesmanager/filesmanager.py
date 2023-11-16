@@ -486,10 +486,10 @@ class FilesManagerXBlock(XBlock):
         - Compare the files from the course assets with the files from the directories list.
         - Remove the files that are in the directory list but not in the course assets.
         """
-        course_assets_files = self.get_all_serialized_assets()
+        course_assets_ids = [asset["id"] for asset in self.get_all_serialized_assets()]
         directories_files = self.get_all_files(self.directories["children"])
         for file in directories_files:
-            if file["metadata"] not in course_assets_files:
+            if file["metadata"]["id"] not in course_assets_ids:
                 self.delete_file_from_directory(file)
 
     def delete_file_from_directory(self, file):
