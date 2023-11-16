@@ -1,151 +1,236 @@
-FilesManager Xblock for Open edX
-################################
+FilesManager XBlock
+###################
 
-Testing with Docker
-********************
+|status-badge| |license-badge| |ci-badge|
 
-This XBlock comes with a Docker test environment ready to build, based on the xblock-sdk workbench. To build and run it::
+Purpose
+*******
 
-    $ make dev.run
+Files Manager XBlock is a pluggable extension to the Open edX platform that
+allows course creators to add a file manager to upload/download files and
+create, delete and download folders, and students to view and download them.
 
-The XBlock SDK Workbench, including this XBlock, will be available on the list of XBlocks at http://localhost:8000
+It leverages the `chonky component`_ to provide a intuituve and complete file
+manager that allows users to upload, download, delete and move files and
+folders including drag and drop support, toggleable view modes, keyboard
+shortcuts, and more.
 
-Translating
+This XBlock has been created as an open source contribution to the Open edX
+platform and has been funded by Unidigital project from the Spanish Government
+- 2023.
+
+.. _chonky component: https://github.com/TimboKZ/Chonky
+
+
+Enabling the XBlock in a course
+*******************************
+
+When the XBlock has been installed, you can enable it in a course from Studio
+through the **Advanced Settings**.
+
+1. Go to Studio and open the course you want to add the XBlock to.
+2. Go to **Settings** > **Advanced Settings** from the top menu.
+3. Search for **Advanced Module List** and add ``"filesmanager"`` to the list.
+4. Click **Save Changes** button.
+
+   .. image:: https://github.com/eduNEXT/xblock-filesmanager/assets/64033729/5f7c99b8-31d2-492f-8573-88ae8748166b
+      :alt: Enable XBlock in a course
+
+
+Adding a Files Manager Component to a course unit
+*************************************************
+
+From Studio, you can add the Files Manager Component to a course unit.
+
+1. Click on the **Advanced** button in **Add New Component**.
+
+   .. image:: https://github.com/eduNEXT/xblock-filesmanager/assets/64033729/7c4cfde4-f2b2-4334-b646-c302dea9c515
+      :alt: Open Advanced Components
+
+2. Select **filesmanager** from the list.
+
+   .. image:: https://github.com/eduNEXT/xblock-filesmanager/assets/64033729/d5a524e5-ce0e-4cec-a336-3b04737fb373
+      :alt: Select Files Manager Component
+
+
+Using the Files Manager Component
+*********************************
+
+Create folders
+==============
+1. Go to edit section of the component from Studio.
+2. Create your folders structure by clicking on the **Create folder** button.
+
+   .. image:: https://github.com/eduNEXT/xblock-filesmanager/assets/64033729/27fa71a1-0bd7-4c64-9ff1-c8275bf40ace
+      :alt: Create folder
+
+Upload files
+============
+1. Go to edit section of the component from Studio.
+2. Upload files by clicking on the **Upload files** button.
+
+   .. image:: https://github.com/eduNEXT/xblock-filesmanager/assets/64033729/5f9af287-8c79-4867-8624-9e2ac610c6ae
+      :alt: Upload files
+
+   **NOTE:** The soported files types are the same as the ones supported by the
+   Open edX platform.
+
+3. The uploaded files are added to the course assets, and they can be viewed
+   from **Content** > **Files** in Studio.
+
+   .. image:: https://github.com/eduNEXT/xblock-filesmanager/assets/64033729/36d6b09d-b2e7-496e-9677-b24d61f5998c
+      :alt: Files in Course Assets
+
+4. The instructors have an **Unpublished** folder where they can view files
+   into the course assets that have not been categorized yet in the component.
+   This folder is not visible to the students.
+
+   .. image:: https://github.com/eduNEXT/xblock-filesmanager/assets/64033729/ca4c27d7-5797-4293-bcd3-38a3845b72e7
+      :alt: Course Assets Unpublished folder
+
+   .. image:: https://github.com/eduNEXT/xblock-filesmanager/assets/64033729/bd7d838a-71ba-4296-94f8-613cc3da5c69
+      :alt: Unpublished folder
+
+   In addition, instructors can preview files and folders that have been added
+   to the component before publishing the changes in the course.
+
+Delete files
+============
+To delete a file, the following must be taken into account:
+
+1. The deletion of files directly from the Files Manager component is
+   restricted. If you want to delete a file, you must do it from the course
+   assets.
+
+   .. image:: https://github.com/eduNEXT/xblock-filesmanager/assets/64033729/5fab112b-4e87-453f-801d-8ab51eb55c7a
+      :alt: Delete file
+
+   .. image:: https://github.com/eduNEXT/xblock-filesmanager/assets/64033729/144d9e6f-db54-42fc-a387-46f818802258
+      :alt: Delete file from course assets
+
+   .. image:: https://github.com/eduNEXT/xblock-filesmanager/assets/64033729/1a59c707-1a03-4f8f-bf5b-812f8274dece
+      :alt: File removed from Files Manager component
+
+2. To unpublish a file that you uploaded in the Files Manager component, you
+   must move that file to the **Unpublished** folder. This action will not
+   delete the file from the course assets, but it will remove it from the
+   student view.
+
+   .. image:: https://github.com/eduNEXT/xblock-filesmanager/assets/64033729/0e9718ee-e53f-488e-a386-dddcfa782113
+        :alt: Unpublish file
+
+   .. image:: https://github.com/eduNEXT/xblock-filesmanager/assets/64033729/fa24c3a5-9d8e-4ce0-8d0a-25295a1a36df
+        :alt: Move file to Unpublished folder
+
+3. To publish a file you must move that file from the **Unpublished** folder to
+   the destination folder. This action allow that file to be visible from the
+   student view.
+
+   .. image:: https://github.com/eduNEXT/xblock-filesmanager/assets/64033729/ec4b618f-5afe-47c5-9f0a-27b04cabfe94
+        :alt: Publish file
+
+   .. image:: https://github.com/eduNEXT/xblock-filesmanager/assets/64033729/cc575d43-d1be-4e62-bfb7-8cd05d9c5dfe
+       :alt: Move file to destination folder
+
+
+View from the Learning Management System (LMS)
+**********************************************
+
+The students can view and download files and folders that have been added to the
+component from the LMS. The download can be individual or multiple (as a zip file).
+
+.. image:: https://github.com/eduNEXT/xblock-filesmanager/assets/64033729/ef7f3f96-d2d9-4db0-81f9-150eed7effeb
+   :alt: View from the LMS
+
+
+Experimenting with this XBlock in the Workbench
+************************************************
+
+`XBlock`_ is the Open edX component architecture for building custom learning
+interactive components.
+
+.. _XBlock: https://openedx.org/r/xblock
+
+You can see the Files Manager component in action in the XBlock Workbench.
+Running the Workbench requires having docker running.
+
+.. code:: bash
+
+    git clone git@github.com:eduNEXT/xblock-filesmanager
+    virtualenv venv/
+    source venv/bin/activate
+    cd xblock-filesmanager
+    make upgrade
+    make install
+    make dev.run
+
+Once the process is done, you can interact with the Files Manager XBlock in
+the Workbench by navigating to http://localhost:8000
+
+For details regarding how to deploy this or any other XBlock in the Open edX
+platform, see the `installing-the-xblock`_ documentation.
+
+.. _installing-the-xblock: https://edx.readthedocs.io/projects/xblock-tutorial/en/latest/edx_platform/devstack.html#installing-the-xblock
+
+
+Getting Help
 *************
 
-Internationalization (i18n) is when a program is made aware of multiple languages.
-Localization (l10n) is adapting a program to local language and cultural habits.
+If you're having trouble, the Open edX community has active discussion forums
+available at https://discuss.openedx.org where you can connect with others in
+the community.
 
-Use the locale directory to provide internationalized strings for your XBlock project.
-For more information on how to enable translations, visit the
-`Open edX XBlock tutorial on Internationalization <https://edx.readthedocs.org/projects/xblock-tutorial/en/latest/edx_platform/edx_lms.html>`_.
+Also, real-time conversations are always happening on the Open edX community
+Slack channel. You can request a `Slack invitation`_, then join the
+`community Slack workspace`_.
 
-This cookiecutter template uses `django-statici18n <https://django-statici18n.readthedocs.io/en/latest/>`_
-to provide translations to static javascript using ``gettext``.
+For anything non-trivial, the best path is to open an `issue`_ in this
+repository with as many details about the issue you are facing as you can
+provide.
 
-The included Makefile contains targets for extracting, compiling and validating translatable strings.
-The general steps to provide multilingual messages for a Python program (or an XBlock) are:
+For more information about these options, see the `Getting Help`_ page.
 
-1. Mark translatable strings.
-2. Run i18n tools to create raw message catalogs.
-3. Create language specific translations for each message in the catalogs.
-4. Use ``gettext`` to translate strings.
-
-1. Mark translatable strings
-=============================
-
-Mark translatable strings in python::
+.. _Slack invitation: https://openedx.org/slack
+.. _community Slack workspace: https://openedx.slack.com/
+.. _issue: https://github.com/eduNEXT/xblock-filesmanager/issues
+.. _Getting Help: https://openedx.org/getting-help
 
 
-    from django.utils.translation import ugettext as _
+License
+*******
 
-    # Translators: This comment will appear in the `.po` file.
-    message = _("This will be marked.")
+The code in this repository is licensed under the AGPL-3.0 unless otherwise
+noted.
 
-See `edx-developer-guide <https://edx.readthedocs.io/projects/edx-developer-guide/en/latest/internationalization/i18n.html#python-source-code>`__
-for more information.
-
-You can also use ``gettext`` to mark strings in javascript::
+Please see `LICENSE.txt <LICENSE.txt>`_ for details.
 
 
-    // Translators: This comment will appear in the `.po` file.
-    var message = gettext("Custom message.");
+Contributing
+************
 
-See `edx-developer-guide <https://edx.readthedocs.io/projects/edx-developer-guide/en/latest/internationalization/i18n.html#javascript-files>`__
-for more information.
+Contributions are very welcome.
 
-2. Run i18n tools to create Raw message catalogs
-=================================================
-
-This cookiecutter template offers multiple make targets which are shortcuts to
-use `edx-i18n-tools <https://github.com/openedx/i18n-tools>`_.
-
-After marking strings as translatable we have to create the raw message catalogs.
-These catalogs are created in ``.po`` files. For more information see
-`GNU PO file documentation <https://www.gnu.org/software/gettext/manual/html_node/PO-Files.html>`_.
-These catalogs can be created by running::
+This project is currently accepting all types of contributions, bug fixes,
+security fixes, maintenance work, or new features.  However, please make sure
+to have a discussion about your new feature idea with the maintainers prior to
+beginning development to maximize the chances of your change being accepted.
+You can start a conversation by creating a new issue on this repo summarizing
+your idea.
 
 
-    $ make extract_translations
+Reporting Security Issues
+*************************
 
-The previous command will create the necessary ``.po`` files under
-``xblock-filesmanager/filesmanager/locale/en/LC_MESSAGES/text.po``.
-The ``text.po`` file is created from the ``django-partial.po`` file created by
-``django-admin makemessages`` (`makemessages documentation <https://docs.djangoproject.com/en/3.2/topics/i18n/translation/#message-files>`_),
-this is why you will not see a ``django-partial.po`` file.
+Please do not report a potential security issue in public. Please email
+security@edunext.co.
 
-3. Create language specific translations
-==============================================
 
-3.1 Add translated strings
----------------------------
+.. |ci-badge| image:: https://github.com/eduNEXT/xblock-filesmanager/workflows/Python%20CI/badge.svg?branch=main
+    :target: https://github.com/eduNEXT/xblock-filesmanager/actions
+    :alt: CI
 
-After creating the raw message catalogs, all translations should be filled out by the translator.
-One or more translators must edit the entries created in the message catalog, i.e. the ``.po`` file(s).
-The format of each entry is as follows::
+.. |license-badge| image:: https://img.shields.io/github/license/eduNEXT/xblock-filesmanager.svg
+    :target: https://github.com/eduNEXT/xblock-filesmanager/blob/main/LICENSE.txt
+    :alt: License
 
-    #  translator-comments
-    A. extracted-comments
-    #: reference…
-    #, flag…
-    #| msgid previous-untranslated-string
-    msgid 'untranslated message'
-    msgstr 'mensaje traducido (translated message)'
-
-For more information see
-`GNU PO file documentation <https://www.gnu.org/software/gettext/manual/html_node/PO-Files.html>`_.
-
-To use translations from transifex use the follow Make target to pull translations::
-
-    $ make pull_translations
-
-See `config instructions <https://github.com/openedx/i18n-tools#transifex-commands>`_ for information on how to set up your
-transifex credentials.
-
-See `transifex documentation <https://docs.transifex.com/integrations/django>`_ for more details about integrating
-django with transiflex.
-
-3.2 Compile translations
--------------------------
-
-Once translations are in place, use the following Make target to compile the translation catalogs ``.po`` into
-``.mo`` message files::
-
-    $ make compile_translations
-
-The previous command will compile ``.po`` files using
-``django-admin compilemessages`` (`compilemessages documentation <https://docs.djangoproject.com/en/3.2/topics/i18n/translation/#compiling-message-files>`_).
-After compiling the ``.po`` file(s), ``django-statici18n`` is used to create language specific catalogs. See
-``django-statici18n`` `documentation <https://django-statici18n.readthedocs.io/en/latest/>`_ for more information.
-
-To upload translations to transiflex use the follow Make target::
-
-    $ make push_translations
-
-See `config instructions <https://github.com/openedx/i18n-tools#transifex-commands>`_ for information on how to set up your
-transifex credentials.
-
-See `transifex documentation <https://docs.transifex.com/integrations/django>`_ for more details about integrating
-django with transiflex.
-
- **Note:** The ``dev.run`` make target will automatically compile any translations.
-
- **Note:** To check if the source translation files (``.po``) are up-to-date run::
-
-     $ make detect_changed_source_translations
-
-4. Use ``gettext`` to translate strings
-========================================
-
-Django will automatically use ``gettext`` and the compiled translations to translate strings.
-
-Troubleshooting
-****************
-
-If there are any errors compiling ``.po`` files run the following command to validate your ``.po`` files::
-
-    $ make validate
-
-See `django's i18n troubleshooting documentation
-<https://docs.djangoproject.com/en/3.2/topics/i18n/translation/#troubleshooting-gettext-incorrectly-detects-python-format-in-strings-with-percent-signs>`_
-for more information.
+.. |status-badge| image:: https://img.shields.io/badge/Status-Maintained-brightgreen
