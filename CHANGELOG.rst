@@ -16,6 +16,15 @@ Unreleased
 
 *
 
+0.3.0 – 2023-11-17
+**********************************************
+
+Added
+=====
+
+* Remove delete action for files, now it's only available for directories.
+* Sync files data with what's inside course assets.
+
 0.2.0 – 2023-11-13
 **********************************************
 
