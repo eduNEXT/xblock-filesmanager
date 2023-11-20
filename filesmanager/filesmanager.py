@@ -1,15 +1,16 @@
 """Definition for the Files Manager XBlock."""
-from datetime import datetime
 import json
 import logging
 import os
+import tempfile
 from copy import deepcopy
+from datetime import datetime
 from http import HTTPStatus
 from urllib.parse import urljoin
-from django.core.files.uploadedfile import InMemoryUploadedFile
-import tempfile
+
 import pkg_resources
 from django.conf import settings
+from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.utils import translation
 from webob.response import Response
 from xblock.core import XBlock
@@ -630,12 +631,22 @@ class FilesManagerXBlock(XBlock):
         self.content_paths.append(file_path)
 
     def generate_memory_file_for_asset(self, metadata):
+        """
+        Generate a django in memory file with the contents of a file from the course assets.
+        """
         location = AssetKey.from_string(metadata.get("asset_key"))
         content = contentstore().find(location)
         tmp_file = tempfile.NamedTemporaryFile(suffix=content.content_type.split("/")[-1])
-        tmp_file.write(content._data)
+        tmp_file.write(content._data)  # pylint: disable=protected-access
         tmp_file.file.seek(0)
-        memory_file = InMemoryUploadedFile(file=tmp_file, field_name=None, name=metadata.get("display_name"), content_type=content.content_type, size=content.length, charset=None)
+        memory_file = InMemoryUploadedFile(
+            file=tmp_file,
+            field_name=None,
+            name=metadata.get("display_name"),
+            content_type=content.content_type,
+            size=content.length,
+            charset=None
+        )
         return memory_file
 
     def find_temporary_file(self, file_name):
@@ -741,7 +752,7 @@ class FilesManagerXBlock(XBlock):
                 is_num = False
             if self.block_id_parsed in display_name or (display_name.startswith("files-") and is_num):
                 continue
-            if course_asset["asset_key"] in self.source_keys.keys():
+            if course_asset["asset_key"] in self.source_keys:
                 continue
 
             unpublished_directory["children"].append(
