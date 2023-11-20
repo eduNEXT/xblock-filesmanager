@@ -500,7 +500,9 @@ class FilesManagerXBlock(XBlock):
         for file in directories_files:
             if file["metadata"].get("id") not in course_assets_ids:
                 self.delete_file_from_directory(file)
-                del self.source_keys[file["metadata"]["asset_key"]]
+                asset_key = file["metadata"].get("asset_key")
+                if asset_key in self.source_keys:
+                    del self.source_keys[asset_key]
 
     def delete_file_from_directory(self, file):
         """Delete an file from a directory.
@@ -595,26 +597,41 @@ class FilesManagerXBlock(XBlock):
         file_path, name = file.get("path"), file.get("name")
         metadata = file.get("metadata", {})
 
-        if "Unpublished" in file_path:
-            print("File moved from other Folder to Unpublished", metadata)
-            if metadata.get("from"):
-                del self.source_keys[metadata.get("from")]
-            return
-        if file_object:
+        if file_object and not metadata:
+            # New file uploaded from the Files Manager
             file_path, name = self.generate_content_path(file_path, file_object.filename)
             file_object.file._set_name(self.generate_asset_name(file_path)) # pylint: disable=protected-access
             content = update_course_run_asset(self.course_id, file_object.file)
             metadata = self.get_asset_json_from_content(content)
         elif not metadata.get("uploaded_at"):
-            file_path, name = self.generate_content_path(file_path, metadata.get("display_name"))
-            source_asset_key = metadata.get("asset_key")
-            memory_file = self.generate_memory_file_for_asset(metadata)
-            memory_file._set_name(self.generate_asset_name(file_path)) # pylint: disable=protected-access
-            content = update_course_run_asset(self.course_id, memory_file)
-            metadata = self.get_asset_json_from_content(content)
-            metadata["from"] = source_asset_key
-
-            self.source_keys[source_asset_key] = metadata.get("asset_key")
+            # File was uploaded from the course assets. Just create a link
+            if "files-" not in metadata.get("asset_key"):
+                file_path, name = self.generate_content_path(file_path, metadata.get("display_name"))
+                metadata["from"] = metadata.get("asset_key")
+                self.source_keys[metadata.get("asset_key")] = metadata.get("asset_key")
+            else:
+                # If the file is bring back to the Unpublished folder and was not uploaded from the course assets
+                # mark the file as Unpublished again and do not upload it to the course assets
+                if "Unpublished" in file_path and not metadata.get("uploaded_at"):
+                    if metadata.get("from"):
+                        del self.source_keys[metadata.get("from")]
+                    return
+        else:
+            # File uploaded to files-manager and then moved to a different directory
+            file_path, name = self.generate_content_path(file_path, name)
+            internal_name = self.generate_asset_name(file_path)
+            if "Unpublished" in file_path and not metadata.get("uploaded_at"):
+                if metadata.get("from"):
+                    del self.source_keys[metadata.get("from")]
+                return
+            if not internal_name in metadata.get("asset_key"):
+                # File was moved from a different directory
+                source_asset_key = metadata.get("asset_key")
+                memory_file = self.generate_memory_file_for_asset(metadata)
+                memory_file._set_name(internal_name) # pylint: disable=protected-access
+                content = update_course_run_asset(self.course_id, memory_file)
+                metadata = self.get_asset_json_from_content(content)
+                self.delete_asset(source_asset_key)
         if not metadata:
             raise Exception("Metadata not found")
 
@@ -728,6 +745,31 @@ class FilesManagerXBlock(XBlock):
     def generate_asset_name(self, path):
         return f"files-{self.block_id_parsed}-{path.replace('/', '-')}"
 
+    def is_in_filesmanager(self, course_asset):
+        """Check if an asset is part of the xblock content.
+
+        Arguments:
+            course_asset: the course asset to be checked.
+
+        Returns: True if the asset key is in the files manager, False otherwise.
+        """
+        if course_asset["asset_key"] in self.source_keys:
+            return True
+
+        display_name = course_asset["display_name"]
+        is_num = False
+        try:
+            block_id = display_name.split("files-")[1][0:32]
+            int(block_id, 16)
+            is_num = True
+        except IndexError:
+            return False
+        except ValueError:
+            return False
+        if display_name.startswith("files-") and is_num:
+            return True
+        return False
+
     def fill_unpublished(self):
         """Prefill the directories list with the content of the course assets.
 
@@ -740,19 +782,10 @@ class FilesManagerXBlock(XBlock):
         unpublished_directory["parentId"] = self.directories["id"]
         all_course_assets = self.get_all_serialized_assets()
         for course_asset in all_course_assets:
-            display_name = course_asset["display_name"]
-            is_num = False
-            try:
-                block_id = display_name.split("files-")[1][0:32]
-                int(block_id, 16)
-                is_num = True
-            except IndexError:
-                block_id = None
-            except ValueError:
-                is_num = False
-            if self.block_id_parsed in display_name or (display_name.startswith("files-") and is_num):
+            if self.is_in_filesmanager(course_asset):
                 continue
-            if course_asset["asset_key"] in self.source_keys:
+
+            if self.is_asset_in_unpublished(course_asset, unpublished_directory):
                 continue
 
             unpublished_directory["children"].append(
@@ -765,6 +798,20 @@ class FilesManagerXBlock(XBlock):
                     "metadata": course_asset,
                 }
             )
+
+    def is_asset_in_unpublished(self, course_asset, unpublished_directory):
+        """Check if an asset is in the unpublished directory.
+
+        Arguments:
+            course_asset: the course asset to be checked.
+            unpublished_directory: the unpublished directory.
+
+        Returns: True if the asset is in the unpublished directory, False otherwise.
+        """
+        for content in unpublished_directory["children"]:
+            if content["metadata"]["id"] == course_asset["id"]:
+                return True
+        return False
 
     def get_all_serialized_assets(self):
         """Get all the serialized assets for a given course.
