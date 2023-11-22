@@ -639,17 +639,13 @@ class FilesManagerXBlock(XBlock):
             else:
                 # If the file is bring back to the Unpublished folder and was not uploaded from the course assets
                 # mark the file as Unpublished again and do not upload it to the course assets
-                if "Unpublished" in file_path and not metadata.get("uploaded_at"):
-                    if metadata.get("from"):
-                        del self.source_keys[metadata.get("from")]
+                if self.delete_unpublished_asset(file_path, metadata):
                     return
         else:
             # File uploaded to files-manager and then moved to a different directory
             file_path, name = self.generate_content_path(file_path, name)
             internal_name = self.generate_asset_name(file_path)
-            if "Unpublished" in file_path and not metadata.get("uploaded_at"):
-                if metadata.get("from"):
-                    del self.source_keys[metadata.get("from")]
+            if self.delete_unpublished_asset(file_path, metadata):
                 return
             if not internal_name in metadata.get("asset_key"):
                 # File was moved from a different directory
@@ -673,6 +669,14 @@ class FilesManagerXBlock(XBlock):
             }
         )
         self.content_paths.append(file_path)
+
+    def delete_unpublished_asset(self, file_path, metadata):
+        """Delete an unpublished asset if the file is being moved to the Unpublished folder."""
+        if "Unpublished" in file_path and not metadata.get("uploaded_at"):
+            if metadata.get("from"):
+                del self.source_keys[metadata.get("from")]
+            return True
+        return False
 
     def generate_memory_file_for_asset(self, metadata):
         """
