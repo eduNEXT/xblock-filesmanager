@@ -1021,8 +1021,8 @@ class FilesManagerXBlock(XBlock):
         contents = data.get("contents")
         if not contents:
             return {
-                "status": "error",
-                "message": "Path not found",
+                "status": "ERROR",
+                "message": "Provide a list of contents to download.",
             }
         task_result = create_zip_file_task.delay(contents)
         return {
@@ -1044,13 +1044,13 @@ class FilesManagerXBlock(XBlock):
         task_id = data.get("task_id")
         if not task_id:
             return {
-                "status": "error",
+                "status": "ERROR",
                 "message": "Provide a task ID",
             }
         task_result = create_zip_file_task.AsyncResult(task_id)
         if not task_result:
             return {
-                "status": "error",
+                "status": "ERROR",
                 "message": "Task not found",
             }
         try:
