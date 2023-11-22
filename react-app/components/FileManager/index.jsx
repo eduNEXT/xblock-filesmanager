@@ -20,7 +20,7 @@ import ErrorMessage from '@components/ErrorMessage';
 
 import { useCustomFileMap, useFiles, useFolderChain, useFileActionHandler } from './hooks';
 import { convertFileMapToTree } from './utils';
-import { prepareCustomFileMap, defaultFileActions, customFileActions } from './constants';
+import { prepareCustomFileMap, defaultFileActions, customFileActions, openFileAction } from './constants';
 
 ChonkyActions.ToggleHiddenFiles.button.toolbar = false;
 
@@ -187,7 +187,7 @@ const FileManager = (props) => {
     ? customFileActions(hasOneFolderSelected, hasOneFileSelected)
     : defaultFileActions
 
-  const fileActions = isEditView ? fileActionsList : [ChonkyActions.DownloadFiles];
+  const fileActions = isEditView ? fileActionsList : [ChonkyActions.DownloadFiles, openFileAction];
 
   const checkFileSelection = () => {
     if (fileBrowserRef.current) {
