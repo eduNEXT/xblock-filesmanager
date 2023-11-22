@@ -187,7 +187,8 @@ const FileManager = (props) => {
     ? customFileActions(hasOneFolderSelected, hasOneFileSelected)
     : defaultFileActions
 
-  const fileActions = isEditView ? fileActionsList : [ChonkyActions.DownloadFiles, openFileAction];
+  const defaultActions =  hasOneFileSelected ? [ChonkyActions.DownloadFiles, openFileAction] : [ChonkyActions.DownloadFiles];
+  const fileActions = isEditView ? fileActionsList : defaultActions;
 
   const checkFileSelection = () => {
     if (fileBrowserRef.current) {
