@@ -291,6 +291,15 @@ export const useFileActionHandler = (
             renameFolder(currentFolderToRename, newFolderName);
           }
         }
+      } else if (data.id === 'open_file_custom') {
+        const [fileSelected] = data.state.selectedFiles;
+        const { isSaved, metadata = {} } = fileSelected;
+        if (isSaved) {
+          const { external_url } = metadata;
+          window.open(external_url, '_blank');
+        } else {
+          alert('Please select a file that has been saved previously');
+        }
       } else if (data.id === ChonkyActions.DeleteFiles.id) {
         deleteFiles(data.state.selectedFilesForAction);
       } else if (data.id === ChonkyActions.MoveFiles.id) {

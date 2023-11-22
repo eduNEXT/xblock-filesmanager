@@ -211,7 +211,7 @@ const FileManager = (props) => {
     checkFileSelection();
 
     // On each render, check for changes in file selection
-    const interval = setInterval(checkFileSelection, 500);
+    const interval = setInterval(checkFileSelection, 150);
 
     // Clean-up interval on unmount or changes to the fileSelection dependency
     return () => clearInterval(interval);
