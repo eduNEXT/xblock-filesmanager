@@ -559,6 +559,16 @@ class FilesManagerXBlock(XBlock):
             base_name (str): The content name to check.
         Returns:
             str: The new file name.
+
+        ..note::
+
+                If the file name already exists, the new file name will be generated
+                by adding a number at the end of the file name.
+
+                Example:
+                    - If the file name is "file.txt", the new file name will be "file (1).txt".
+                    - If the file name is "file (1).txt", the new file name will be "file (2).txt".
+
         """
         if base_path in self.content_paths:
             counter = 1
@@ -761,6 +771,10 @@ class FilesManagerXBlock(XBlock):
         }
 
     def generate_asset_name(self, path):
+        """Generate an asset name for a given path.
+
+        Returns: the asset name with a prefix of 'files-' and a suffix of the block id.
+        """
         return f"files-{self.block_id_parsed}-{path.replace('/', '-')}"
 
     def is_in_filesmanager(self, course_asset):
