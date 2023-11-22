@@ -86,6 +86,16 @@ export const useCustomFileMap = (prepareCustomFileMap) => {
     });
   }, []);
 
+  const renameFolder = useCallback((folder, folderName) => {
+    setFileMap((currentFileMap) => {
+      const newFileMap = _.cloneDeep(currentFileMap);
+
+      const { id: folderId } = folder;
+      newFileMap[folderId].name = folderName;
+
+      return newFileMap;
+    });
+  }, []);
   const moveFiles = useCallback((files, source, destination) => {
     setFileMap((currentFileMap) => {
       const newFileMap = _.cloneDeep(currentFileMap);
@@ -210,7 +220,8 @@ export const useCustomFileMap = (prepareCustomFileMap) => {
     moveFiles,
     createFolder,
     createFile,
-    deleteFolders
+    deleteFolders,
+    renameFolder
   };
 };
 
@@ -248,10 +259,13 @@ export const useFileActionHandler = (
   createFolder,
   addFile,
   downloadFile,
-  deleteFolders
+  deleteFolders,
+  renameFolder
 ) => {
   return useCallback(
     (data) => {
+      const hasPublishFolder = data.state.selectedFiles.some(({ id }) => id === 'unpublished');
+
       if (data.id === ChonkyActions.OpenFiles.id) {
         const { targetFile, files } = data.payload;
         const fileToOpen = targetFile ?? files[0];
@@ -260,11 +274,22 @@ export const useFileActionHandler = (
           return;
         }
       } else if (data.id === 'delete_folder') {
-        const hasPublishFolder = data.state.selectedFiles.some(({ id }) => id === 'unpublished');
         if (hasPublishFolder) {
           alert('You can not delete Unpublished folder');
         } else {
           deleteFolders(data.state.selectedFiles);
+        }
+      } else if (data.id === 'rename_folder') {
+        if (hasPublishFolder) {
+          alert('You can not rename Unpublished folder');
+        } else {
+          const [currentFolderToRename] = data.state.selectedFiles;
+          const { name: folderName } = currentFolderToRename;
+          const newFolderName = prompt('Please enter a new name for the folder', folderName);
+          const newFolderNameLength = newFolderName.trim().length;
+          if (newFolderNameLength && newFolderName.trim() !== folderName) {
+            renameFolder(currentFolderToRename, newFolderName);
+          }
         }
       } else if (data.id === ChonkyActions.DeleteFiles.id) {
         deleteFiles(data.state.selectedFilesForAction);

@@ -6,11 +6,7 @@ import {
   FileList,
   FileNavbar,
   FileToolbar,
-  setChonkyDefaults,
-  ChonkyIconName,
-  FileViewMode,
-  defineFileAction
-} from 'chonky';
+  setChonkyDefaults} from 'chonky';
 import _ from 'lodash';
 import { ChonkyIconFA } from 'chonky-icon-fontawesome';
 import { StatusCodes } from 'http-status-codes';
@@ -25,6 +21,8 @@ import ErrorMessage from '@components/ErrorMessage';
 import { useCustomFileMap, useFiles, useFolderChain, useFileActionHandler } from './hooks';
 import { convertFileMapToTree } from './utils';
 import { prepareCustomFileMap, defaultFileActions, customFileActions } from './constants';
+
+ChonkyActions.ToggleHiddenFiles.button.toolbar = false;
 
 import './styles.css';
 
@@ -72,7 +70,8 @@ const FileManager = (props) => {
     moveFiles,
     createFolder,
     createFile,
-    deleteFolders
+    deleteFolders,
+    renameFolder
   } = useCustomFileMap(rootFolderId ? fileMapData : prepareCustomFileMap);
 
   const handleFileChange = (event) => {
@@ -99,7 +98,8 @@ const FileManager = (props) => {
     createFolder,
     addFile,
     downloadFile,
-    deleteFolders
+    deleteFolders,
+    renameFolder
   );
 
   const { xblockId, isEditView } = xBlockContext;
@@ -180,8 +180,12 @@ const FileManager = (props) => {
   const fileBrowserRef = useRef(null);
   const [fileSelection, setFileSelection] = useState(null);
   const [hasFilesSelected, setHasFilesSelected] = useState(false);
+  const [hasOneFolderSelected, setHasOneFolderSelected] = useState(false);
+  const [hasOneFileSelected, setHasOneFileSelected] = useState(false);
   const disabledActions = hasFilesSelected ? [ChonkyActions.DownloadFiles.id] : undefined;
-  const fileActionsList = hasFilesSelected ? defaultFileActions : customFileActions;
+  const fileActionsList = hasOneFolderSelected || hasOneFileSelected
+    ? customFileActions(hasOneFolderSelected, hasOneFileSelected)
+    : defaultFileActions
 
   const fileActions = isEditView ? fileActionsList : [ChonkyActions.DownloadFiles];
 
@@ -190,7 +194,12 @@ const FileManager = (props) => {
       const newFileSelection = fileBrowserRef.current.getFileSelection();
       if (!_.isEqual(newFileSelection, fileSelection)) {
         const selections = Array.from(newFileSelection);
+        const hasOneSelection = selections.length === 1;
         const hasFilesSelected = selections.some((fileId) => !fileMap[fileId].isDir);
+        const hasOneFolderSelected = hasOneSelection && !hasFilesSelected;
+        const hasOneFileSelected = hasOneSelection && hasFilesSelected;
+        setHasOneFileSelected(hasOneFileSelected);
+        setHasOneFolderSelected(hasOneFolderSelected);
         setHasFilesSelected(hasFilesSelected);
         setFileSelection(newFileSelection);
       }
@@ -206,7 +215,7 @@ const FileManager = (props) => {
 
     // Clean-up interval on unmount or changes to the fileSelection dependency
     return () => clearInterval(interval);
-  }, [fileSelection, fileBrowserRef, fileMap]);
+  }, [fileSelection, fileBrowserRef, fileMap, hasOneFolderSelected, hasOneFileSelected]);
 
   useEffect(() => {
     if (reloadPage) {

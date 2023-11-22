@@ -14,10 +14,13 @@ export const prepareCustomFileMap = () => {
     }
   };
 
-  return { baseFileMap, rootFolderId };
+  return {
+    baseFileMap,
+    rootFolderId
+  };
 };
 
-// Custom action
+// Custom action to delete folders
 export const deleteFolderAction = defineFileAction({
   id: 'delete_folder',
   hotkeys: ['delete', 'ctrl+backspace'],
@@ -29,11 +32,40 @@ export const deleteFolderAction = defineFileAction({
   }
 });
 
-export const defaultFileActions = [ChonkyActions.CreateFolder, ChonkyActions.UploadFiles, ChonkyActions.DownloadFiles];
+// Custom action to rename folders
+export const renameFolderAction = defineFileAction({
+  id: 'rename_folder',
+  hotkeys: ['ctrl+r'],
+  button: {
+    name: 'Rename folder',
+    toolbar: false,
+    contextMenu: true,
+    icon: ChonkyIconName.config
+  }
+});
 
-export const customFileActions = [
+// Custom action to open preview of a file
+export const openFileAction = defineFileAction({
+  id: 'open_file_custom',
+  hotkeys: ['ctrl+o'],
+  button: {
+    name: 'Open file in a new tab',
+    toolbar: false,
+    contextMenu: true,
+    icon: ChonkyIconName.symlink
+  }
+});
+
+export const defaultFileActions = [ChonkyActions.CreateFolder, ChonkyActions.UploadFiles, ChonkyActions.DownloadFiles];
+const initialCustomFileActions = [
   ChonkyActions.CreateFolder,
   ChonkyActions.UploadFiles,
   deleteFolderAction,
   ChonkyActions.DownloadFiles
 ];
+
+export const customFileActions = (hasFolderSelected = false, hasFileSelected = false) => {
+  let customActions = hasFolderSelected ? [...initialCustomFileActions, renameFolderAction] : initialCustomFileActions;
+  customActions = hasFileSelected ? [...customActions, openFileAction] : customActions;
+  return customActions;
+};
