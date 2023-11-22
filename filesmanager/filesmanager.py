@@ -36,6 +36,11 @@ COURSE_ASSETS_PAGE_SIZE = 100
 ATTR_KEY_ANONYMOUS_USER_ID = 'edx-platform.anonymous_user_id'
 
 
+class NameTooLong(Exception):
+    """
+    Exception raised when the name of the file is too long.
+    """
+
 @XBlock.wants("user")
 class FilesManagerXBlock(XBlock):
     """
@@ -430,7 +435,17 @@ class FilesManagerXBlock(XBlock):
         contents = json.loads(request.params.get("contents", "[]"))
         self.directories["id"] = contents.get("rootFolderId", "")
 
-        self._sync_content(contents.get("treeFolders", {}).get("children", []))
+        try:
+            self._sync_content(contents.get("treeFolders", {}).get("children", []))
+        except NameTooLong as e:
+            return Response(
+                json_body={
+                    "status": "ERROR",
+                    "message": str(e),
+                },
+                status=HTTPStatus.BAD_REQUEST,
+            )
+
 
         self.clean_uploaded_files()
         self.fill_unpublished()
@@ -700,14 +715,14 @@ class FilesManagerXBlock(XBlock):
         )
         return memory_file
 
-    def find_temporary_file(self, file):
+    def find_temporary_file(self, file_data):
         """
         Find a temporary file by its name. If the file is found, a deepcopy of the file is returned.
         to allow multiple uploads of the same file.
         """
-        if file.get("metadata"):
+        if file_data.get("metadata"):
             return None
-        file_name = file.get("name")
+        file_name = file_data.get("name")
         for file in self.temporary_uploaded_files:
             if file.file.name == file_name:
                 self.temporary_uploaded_files.remove(file)
@@ -785,7 +800,10 @@ class FilesManagerXBlock(XBlock):
 
         Returns: the asset name with a prefix of 'files-' and a suffix of the block id.
         """
-        return f"files-{self.block_id_parsed}-{path.replace('/', '-')}"
+        name = f"files-{self.block_id_parsed}-{path.replace('/', '-')}"
+        if len(name) > 255:
+            raise NameTooLong("The name of the file is too long")
+        return name
 
     def is_in_filesmanager(self, course_asset):
         """Check if an asset is part of the xblock content.
