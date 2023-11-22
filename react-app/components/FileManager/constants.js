@@ -59,7 +59,13 @@ export const openFileAction = defineFileAction({
 export const defaultFileActions = [ChonkyActions.CreateFolder, ChonkyActions.UploadFiles, ChonkyActions.DownloadFiles];
 
 export const customFileActions = (hasFolderSelected = false, hasFileSelected = false) => {
-  let customActions = hasFolderSelected ? [deleteFolderAction, renameFolderAction, ...defaultFileActions] : defaultFileActions;
-  customActions = hasFileSelected ? [...customActions, openFileAction] : customActions;
-  return customActions;
+  if (hasFolderSelected) {
+    return [deleteFolderAction, renameFolderAction, ...defaultFileActions];
+  }
+
+  if (hasFileSelected) {
+    return [...defaultFileActions, openFileAction];
+  }
+
+  return defaultFileActions;
 };

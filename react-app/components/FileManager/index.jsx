@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useMemo, useState } from 'react';
+import React, { useEffect, useRef, useMemo, useState, useCallback } from 'react';
 import {
   ChonkyActions,
   FileBrowser,
@@ -217,6 +217,12 @@ const FileManager = (props) => {
     return () => clearInterval(interval);
   }, [fileSelection, fileBrowserRef, fileMap, hasOneFolderSelected, hasOneFileSelected]);
 
+  const thumbnailGenerator = useCallback(
+    ({ isSaved, metadata }) =>
+      isSaved && metadata.thumbnail && !metadata.thumbnail.includes('None') ? metadata.thumbnail : null,
+    []
+  );
+
   useEffect(() => {
     if (reloadPage) {
       window.location.reload();
@@ -237,6 +243,7 @@ const FileManager = (props) => {
           fileActions={fileActions}
           disableDefaultFileActions={isLoadingDownloadFile ? [ChonkyActions.DownloadFiles.id] : disabledActions}
           onFileAction={handleFileAction}
+          thumbnailGenerator={thumbnailGenerator}
           defaultFileViewActionId={ChonkyActions.EnableListView.id}
           clearSelectionOnOutsideClick={false}
           disableDragAndDropProvider={false}>
