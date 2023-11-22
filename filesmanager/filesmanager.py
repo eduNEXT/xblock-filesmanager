@@ -650,11 +650,14 @@ class FilesManagerXBlock(XBlock):
             if not internal_name in metadata.get("asset_key"):
                 # File was moved from a different directory
                 source_asset_key = metadata.get("asset_key")
+                uploaded_at = metadata.get("uploaded_at")
                 memory_file = self.generate_memory_file_for_asset(metadata)
                 memory_file._set_name(internal_name) # pylint: disable=protected-access
                 content = update_course_run_asset(self.course_id, memory_file)
                 metadata = self.get_asset_json_from_content(content)
-                self.delete_asset(source_asset_key)
+                metadata["uploaded_at"] = uploaded_at
+                if source_asset_key != metadata.get("asset_key"):
+                    self.delete_asset(source_asset_key)
         if not metadata:
             raise Exception("Metadata not found")
 
