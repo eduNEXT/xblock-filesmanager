@@ -139,15 +139,12 @@ const FileManager = (props) => {
     formData.append('contents', contentString);
     const hasAssetsKeyToDelete = filesToDelete.length > 0;
     let sizeFiles = 0;
-    const fileNames = new Set();
 
     filesKeys.forEach((key) => {
       const isFile = filesToSave[key].isDir === false;
-      const fileName = filesToSave[key].name;
       const isSavedFile = 'metadata' in filesToSave[key];
       const hasFileLoaded = 'file' in filesToSave[key];
-      if (isFile && hasFileLoaded && !isSavedFile && !fileNames.has(fileName)) {
-        fileNames.add(fileName);
+      if (isFile && hasFileLoaded && !isSavedFile) {
         const { file } = filesToSave[key];
         formData.append('files', file);
         sizeFiles++;

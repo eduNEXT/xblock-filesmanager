@@ -673,6 +673,7 @@ class FilesManagerXBlock(XBlock):
         """
         for file in self.temporary_uploaded_files:
             if file.file.name == file_name:
+                self.temporary_uploaded_files.remove(file)
                 return deepcopy(file)
         return None
 
