@@ -620,7 +620,7 @@ class FilesManagerXBlock(XBlock):
             from cms.djangoapps.contentstore.asset_storage_handler import \
                 update_course_run_asset  # pylint: disable=import-outside-toplevel
 
-        file_object = self.find_temporary_file(file.get("name"))
+        file_object = self.find_temporary_file(file)
         file_path, name = file.get("path"), file.get("name")
         metadata = file.get("metadata", {})
 
@@ -697,11 +697,14 @@ class FilesManagerXBlock(XBlock):
         )
         return memory_file
 
-    def find_temporary_file(self, file_name):
+    def find_temporary_file(self, file):
         """
         Find a temporary file by its name. If the file is found, a deepcopy of the file is returned.
         to allow multiple uploads of the same file.
         """
+        if file.get("metadata"):
+            return None
+        file_name = file.get("name")
         for file in self.temporary_uploaded_files:
             if file.file.name == file_name:
                 self.temporary_uploaded_files.remove(file)
