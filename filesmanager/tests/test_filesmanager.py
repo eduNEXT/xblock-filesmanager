@@ -192,9 +192,6 @@ class TestFilesManagerXBlockHandlers(FilesManagerXBlockTestMixin):
     def test_delete_content_with_contents(self):
         """
         Check delete content JSON handler with contents.
-        Expected result:
-            - The view returns 200 status code.
-            - The contents are deleted.
         """
         contents = ["path/to/content1", "path/to/content2"]
         data = {"contents": contents}
@@ -213,9 +210,6 @@ class TestFilesManagerXBlockHandlers(FilesManagerXBlockTestMixin):
     def test_delete_content_without_contents(self):
         """
         Check delete content JSON handler without contents.
-        Expected result:
-            - The view returns 200 status code.
-            - The contents are not deleted.
         """
         data = {"contents": []}
         self.request.body = json.dumps(data).encode("utf-8")
@@ -815,7 +809,7 @@ class TestFilesManagerXBlockUtilities(TestCase):
             "thumbnail_location": ["part1", "part2", "part3", "part4", "thumbnail_path"]
         }
         expected_result = str(
-            self.xblock.course_id.make_asset_key("thumbnail", "thumbnail_path")
+            self.xblock.course_id.make_asset_key("thumbnail", "thumbnail_path")  # pylint: disable=no-member
         )
 
         result = (

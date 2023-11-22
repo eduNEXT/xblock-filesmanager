@@ -51,44 +51,23 @@ class FilesManagerXBlock(XBlock):
     It allows to add, delete and reorganize files and (virtual) directories in the course assets.
     It also allows to upload files to the course assets.
 
-    Example of directories list:
-    [
-        {
-            "name": "Folder 1",
-            "type": "directory",
-            "path": "Folder 1",
-            "metadata": {
-                "id": ..,
-                ...
-            },
-            "children": [
+    ..note::
+
+            Example of directories list:
+            [
                 {
-                    "name": "File 1",
-                    "type": "file",
-                    "path": "Folder 1/File 1"
-                    "metadata": {
-                        "id": ..,
-                        "asset_key": ..,
-                        "display_name": ..,
-                        "url": ..,
-                        "content_type": ..,
-                        "file_size": ..,
-                        "external_url": ..,
-                        "thumbnail": ..,
-                    },
-                {
-                    "name": "Folder 2",
+                    "name": "Folder 1",
                     "type": "directory",
-                    "path": "Folder 1/Folder 2",
+                    "path": "Folder 1",
                     "metadata": {
                         "id": ..,
                         ...
                     },
                     "children": [
                         {
-                            "name": "File 2",
+                            "name": "File 1",
                             "type": "file",
-                            "path": "Folder 1/Folder 2/File 2"
+                            "path": "Folder 1/File 1"
                             "metadata": {
                                 "id": ..,
                                 "asset_key": ..,
@@ -99,11 +78,34 @@ class FilesManagerXBlock(XBlock):
                                 "external_url": ..,
                                 "thumbnail": ..,
                             },
+                        {
+                            "name": "Folder 2",
+                            "type": "directory",
+                            "path": "Folder 1/Folder 2",
+                            "metadata": {
+                                "id": ..,
+                                ...
+                            },
+                            "children": [
+                                {
+                                    "name": "File 2",
+                                    "type": "file",
+                                    "path": "Folder 1/Folder 2/File 2"
+                                    "metadata": {
+                                        "id": ..,
+                                        "asset_key": ..,
+                                        "display_name": ..,
+                                        "url": ..,
+                                        "content_type": ..,
+                                        "file_size": ..,
+                                        "external_url": ..,
+                                        "thumbnail": ..,
+                                    },
+                                }
+                            ]
                         }
                     ]
-                }
             ]
-    ]
     """
 
     directories = Dict(
@@ -289,20 +291,22 @@ class FilesManagerXBlock(XBlock):
 
         Returns: the list of directories is stored in the XBlock settings.
 
-        [
-            {
-                "name": "Folder 1",
-                "type": "directory",
-                "path": "Folder 1",
-                "metadata": {
-                    "id": ..,
-                    ...
-                },
-                "children": [
-                    ...
+        ..note::
+
+                [
+                    {
+                        "name": "Folder 1",
+                        "type": "directory",
+                        "path": "Folder 1",
+                        "metadata": {
+                            "id": ..,
+                            ...
+                        },
+                        "children": [
+                            ...
+                        ]
+                    }
                 ]
-            }
-        ]
         """
         # When outside the component edit view where there's anonymous user ID, remove unpublished directory
         if self.get_current_user().opt_attrs.get(ATTR_KEY_ANONYMOUS_USER_ID):
@@ -397,39 +401,41 @@ class FilesManagerXBlock(XBlock):
         Arguments:
             request: the request object containing the content to be added. The content can be
             directories or a files.
-            Each request must contain the following parameters:
-            - contents: the content to be added with the following format:
-            {
-                "rootFolderId": ...,
-                "treeFolders": {
-                    "id": "<rootFolderId>",
-                    "name": "Root",
-                    "type": "directory",
-                    "path": "Root",
-                    "parentId": "",
-                    "metadata": {},
-                    "children": [
-                        {
-                            "id": <folderId>,
-                            "name": "Folder 1",
-                            "type": "directory",
-                            "path": "Root/Folder 1",
-                            "parentId": "<rootFolderId>",
-                            "children": [
-                                {
-                                    "id": <fileId>,
-                                    "parentId": "<folderId>",
-                                    "name": "File 1",
-                                    "type": "file",
-                                    "path": "Root/Folder 1/File 1",
-                                }
-                            ]
-                        },
-                    ]
-            }
-
-            - file(s): file(s) to be uploaded, in case the content to be added contains files.
+            file(s): file(s) to be uploaded, in case the content to be added contains files.
             suffix: the suffix of the request.
+
+        ..note::
+
+                Each request must contain the following parameters:
+                - contents: the content to be added with the following format:
+                {
+                    "rootFolderId": ...,
+                    "treeFolders": {
+                        "id": "<rootFolderId>",
+                        "name": "Root",
+                        "type": "directory",
+                        "path": "Root",
+                        "parentId": "",
+                        "metadata": {},
+                        "children": [
+                            {
+                                "id": <folderId>,
+                                "name": "Folder 1",
+                                "type": "directory",
+                                "path": "Root/Folder 1",
+                                "parentId": "<rootFolderId>",
+                                "children": [
+                                    {
+                                        "id": <fileId>,
+                                        "parentId": "<folderId>",
+                                        "name": "File 1",
+                                        "type": "file",
+                                        "path": "Root/Folder 1/File 1",
+                                    }
+                                ]
+                            },
+                        ]
+                }
         """
         self.initialize_directories()
         self.temporary_save_upload_files(request.params.items())
@@ -744,7 +750,7 @@ class FilesManagerXBlock(XBlock):
         """
         Create a directory.
 
-         The new directory will:
+        The new directory will:
         - Be added to the target directory, if found. Otherwise, an error will be returned.
         - Be added to the root directory if no target directory is specified.
         - Have a path composed by the target directory path and the directory name, this path
