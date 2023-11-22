@@ -7,5 +7,6 @@ load-plugins = edx_lint.pylint,pylint_django,pylint_celery
 disable+=
     invalid-name,
     django-not-configured,
+    no-member,
     consider-using-with,
     bad-option-value,

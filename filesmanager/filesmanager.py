@@ -42,54 +42,33 @@ class NameTooLong(Exception):
     Exception raised when the name of the file is too long.
     """
 
+
 @XBlock.wants("user")
 class FilesManagerXBlock(XBlock):
     """
     Xblock to manage files which live in the course assets.
 
-
     This xblock is intended to be used as a presentation layer for the course assets.
     It allows to add, delete and reorganize files and (virtual) directories in the course assets.
     It also allows to upload files to the course assets.
 
-    Example of directories list:
-    [
-        {
-            "name": "Folder 1",
-            "type": "directory",
-            "path": "Folder 1",
-            "metadata": {
-                "id": ..,
-                ...
-            },
-            "children": [
+    ..note::
+
+            Example of directories list:
+            [
                 {
-                    "name": "File 1",
-                    "type": "file",
-                    "path": "Folder 1/File 1"
-                    "metadata": {
-                        "id": ..,
-                        "asset_key": ..,
-                        "display_name": ..,
-                        "url": ..,
-                        "content_type": ..,
-                        "file_size": ..,
-                        "external_url": ..,
-                        "thumbnail": ..,
-                    },
-                {
-                    "name": "Folder 2",
+                    "name": "Folder 1",
                     "type": "directory",
-                    "path": "Folder 1/Folder 2",
+                    "path": "Folder 1",
                     "metadata": {
                         "id": ..,
                         ...
                     },
                     "children": [
                         {
-                            "name": "File 2",
+                            "name": "File 1",
                             "type": "file",
-                            "path": "Folder 1/Folder 2/File 2"
+                            "path": "Folder 1/File 1"
                             "metadata": {
                                 "id": ..,
                                 "asset_key": ..,
@@ -100,16 +79,38 @@ class FilesManagerXBlock(XBlock):
                                 "external_url": ..,
                                 "thumbnail": ..,
                             },
+                        {
+                            "name": "Folder 2",
+                            "type": "directory",
+                            "path": "Folder 1/Folder 2",
+                            "metadata": {
+                                "id": ..,
+                                ...
+                            },
+                            "children": [
+                                {
+                                    "name": "File 2",
+                                    "type": "file",
+                                    "path": "Folder 1/Folder 2/File 2"
+                                    "metadata": {
+                                        "id": ..,
+                                        "asset_key": ..,
+                                        "display_name": ..,
+                                        "url": ..,
+                                        "content_type": ..,
+                                        "file_size": ..,
+                                        "external_url": ..,
+                                        "thumbnail": ..,
+                                    },
+                                }
+                            ]
                         }
                     ]
-                }
             ]
-    ]
     """
 
     directories = Dict(
-        default=
-        {
+        default={
             "id": "root",
             "name": "Root",
             "type": "directory",
@@ -171,7 +172,7 @@ class FilesManagerXBlock(XBlock):
         return self.runtime.service(self, "user").get_current_user()
 
     def read_file(self, path: str):
-        """Helper for reading a file using a relative path"""
+        """Read a file using a relative path."""
         file_content = ''
         BASE_DIR = os.path.abspath(os.path.dirname(__file__))
         file_path = os.path.join(BASE_DIR, path)
@@ -193,8 +194,7 @@ class FilesManagerXBlock(XBlock):
     # TO-DO: change this view to display your data your own way.
     def student_view(self, context=None):
         """
-        The primary view of the FilesManagerXBlock, shown to students
-        when viewing courses.
+        Return the primary view of the FilesManagerXBlock, shown to students when viewing courses.
         """
         if context:
             pass  # TO-DO: do something based on the context.
@@ -207,7 +207,6 @@ class FilesManagerXBlock(XBlock):
             new_content = js_content.replace('files-manager-app-root', react_app_root_id)
             js_content = new_content.replace('FilesManagerXBlock', js_xblock_function)
 
-
         html = f"<div id='{react_app_root_id}'></div><script defer='defer'>{js_content}</script>"
         frag = Fragment(html)
         frag.add_css(self.resource_string("static/css/filesmanager.css"))
@@ -215,23 +214,25 @@ class FilesManagerXBlock(XBlock):
         js_main_function = f"Main_{js_xblock_function}"
 
         js_content_parsed = (
-           f"function {js_main_function}(runtime, element, context) {{"
-           f"{js_xblock_function}(runtime, element, context);"
-        "}")
+            f"function {js_main_function}(runtime, element, context) {{"
+            f"{js_xblock_function}(runtime, element, context);"
+            "}"
+        )
 
         if not js_content:
             js_content_parsed = (
                 f"function {js_main_function}(runtime, element, context) {{"
                 "console.error('Something went wrong with XBlock rendering');"
-            "}")
+                "}"
+            )
 
         # Add i18n js
         statici18n_js_url = self._get_statici18n_js_url()
         if statici18n_js_url:
-           frag.add_javascript_url(self.runtime.local_resource_url(self, statici18n_js_url))
+            frag.add_javascript_url(self.runtime.local_resource_url(self, statici18n_js_url))
 
-        js_context  = {
-           "xblock_id": self.block_id,
+        js_context = {
+            "xblock_id": self.block_id,
             "is_edit_view": False
         }
 
@@ -239,14 +240,10 @@ class FilesManagerXBlock(XBlock):
         frag.initialize_js(js_main_function, json_args=js_context)
         return frag
 
-    def studio_view(self, context=None):
+    def studio_view(self, context=None):  # pylint: disable=unused-argument
         """
-        The edit view of the FilesManagerXBlock in Studio.
+        Return the edit view of the FilesManagerXBlock in Studio.
         """
-        if context:
-           pass  # TO-DO: do something based on the context.
-
-
         js_xblock_function = f"XBlockMainEdit{self.block_id_parsed}"
         react_app_root_id = f"files-manager-app-root-{self.block_id_parsed}-edit"
 
@@ -262,23 +259,25 @@ class FilesManagerXBlock(XBlock):
         js_main_function = f"Main_{js_xblock_function}"
 
         js_content_parsed = (
-           f"function {js_main_function}(runtime, element, context) {{"
-           f"{js_xblock_function}(runtime, element, context);"
-        "}")
+            f"function {js_main_function}(runtime, element, context) {{"
+            f"{js_xblock_function}(runtime, element, context);"
+            "}"
+        )
 
         if not js_content:
             js_content_parsed = (
                 f"function {js_main_function}(runtime, element, context) {{"
                 "console.error('Something went wrong with XBlock rendering');"
-            "}")
+                "}"
+            )
 
         # Add i18n js
         statici18n_js_url = self._get_statici18n_js_url()
         if statici18n_js_url:
-           frag.add_javascript_url(self.runtime.local_resource_url(self, statici18n_js_url))
+            frag.add_javascript_url(self.runtime.local_resource_url(self, statici18n_js_url))
 
-        js_context  = {
-           "xblock_id": self.block_id,
+        js_context = {
+            "xblock_id": self.block_id,
             "is_edit_view": True
         }
 
@@ -287,26 +286,28 @@ class FilesManagerXBlock(XBlock):
         return frag
 
     @XBlock.json_handler
-    def get_directories(self, data, suffix=''): # pylint: disable=unused-argument
-        """Get the list of directories.
-
+    def get_directories(self, data, suffix=''):  # pylint: disable=unused-argument
+        """
+        Get the list of directories.
 
         Returns: the list of directories is stored in the XBlock settings.
 
-        [
-            {
-                "name": "Folder 1",
-                "type": "directory",
-                "path": "Folder 1",
-                "metadata": {
-                    "id": ..,
-                    ...
-                },
-                "children": [
-                    ...
+        ..note::
+
+                [
+                    {
+                        "name": "Folder 1",
+                        "type": "directory",
+                        "path": "Folder 1",
+                        "metadata": {
+                            "id": ..,
+                            ...
+                        },
+                        "children": [
+                            ...
+                        ]
+                    }
                 ]
-            }
-        ]
         """
         # When outside the component edit view where there's anonymous user ID, remove unpublished directory
         if self.get_current_user().opt_attrs.get(ATTR_KEY_ANONYMOUS_USER_ID):
@@ -328,8 +329,9 @@ class FilesManagerXBlock(XBlock):
         }
 
     @XBlock.json_handler
-    def clear_directories(self, data, suffix=''): # pylint: disable=unused-argument
-        """Clear the list of directories without removing files from course assets.
+    def clear_directories(self, data, suffix=''):  # pylint: disable=unused-argument
+        """
+        Clear the list of directories without removing files from course assets.
 
         All the directories will be removed except the unpublished directory,
         and assets from the course will be added to the unpublished directory.
@@ -363,11 +365,13 @@ class FilesManagerXBlock(XBlock):
         }
 
     @XBlock.json_handler
-    def get_content(self, data, suffix=''): # pylint: disable=unused-argument
-        """Get the content of a directory.
+    def get_content(self, data, suffix=''):  # pylint: disable=unused-argument
+        """
+        Get the content of a directory.
 
         Arguments:
             data: the path of the directory to be retrieved.
+            suffix: the suffix of the request.
 
         Returns: the content of the directory if found, an empty sequence otherwise.
         """
@@ -384,8 +388,9 @@ class FilesManagerXBlock(XBlock):
         }
 
     @XBlock.handler
-    def sync_content(self, request, suffix=''): # pylint: disable=unused-argument
-        """Associate content to the Xblock state and course assets when necessary.
+    def sync_content(self, request, suffix=''):  # pylint: disable=unused-argument
+        """
+        Associate content to the Xblock state and course assets when necessary.
 
         This handler does the following:
         - Initialize the directories list with the content of the course assets.
@@ -397,38 +402,41 @@ class FilesManagerXBlock(XBlock):
         Arguments:
             request: the request object containing the content to be added. The content can be
             directories or a files.
-            Each request must contain the following parameters:
-            - contents: the content to be added with the following format:
-            {
-                "rootFolderId": ...,
-                "treeFolders": {
-                    "id": "<rootFolderId>",
-                    "name": "Root",
-                    "type": "directory",
-                    "path": "Root",
-                    "parentId": "",
-                    "metadata": {},
-                    "children": [
-                        {
-                            "id": <folderId>,
-                            "name": "Folder 1",
-                            "type": "directory",
-                            "path": "Root/Folder 1",
-                            "parentId": "<rootFolderId>",
-                            "children": [
-                                {
-                                    "id": <fileId>,
-                                    "parentId": "<folderId>",
-                                    "name": "File 1",
-                                    "type": "file",
-                                    "path": "Root/Folder 1/File 1",
-                                }
-                            ]
-                        },
-                    ]
-            }
+            file(s): file(s) to be uploaded, in case the content to be added contains files.
+            suffix: the suffix of the request.
 
-            - file(s): file(s) to be uploaded, in case the content to be added contains files.
+        ..note::
+
+                Each request must contain the following parameters:
+                - contents: the content to be added with the following format:
+                {
+                    "rootFolderId": ...,
+                    "treeFolders": {
+                        "id": "<rootFolderId>",
+                        "name": "Root",
+                        "type": "directory",
+                        "path": "Root",
+                        "parentId": "",
+                        "metadata": {},
+                        "children": [
+                            {
+                                "id": <folderId>,
+                                "name": "Folder 1",
+                                "type": "directory",
+                                "path": "Root/Folder 1",
+                                "parentId": "<rootFolderId>",
+                                "children": [
+                                    {
+                                        "id": <fileId>,
+                                        "parentId": "<folderId>",
+                                        "name": "File 1",
+                                        "type": "file",
+                                        "path": "Root/Folder 1/File 1",
+                                    }
+                                ]
+                            },
+                        ]
+                }
         """
         self.initialize_directories()
         self.temporary_save_upload_files(request.params.items())
@@ -447,7 +455,6 @@ class FilesManagerXBlock(XBlock):
                 status=HTTPStatus.BAD_REQUEST,
             )
 
-
         self.clean_uploaded_files()
         self.fill_unpublished()
 
@@ -457,7 +464,8 @@ class FilesManagerXBlock(XBlock):
         )
 
     def initialize_directories(self):
-        """Initialize the directories list with the content of the course assets.
+        """
+        Initialize the directories list with the content of the course assets.
 
         The directory data structure is initialized every time the sync_content method is called.
         While initializing, the root/unpublished directory is created.
@@ -478,7 +486,8 @@ class FilesManagerXBlock(XBlock):
         ]
 
     def _sync_content(self, contents):
-        """Add new content to a target directory or to the root directory.
+        """
+        Add new content to a target directory or to the root directory.
 
         Arguments:
             contents: the content to be added.
@@ -503,7 +512,8 @@ class FilesManagerXBlock(XBlock):
         }
 
     def sync_with_course_assets(self):
-        """Sync files according to the course assets.
+        """
+        Sync files according to the course assets.
 
         This method does the following:
         - Get all files from the course assets.
@@ -521,7 +531,8 @@ class FilesManagerXBlock(XBlock):
                     del self.source_keys[asset_key]
 
     def delete_file_from_directory(self, file):
-        """Delete an file from a directory.
+        """
+        Delete an file from a directory.
 
         Arguments:
             file: the file to be deleted.
@@ -533,7 +544,8 @@ class FilesManagerXBlock(XBlock):
             del parent_directory[index]
 
     def get_all_files(self, directory):
-        """Get all the files from a directory.
+        """
+        Get all the files from a directory.
 
         Arguments:
             directory: the directory to be scanned.
@@ -549,11 +561,11 @@ class FilesManagerXBlock(XBlock):
         return files
 
     def temporary_save_upload_files(self, uploaded_files):
-        """Handler for file upload to the course assets.
+        """
+        Save files for later upload to course assets.
 
         Arguments:
-            request: the request object containing the files to be uploaded and the
-            target directory path.
+            uploaded_files: the list of files to be saved.
 
         Returns: the content of the target directory.
         """
@@ -563,14 +575,17 @@ class FilesManagerXBlock(XBlock):
             self.temporary_uploaded_files.append(file)
 
     def clean_uploaded_files(self):
-        """Clean the temporary uploaded files.
+        """
+        Clean the temporary uploaded files.
 
         Returns: None.
         """
         self.temporary_uploaded_files = []
 
     def generate_content_path(self, base_path, name=None):
-        """Generate a new file name if the file name already exists.
+        """
+        Generate a new file name if the file name already exists.
+
         Args:
             base_name (str): The content name to check.
         Returns:
@@ -604,7 +619,8 @@ class FilesManagerXBlock(XBlock):
         return base_path, name
 
     def upload_file_to_directory(self, file, target_directory):
-        """Upload a file to a directory.
+        """
+        Upload a file to a directory.
 
         Arguments:
             file: the file to be uploaded.
@@ -643,7 +659,7 @@ class FilesManagerXBlock(XBlock):
         if file_object and not metadata:
             # New file uploaded from the Files Manager
             file_path, name = self.generate_content_path(file_path, file_object.filename)
-            file_object.file._set_name(self.generate_asset_name(file_path)) # pylint: disable=protected-access
+            file_object.file._set_name(self.generate_asset_name(file_path))  # pylint: disable=protected-access
             content = update_course_run_asset(self.course_id, file_object.file)
             metadata = self.get_asset_json_from_content(content)
         elif not metadata.get("uploaded_at"):
@@ -663,12 +679,12 @@ class FilesManagerXBlock(XBlock):
             internal_name = self.generate_asset_name(file_path)
             if self.delete_unpublished_asset(file_path, metadata):
                 return
-            if not internal_name in metadata.get("asset_key"):
+            if internal_name not in metadata.get("asset_key"):
                 # File was moved from a different directory
                 source_asset_key = metadata.get("asset_key")
                 uploaded_at = metadata.get("uploaded_at")
                 memory_file = self.generate_memory_file_for_asset(metadata)
-                memory_file._set_name(internal_name) # pylint: disable=protected-access
+                memory_file._set_name(internal_name)  # pylint: disable=protected-access
                 content = update_course_run_asset(self.course_id, memory_file)
                 metadata = self.get_asset_json_from_content(content)
                 metadata["uploaded_at"] = uploaded_at
@@ -718,7 +734,9 @@ class FilesManagerXBlock(XBlock):
 
     def find_temporary_file(self, file_data):
         """
-        Find a temporary file by its name. If the file is found, a deepcopy of the file is returned.
+        Find a temporary file by its name.
+
+        If the file is found, a deepcopy of the file is returned
         to allow multiple uploads of the same file.
         """
         if file_data.get("metadata"):
@@ -731,9 +749,10 @@ class FilesManagerXBlock(XBlock):
         return None
 
     def create_directory(self, directory, target_directory):
-        """Create a directory.
+        """
+        Create a directory.
 
-         The new directory will:
+        The new directory will:
         - Be added to the target directory, if found. Otherwise, an error will be returned.
         - Be added to the root directory if no target directory is specified.
         - Have a path composed by the target directory path and the directory name, this path
@@ -765,11 +784,13 @@ class FilesManagerXBlock(XBlock):
                 self.upload_file_to_directory(child, target_directory[-1]["children"])
 
     @XBlock.json_handler
-    def delete_content(self, data, suffix=''): # pylint: disable=unused-argument
-        """Delete a content from the course assets.
+    def delete_content(self, data, suffix=''):  # pylint: disable=unused-argument
+        """
+        Delete a content from the course assets.
 
         Arguments:
-            paths: list of paths of the content to be deleted.
+            data: list of paths of the content to be deleted.
+            suffix: the suffix of the request.
 
         Returns: the content of the parent directory.
         """
@@ -787,7 +808,8 @@ class FilesManagerXBlock(XBlock):
         }
 
     def get_formatted_content(self):
-        """Get the formatted content of the directories.
+        """
+        Get the formatted content of the directories.
 
         Returns: the formatted content of the directories.
         """
@@ -797,7 +819,8 @@ class FilesManagerXBlock(XBlock):
         }
 
     def generate_asset_name(self, path):
-        """Generate an asset name for a given path.
+        """
+        Generate an asset name for a given path.
 
         Returns: the asset name with a prefix of 'files-' and a suffix of the block id.
         """
@@ -807,7 +830,8 @@ class FilesManagerXBlock(XBlock):
         return name
 
     def is_in_filesmanager(self, course_asset):
-        """Check if an asset is part of the xblock content.
+        """
+        Check if an asset is part of the xblock content.
 
         Arguments:
             course_asset: the course asset to be checked.
@@ -832,7 +856,8 @@ class FilesManagerXBlock(XBlock):
         return False
 
     def fill_unpublished(self):
-        """Prefill the directories list with the content of the course assets.
+        """
+        Prefill the directories list with the content of the course assets.
 
         This unorganized content will be added to the unpublished directory, which is the first
         directory in the list.
@@ -861,7 +886,8 @@ class FilesManagerXBlock(XBlock):
             )
 
     def is_asset_in_unpublished(self, course_asset, unpublished_directory):
-        """Check if an asset is in the unpublished directory.
+        """
+        Check if an asset is in the unpublished directory.
 
         Arguments:
             course_asset: the course asset to be checked.
@@ -875,11 +901,8 @@ class FilesManagerXBlock(XBlock):
         return False
 
     def get_all_serialized_assets(self):
-        """Get all the serialized assets for a given course.
-
-        Arguments:
-            course_key: the course key of the course.
-            options: the options for the query.
+        """
+        Get all the serialized assets of the current XBlock.
 
         Returns: the serialized assets.
         """
@@ -906,7 +929,8 @@ class FilesManagerXBlock(XBlock):
         return serialized_course_assets
 
     def get_target_directory(self, path):
-        """Get the target directory for a given path.
+        """
+        Get the target directory for a given path.
 
         Arguments:
             path: the path of the target directory.
@@ -922,7 +946,8 @@ class FilesManagerXBlock(XBlock):
         return target_directory
 
     def get_asset_json_from_content(self, content):
-        """Serialize the content object to a JSON serializable object.
+        """
+        Serialize the content object to a JSON serializable object.
 
         Arguments:
             content: the content object to be serialized.
@@ -965,11 +990,15 @@ class FilesManagerXBlock(XBlock):
 
         if thumbnail_location:
             thumbnail_path = thumbnail_location[4]
-            thumbnail_asset_key = self.course_id.make_asset_key('thumbnail', thumbnail_path)
+            thumbnail_asset_key = self.course_id.make_asset_key(  # pylint: disable=no-member
+                'thumbnail',
+                thumbnail_path
+            )
         return str(thumbnail_asset_key)
 
     def get_content_by_path(self, path):
-        """Get the (content, index, parent directory) for a given content path.
+        """
+        Get the (content, index, parent directory) for a given content path.
 
         Arguments:
             path: the path of the content to be retrieved.
@@ -990,7 +1019,8 @@ class FilesManagerXBlock(XBlock):
         return None, None, None
 
     def delete_asset(self, asset_key):
-        """Delete an asset from the course assets.
+        """
+        Delete an asset from the course assets.
 
         Arguments:
             asset_key: the asset key of the asset to be deleted.
@@ -1010,7 +1040,8 @@ class FilesManagerXBlock(XBlock):
 
     @XBlock.json_handler
     def download_content(self, data, suffix=''):  # pylint: disable=unused-argument
-        """Download the content of a directory.
+        """
+        Download the content of a directory.
 
         Arguments:
             contents: the path of the directories or files to be downloaded.
@@ -1021,8 +1052,8 @@ class FilesManagerXBlock(XBlock):
         contents = data.get("contents")
         if not contents:
             return {
-                "status": "error",
-                "message": "Path not found",
+                "status": "ERROR",
+                "message": "Provide a list of contents to download.",
             }
         task_result = create_zip_file_task.delay(contents)
         return {
@@ -1032,7 +1063,8 @@ class FilesManagerXBlock(XBlock):
 
     @XBlock.json_handler
     def download_status(self, data, suffix=''):  # pylint: disable=unused-argument
-        """Get the status of the async task.
+        """
+        Get the status of the async task.
 
         Arguments:
             task_id: the task ID of the async task.
@@ -1044,13 +1076,13 @@ class FilesManagerXBlock(XBlock):
         task_id = data.get("task_id")
         if not task_id:
             return {
-                "status": "error",
+                "status": "ERROR",
                 "message": "Provide a task ID",
             }
         task_result = create_zip_file_task.AsyncResult(task_id)
         if not task_result:
             return {
-                "status": "error",
+                "status": "ERROR",
                 "message": "Task not found",
             }
         try:
@@ -1067,28 +1099,11 @@ class FilesManagerXBlock(XBlock):
             "result": result
         }
 
-    # TO-DO: change this to create the scenarios you'd like to see in the
-    # workbench while developing your XBlock.
     @staticmethod
-    def workbench_scenarios():
-        """A canned scenario for display in the workbench."""
-        return [
-            ("FilesManagerXBlock",
-             """<filesmanager/>
-             """),
-            ("Multiple FilesManagerXBlock",
-             """<vertical_demo>
-                <filesmanager/>
-                <filesmanager/>
-                <filesmanager/>
-                </vertical_demo>
-             """),
-        ]
-
-    @staticmethod
-    def _get_statici18n_js_url(): # pragma: no cover
+    def _get_statici18n_js_url():  # pragma: no cover
         """
-        Returns the Javascript translation file for the currently selected language, if any.
+        Return the Javascript translation file for the currently selected language, if any.
+
         Defaults to English if available.
         """
         locale_code = translation.get_language()
@@ -1106,6 +1121,6 @@ class FilesManagerXBlock(XBlock):
     @staticmethod
     def get_dummy():
         """
-        Dummy method to generate initial i18n
+        Return a dummy translation to generate initial i18n.
         """
         return translation.gettext_noop('Dummy')
