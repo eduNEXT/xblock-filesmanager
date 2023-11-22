@@ -585,6 +585,23 @@ class FilesManagerXBlock(XBlock):
             target_directory: the target directory where the file will be uploaded.
 
         Returns: the content of the target directory.
+
+        ..note::
+
+                The file can be uploaded from the Files Manager or from the course assets.
+
+                If the file is uploaded from the Files Manager:
+                    - A new asset will be created in the course assets.
+                    - A link to the course asset will be created in the Files Manager.
+
+                If the file is uploaded from the course assets:
+                    - A link to the course asset will be created in the Files Manager.
+                    - No new asset will be created in the course assets.
+
+                If the file is moved from a different directory:
+                    - A new asset will be created in the course assets.
+                    - A link to the course asset will be created in the Files Manager.
+                    - As course assets can't be renamed, the original asset will be removed from the course assets.
         """
         try:
             from cms.djangoapps.contentstore.views.assets import \
