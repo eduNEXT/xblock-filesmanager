@@ -52,11 +52,12 @@ const FileManager = (props) => {
 
   const downloadFile = (fileData) => {
     const {
-      metadata: { display_name, url }
+      metadata: { url },
+      name: name
     } = fileData;
     const { hostname, port, protocol } = window.location;
     const fullUrl = port ? `${protocol}//${hostname}:${port}${url}` : `${protocol}//${hostname}${url}`;
-    downloadFileHook(fullUrl, display_name);
+    downloadFileHook(fullUrl, name);
   };
 
   const downloadFiles = (filesToDownload) => {
