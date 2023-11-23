@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { getBlobFile } from '@services/fileService';
-
+import { saveAs } from 'file-saver'
 /**
  * A custom React hook for downloading files from a given URL.
  *
@@ -16,29 +16,13 @@ const useFileDownloader = ({ onError, onFileDownloaded}) => {
   const [, setBlobUrl] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const downloadFileHook = async (fileUrl, fileName) => {
+  const downloadFileHook = async (fileUrl, fileName, isZip) => {
 
     setIsLoading(true);
 
     try {
-      const { data } = await getBlobFile(fileUrl);
-      const blob = new Blob([data]);
-      const url = window.URL.createObjectURL(blob);
-      setBlobUrl(url);
-
-      const link = document.createElement('a');
-      link.style.display = 'none';
-      link.href = url;
-      link.download = fileName;
-      document.body.appendChild(link);
-
-      link.click();
-
-      window.URL.revokeObjectURL(url);
-
+      saveAs(fileUrl, fileName);
       onFileDownloaded();
-      // Clean up by removing the anchor element
-      document.body.removeChild(link);
     } catch (error) {
       onError();
     }finally {

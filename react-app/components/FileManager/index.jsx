@@ -57,7 +57,7 @@ const FileManager = (props) => {
     } = fileData;
     const { hostname, port, protocol } = window.location;
     const fullUrl = port ? `${protocol}//${hostname}:${port}${url}` : `${protocol}//${hostname}${url}`;
-    downloadFileHook(fullUrl, name);
+    downloadFileHook(fullUrl, name, false);
   };
 
   const downloadFiles = (filesToDownload) => {
@@ -86,7 +86,7 @@ const FileManager = (props) => {
     }
     let data = createContentData.data;
     if (data.status === 'SUCCESS') {
-        downloadFileHook(data.result, "download.zip")
+        downloadFileHook(data.result, "download.zip", true)
     } else if (data.status === 'ERROR') {
         onError()
     } else {
