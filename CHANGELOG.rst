@@ -14,7 +14,17 @@ Change Log
 Unreleased
 **********
 
-*
+0.4.0 - 2023-11-23
+**********************************************
+
+Added
+=====
+
+* Allow to rename folders.
+* Remove hiden files button.
+* Show thumbnails for images.
+* Open file preview in another tab.
+* Allow to upload files with the same name.
 
 0.3.0 – 2023-11-17
 **********************************************
