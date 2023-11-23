@@ -1,14 +1,16 @@
 """Definition for the Files Manager XBlock."""
-from datetime import datetime
 import json
 import logging
 import os
+import tempfile
 from copy import deepcopy
+from datetime import datetime
 from http import HTTPStatus
 from urllib.parse import urljoin
 
 import pkg_resources
 from django.conf import settings
+from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.utils import translation
 from webob.response import Response
 from xblock.core import XBlock
@@ -33,6 +35,11 @@ log = logging.getLogger(__name__)
 COURSE_ASSETS_PAGE_SIZE = 100
 ATTR_KEY_ANONYMOUS_USER_ID = 'edx-platform.anonymous_user_id'
 
+
+class NameTooLong(Exception):
+    """
+    Exception raised when the name of the file is too long.
+    """
 
 @XBlock.wants("user")
 class FilesManagerXBlock(XBlock):
@@ -130,10 +137,16 @@ class FilesManagerXBlock(XBlock):
         help="List of content paths to be displayed in the Files Manager."
     )
 
-    temporary_uploaded_files = Dict(
-        default={},
+    temporary_uploaded_files = List(
+        default=[],
         scope=Scope.settings,
         help="List of temporary uploaded files."
+    )
+
+    source_keys = Dict(
+        default={},
+        scope=Scope.settings,
+        help="List of source keys."
     )
 
     @property
@@ -422,7 +435,17 @@ class FilesManagerXBlock(XBlock):
         contents = json.loads(request.params.get("contents", "[]"))
         self.directories["id"] = contents.get("rootFolderId", "")
 
-        self._sync_content(contents.get("treeFolders", {}).get("children", []))
+        try:
+            self._sync_content(contents.get("treeFolders", {}).get("children", []))
+        except NameTooLong as e:
+            return Response(
+                json_body={
+                    "status": "ERROR",
+                    "message": str(e),
+                },
+                status=HTTPStatus.BAD_REQUEST,
+            )
+
 
         self.clean_uploaded_files()
         self.fill_unpublished()
@@ -492,6 +515,9 @@ class FilesManagerXBlock(XBlock):
         for file in directories_files:
             if file["metadata"].get("id") not in course_assets_ids:
                 self.delete_file_from_directory(file)
+                asset_key = file["metadata"].get("asset_key")
+                if asset_key in self.source_keys:
+                    del self.source_keys[asset_key]
 
     def delete_file_from_directory(self, file):
         """Delete an file from a directory.
@@ -533,14 +559,14 @@ class FilesManagerXBlock(XBlock):
         for content_type, file in uploaded_files:
             if not content_type.startswith("file"):
                 continue
-            self.temporary_uploaded_files[file.file.name] = file
+            self.temporary_uploaded_files.append(file)
 
     def clean_uploaded_files(self):
         """Clean the temporary uploaded files.
 
         Returns: None.
         """
-        self.temporary_uploaded_files = {}
+        self.temporary_uploaded_files = []
 
     def generate_content_path(self, base_path, name=None):
         """Generate a new file name if the file name already exists.
@@ -548,10 +574,32 @@ class FilesManagerXBlock(XBlock):
             base_name (str): The content name to check.
         Returns:
             str: The new file name.
+
+        ..note::
+
+                If the file name already exists, the new file name will be generated
+                by adding a number at the end of the file name.
+
+                Example:
+                    - If the file name is "file.txt", the new file name will be "file (1).txt".
+                    - If the file name is "file (1).txt", the new file name will be "file (2).txt".
+
         """
         if base_path in self.content_paths:
-            base_path = f"{base_path} ({len(self.content_paths)})"
-            name = f"{name} ({len(self.content_paths)})"
+            counter = 1
+            extension = name.split(".")[-1]
+            base_name = name.replace(f".{extension}", "")
+            base_file_path = base_path.split("/")
+            del base_file_path[-1]
+            base_file_path = "/".join(base_file_path)
+            while True:
+                new_path = f"{base_file_path}/{base_name} ({counter}).{extension}"
+                counter += 1
+                if new_path not in self.content_paths:
+                    break
+
+            base_path = new_path
+            name = base_path.split("/")[-1]
         return base_path, name
 
     def upload_file_to_directory(self, file, target_directory):
@@ -562,6 +610,23 @@ class FilesManagerXBlock(XBlock):
             target_directory: the target directory where the file will be uploaded.
 
         Returns: the content of the target directory.
+
+        ..note::
+
+                The file can be uploaded from the Files Manager or from the course assets.
+
+                If the file is uploaded from the Files Manager:
+                    - A new asset will be created in the course assets.
+                    - A link to the course asset will be created in the Files Manager.
+
+                If the file is uploaded from the course assets:
+                    - A link to the course asset will be created in the Files Manager.
+                    - No new asset will be created in the course assets.
+
+                If the file is moved from a different directory:
+                    - A new asset will be created in the course assets.
+                    - A link to the course asset will be created in the Files Manager.
+                    - As course assets can't be renamed, the original asset will be removed from the course assets.
         """
         try:
             from cms.djangoapps.contentstore.views.assets import \
@@ -570,15 +635,46 @@ class FilesManagerXBlock(XBlock):
             from cms.djangoapps.contentstore.asset_storage_handler import \
                 update_course_run_asset  # pylint: disable=import-outside-toplevel
 
-        file_object = self.temporary_uploaded_files.pop(file.get("name"), None)
+        file_object = self.find_temporary_file(file)
         file_path, name = file.get("path"), file.get("name")
         metadata = file.get("metadata", {})
 
-        if file_object:
+        if file_object and not metadata:
+            # New file uploaded from the Files Manager
             file_path, name = self.generate_content_path(file_path, file_object.filename)
-            file_object.file._set_name(name) # pylint: disable=protected-access
+            file_object.file._set_name(self.generate_asset_name(file_path)) # pylint: disable=protected-access
             content = update_course_run_asset(self.course_id, file_object.file)
             metadata = self.get_asset_json_from_content(content)
+        elif not metadata.get("uploaded_at"):
+            # File was uploaded from the course assets. Just create a link
+            if "files-" not in metadata.get("asset_key"):
+                file_path, name = self.generate_content_path(file_path, metadata.get("display_name"))
+                metadata["from"] = metadata.get("asset_key")
+                self.source_keys[metadata.get("asset_key")] = metadata.get("asset_key")
+            else:
+                # If the file is bring back to the Unpublished folder and was not uploaded from the course assets
+                # mark the file as Unpublished again and do not upload it to the course assets
+                if self.delete_unpublished_asset(file_path, metadata):
+                    return
+        else:
+            # File uploaded to files-manager and then moved to a different directory
+            file_path, name = self.generate_content_path(file_path, name)
+            internal_name = self.generate_asset_name(file_path)
+            if self.delete_unpublished_asset(file_path, metadata):
+                return
+            if not internal_name in metadata.get("asset_key"):
+                # File was moved from a different directory
+                source_asset_key = metadata.get("asset_key")
+                uploaded_at = metadata.get("uploaded_at")
+                memory_file = self.generate_memory_file_for_asset(metadata)
+                memory_file._set_name(internal_name) # pylint: disable=protected-access
+                content = update_course_run_asset(self.course_id, memory_file)
+                metadata = self.get_asset_json_from_content(content)
+                metadata["uploaded_at"] = uploaded_at
+                if source_asset_key != metadata.get("asset_key"):
+                    self.delete_asset(source_asset_key)
+        if not metadata:
+            raise Exception("Metadata not found")
 
         target_directory.append(
             {
@@ -591,6 +687,47 @@ class FilesManagerXBlock(XBlock):
             }
         )
         self.content_paths.append(file_path)
+
+    def delete_unpublished_asset(self, file_path, metadata):
+        """Delete an unpublished asset if the file is being moved to the Unpublished folder."""
+        if "Unpublished" in file_path and not metadata.get("uploaded_at"):
+            if metadata.get("from"):
+                del self.source_keys[metadata.get("from")]
+            return True
+        return False
+
+    def generate_memory_file_for_asset(self, metadata):
+        """
+        Generate a django in memory file with the contents of a file from the course assets.
+        """
+        location = AssetKey.from_string(metadata.get("asset_key"))
+        content = contentstore().find(location)
+        tmp_file = tempfile.NamedTemporaryFile(suffix=content.content_type.split("/")[-1])
+        tmp_file.write(content._data)  # pylint: disable=protected-access
+        tmp_file.file.seek(0)
+        memory_file = InMemoryUploadedFile(
+            file=tmp_file,
+            field_name=None,
+            name=metadata.get("display_name"),
+            content_type=content.content_type,
+            size=content.length,
+            charset=None
+        )
+        return memory_file
+
+    def find_temporary_file(self, file_data):
+        """
+        Find a temporary file by its name. If the file is found, a deepcopy of the file is returned.
+        to allow multiple uploads of the same file.
+        """
+        if file_data.get("metadata"):
+            return None
+        file_name = file_data.get("name")
+        for file in self.temporary_uploaded_files:
+            if file.file.name == file_name:
+                self.temporary_uploaded_files.remove(file)
+                return deepcopy(file)
+        return None
 
     def create_directory(self, directory, target_directory):
         """Create a directory.
@@ -658,6 +795,41 @@ class FilesManagerXBlock(XBlock):
             "treeFolders": self.directories,
         }
 
+    def generate_asset_name(self, path):
+        """Generate an asset name for a given path.
+
+        Returns: the asset name with a prefix of 'files-' and a suffix of the block id.
+        """
+        name = f"files-{self.block_id_parsed}-{path.replace('/', '-')}"
+        if len(name) > 255:
+            raise NameTooLong("The name of the file is too long")
+        return name
+
+    def is_in_filesmanager(self, course_asset):
+        """Check if an asset is part of the xblock content.
+
+        Arguments:
+            course_asset: the course asset to be checked.
+
+        Returns: True if the asset key is in the files manager, False otherwise.
+        """
+        if course_asset["asset_key"] in self.source_keys:
+            return True
+
+        display_name = course_asset["display_name"]
+        is_num = False
+        try:
+            block_id = display_name.split("files-")[1][0:32]
+            int(block_id, 16)
+            is_num = True
+        except IndexError:
+            return False
+        except ValueError:
+            return False
+        if display_name.startswith("files-") and is_num:
+            return True
+        return False
+
     def fill_unpublished(self):
         """Prefill the directories list with the content of the course assets.
 
@@ -670,18 +842,36 @@ class FilesManagerXBlock(XBlock):
         unpublished_directory["parentId"] = self.directories["id"]
         all_course_assets = self.get_all_serialized_assets()
         for course_asset in all_course_assets:
-            content, _, _ = self.get_content_by_name(course_asset["display_name"], self.directories["children"])
-            if not content:
-                unpublished_directory["children"].append(
-                    {
-                        "id": course_asset["id"],
-                        "parentId": unpublished_directory["id"],
-                        "name": course_asset["display_name"],
-                        "type": "file",
-                        "path": f"Root/Unpublished/{course_asset['display_name']}",
-                        "metadata": course_asset,
-                    }
-                )
+            if self.is_in_filesmanager(course_asset):
+                continue
+
+            if self.is_asset_in_unpublished(course_asset, unpublished_directory):
+                continue
+
+            unpublished_directory["children"].append(
+                {
+                    "id": course_asset["id"],
+                    "parentId": unpublished_directory["id"],
+                    "name": course_asset["display_name"],
+                    "type": "file",
+                    "path": f"Root/Unpublished/{course_asset['display_name']}",
+                    "metadata": course_asset,
+                }
+            )
+
+    def is_asset_in_unpublished(self, course_asset, unpublished_directory):
+        """Check if an asset is in the unpublished directory.
+
+        Arguments:
+            course_asset: the course asset to be checked.
+            unpublished_directory: the unpublished directory.
+
+        Returns: True if the asset is in the unpublished directory, False otherwise.
+        """
+        for content in unpublished_directory["children"]:
+            if content["metadata"]["id"] == course_asset["id"]:
+                return True
+        return False
 
     def get_all_serialized_assets(self):
         """Get all the serialized assets for a given course.
@@ -776,24 +966,6 @@ class FilesManagerXBlock(XBlock):
             thumbnail_path = thumbnail_location[4]
             thumbnail_asset_key = self.course_id.make_asset_key('thumbnail', thumbnail_path)
         return str(thumbnail_asset_key)
-
-    def get_content_by_name(self, name, parent_content):
-        """Get the (content, index, parent directory) for a given content name.
-
-        Arguments:
-            name: the name of the content to be retrieved.
-            parent_directory: the parent directory of the content to be retrieved.
-
-        Returns: the content, the index of the content in the parent directory and the parent directory.
-        """
-        for index, content in enumerate(parent_content):
-            if content["name"] == name:
-                return content, index, parent_content
-            if content["type"] == "directory":
-                content, index, parent_content = self.get_content_by_name(name, content["children"])
-                if content:
-                    return content, index, parent_content
-        return None, None, None
 
     def get_content_by_path(self, path):
         """Get the (content, index, parent directory) for a given content path.

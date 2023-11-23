@@ -5,5 +5,5 @@ source = filesmanager
 omit =
     tests
     filesmanager/settings
-    filesmanager/locale
+    filesmanager/locale/*
     filesmanager/static

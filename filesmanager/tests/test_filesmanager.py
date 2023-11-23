@@ -34,7 +34,7 @@ class FilesManagerXBlockTestMixin(TestCase):
         self.xblock.clean_uploaded_files = Mock()
         self.xblock.delete_asset = Mock()
         self.xblock.content_paths = []
-        self.xblock.temporary_uploaded_files = {}
+        self.xblock.temporary_uploaded_files = []
         self.xblock.directories = {
             "id": "root",
             "name": "Root",
@@ -261,7 +261,7 @@ class TestFilesManagerXBlockUtilities(TestCase):
                 }
             ],
         }
-        self.xblock.temporary_uploaded_files = {}
+        self.xblock.temporary_uploaded_files = []
         self.xblock.content_paths = []
         self.xblock.course_id = Mock()
 
@@ -381,8 +381,8 @@ class TestFilesManagerXBlockUtilities(TestCase):
 
         self.xblock.temporary_save_upload_files(uploaded_files)
 
-        self.assertIn("file1", self.xblock.temporary_uploaded_files)
-        self.assertIn("file2", self.xblock.temporary_uploaded_files)
+        self.assertIn(file1, self.xblock.temporary_uploaded_files)
+        self.assertIn(file2, self.xblock.temporary_uploaded_files)
 
     def test_temporary_save_upload_files_without_file(self):
         """
@@ -411,7 +411,7 @@ class TestFilesManagerXBlockUtilities(TestCase):
 
         self.xblock.temporary_save_upload_files(uploaded_files)
 
-        self.assertIn("file1", self.xblock.temporary_uploaded_files)
+        self.assertIn(file1, self.xblock.temporary_uploaded_files)
         self.assertNotIn("non-file1", self.xblock.temporary_uploaded_files)
 
     def test_generate_content_path_without_existing_path(self):
@@ -436,14 +436,14 @@ class TestFilesManagerXBlockUtilities(TestCase):
         Expected result:
             - The base path and name are returned with a suffix.
         """
-        base_path = "path/to/content"
-        name = "content"
+        base_path = "path/to/content.txt"
+        name = "content.txt"
         self.xblock.content_paths.append(base_path)
 
         new_base_path, new_name = self.xblock.generate_content_path(base_path, name)
 
-        self.assertEqual(f"{base_path} (1)", new_base_path)
-        self.assertEqual(f"{name} (1)", new_name)
+        self.assertEqual("path/to/content (1).txt", new_base_path)
+        self.assertEqual("content (1).txt", new_name)
 
     def test_generate_content_path_with_multiple_existing_paths(self):
         """
@@ -452,14 +452,15 @@ class TestFilesManagerXBlockUtilities(TestCase):
         Expected result:
             - The base path and name are returned with a suffix.
         """
-        base_path = "path/to/content"
-        name = "content"
-        self.xblock.content_paths.extend([base_path, base_path])
+        base_path = "path/to/content.txt"
+        base_path2 = "path/to/content (1).txt"
+        name = "content.txt"
+        self.xblock.content_paths.extend([base_path, base_path2])
 
         new_base_path, new_name = self.xblock.generate_content_path(base_path, name)
 
-        self.assertEqual(f"{base_path} (2)", new_base_path)
-        self.assertEqual(f"{name} (2)", new_name)
+        self.assertEqual("path/to/content (2).txt", new_base_path)
+        self.assertEqual("content (2).txt", new_name)
 
     def test_create_directory(self):
         """
@@ -538,14 +539,14 @@ class TestFilesManagerXBlockUtilities(TestCase):
 
         self.assertEqual(expected_result, result)
 
-    @patch("filesmanager.filesmanager.FilesManagerXBlock.get_content_by_name")
     @patch("filesmanager.filesmanager.FilesManagerXBlock.get_all_serialized_assets")
     @patch("filesmanager.filesmanager.FilesManagerXBlock.get_content_by_path")
+    @patch("filesmanager.filesmanager.FilesManagerXBlock.source_keys")
     def test_fill_unpublished_with_new_assets(
         self,
+        mock_source_keys: Mock,
         mock_get_content_by_path: Mock,
         mock_get_all_serialized_assets: Mock,
-        mock_get_content_by_name: Mock,
     ):
         """
         Check fill_unpublished method with new assets.
@@ -563,12 +564,12 @@ class TestFilesManagerXBlockUtilities(TestCase):
             "children": [],
         }
         all_course_assets = [
-            {"id": "asset1", "display_name": "Asset 1"},
-            {"id": "asset2", "display_name": "Asset 2"},
+            {"id": "asset1", "display_name": "Asset 1", "asset_key": "asset1"},
+            {"id": "asset2", "display_name": "Asset 2", "asset_key": "asset2"},
         ]
+        mock_source_keys.return_value = []
         mock_get_all_serialized_assets.return_value = all_course_assets
-        mock_get_content_by_path.return_value = [unpublished_directory]
-        mock_get_content_by_name.return_value = (None, None, None)
+        mock_get_content_by_path.return_value = (unpublished_directory, 0, None)
         expected_children = [
             {
                 "id": asset["id"],
@@ -583,16 +584,16 @@ class TestFilesManagerXBlockUtilities(TestCase):
 
         self.xblock.fill_unpublished()
 
-        self.assertEqual(expected_children, unpublished_directory["children"])
+        self.assertEqual(unpublished_directory["children"], expected_children)
 
-    @patch("filesmanager.filesmanager.FilesManagerXBlock.get_content_by_name")
     @patch("filesmanager.filesmanager.FilesManagerXBlock.get_all_serialized_assets")
     @patch("filesmanager.filesmanager.FilesManagerXBlock.get_content_by_path")
+    # @patch("filesmanager.filesmanager.FilesManagerXBlock.source_keys")
     def test_fill_unpublished_with_existing_assets(
         self,
+        #mock_source_keys: Mock,
         mock_get_content_by_path: Mock,
         mock_get_all_serialized_assets: Mock,
-        mock_get_content_by_name: Mock,
     ):
         """
         Check fill_unpublished method with existing assets.
@@ -610,16 +611,27 @@ class TestFilesManagerXBlockUtilities(TestCase):
             "children": [],
         }
         all_course_assets = [
-            {"id": "asset1", "display_name": "Asset 1"},
-            {"id": "asset2", "display_name": "Asset 2"},
+            {"id": "asset1", "display_name": "Asset 1", "asset_key": "asset1"},
+            {"id": "asset2", "display_name": "Asset 2", "asset_key": "asset2"},
         ]
+        self.xblock.source_keys = {"asset1": "dummy1"}
         mock_get_all_serialized_assets.return_value = all_course_assets
-        mock_get_content_by_path.return_value = [unpublished_directory]
-        mock_get_content_by_name.return_value = ("content", "index", "parent")
+        mock_get_content_by_path.return_value = (unpublished_directory, 0, None)
+        expected_children = [
+            {
+                "id": asset["id"],
+                "parentId": "unpublished",
+                "name": asset["display_name"],
+                "type": "file",
+                "path": f"Root/Unpublished/{asset['display_name']}",
+                "metadata": asset,
+            }
+            for asset in all_course_assets if asset["id"] != "asset1"
+        ]
 
         self.xblock.fill_unpublished()
 
-        self.assertEqual([], unpublished_directory["children"])
+        self.assertEqual(expected_children, unpublished_directory["children"])
 
     @patch("filesmanager.filesmanager.contentstore")
     def test_get_all_serialized_assets_empty(self, contentstore_mock: Mock):
@@ -830,68 +842,6 @@ class TestFilesManagerXBlockUtilities(TestCase):
         )
 
         self.assertEqual("None", result)
-
-    def test_get_content_by_name_content_exists(self):
-        """
-        Check get_content_by_name method when content exists.
-
-        Expected result:
-            - The method returns the correct content, index, and parent directory.
-        """
-        name = "Unpublished"
-        parent_content = self.xblock.directories["children"]
-
-        expected_result = (parent_content[0], 0, parent_content)
-
-        result = self.xblock.get_content_by_name(name, parent_content)
-
-        self.assertEqual(expected_result, result)
-
-    def test_get_content_by_name_content_does_not_exist(self):
-        """
-        Check get_content_by_name method when content does not exist.
-
-        Expected result:
-            - The method returns (None, None, None).
-        """
-        name = "Nonexistent"
-        parent_content = self.xblock.directories["children"]
-
-        expected_result = (None, None, None)
-
-        result = self.xblock.get_content_by_name(name, parent_content)
-
-        self.assertEqual(expected_result, result)
-
-    def test_get_content_by_name_content_in_subdirectory(self):
-        """
-        Check get_content_by_name method when content is in a subdirectory.
-
-        Expected result:
-            - The method returns the correct content, index, and parent directory.
-        """
-        name = "SubdirectoryContent"
-        parent_content = self.xblock.directories["children"]
-        parent_content[0]["children"].append(
-            {
-                "id": "subdirectorycontent",
-                "name": "SubdirectoryContent",
-                "type": "file",
-                "path": "Root/Unpublished/SubdirectoryContent",
-                "metadata": {},
-                "parentId": "unpublished",
-            }
-        )
-
-        expected_result = (
-            parent_content[0]["children"][0],
-            0,
-            parent_content[0]["children"],
-        )
-
-        result = self.xblock.get_content_by_name(name, parent_content)
-
-        self.assertEqual(expected_result, result)
 
     def test_get_content_by_path_root(self):
         """
