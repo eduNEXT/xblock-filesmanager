@@ -588,10 +588,8 @@ class TestFilesManagerXBlockUtilities(TestCase):
 
     @patch("filesmanager.filesmanager.FilesManagerXBlock.get_all_serialized_assets")
     @patch("filesmanager.filesmanager.FilesManagerXBlock.get_content_by_path")
-    # @patch("filesmanager.filesmanager.FilesManagerXBlock.source_keys")
     def test_fill_unpublished_with_existing_assets(
         self,
-        #mock_source_keys: Mock,
         mock_get_content_by_path: Mock,
         mock_get_all_serialized_assets: Mock,
     ):

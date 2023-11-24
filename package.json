@@ -23,6 +23,7 @@
     "chonky": "^2.3.2",
     "chonky-icon-fontawesome": "^2.3.2",
     "css-loader": "^6.8.1",
+    "file-saver": "^2.0.5",
     "html-loader": "^4.2.0",
     "html-webpack-plugin": "^5.5.3",
     "http-status-codes": "^2.3.0",

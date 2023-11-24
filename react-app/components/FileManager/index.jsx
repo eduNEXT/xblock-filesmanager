@@ -15,7 +15,7 @@ import xBlockContext from '@constants/xBlockContext';
 import useXBlockActionButtons from '@hooks/useXBlockActionButtons';
 import useFileDownloader from '@hooks/useFileDownloader';
 import useAddErrorMessageToModal from '@hooks/useAddErrorMessageToModal';
-import { syncContent } from '@services/directoriesService';
+import { syncContent, downloadContent, downloadStatus } from '@services/directoriesService';
 import ErrorMessage from '@components/ErrorMessage';
 
 import { useCustomFileMap, useFiles, useFolderChain, useFileActionHandler } from './hooks';
@@ -52,12 +52,55 @@ const FileManager = (props) => {
 
   const downloadFile = (fileData) => {
     const {
-      metadata: { display_name, url }
+      metadata: { url },
+      name,
+      isDir,
     } = fileData;
     const { hostname, port, protocol } = window.location;
     const fullUrl = port ? `${protocol}//${hostname}:${port}${url}` : `${protocol}//${hostname}${url}`;
-    downloadFileHook(fullUrl, display_name);
+    if (isDir){
+        downloadFiles([fileData])
+        return
+    }
+    downloadFileHook(fullUrl, name, false);
   };
+
+  const downloadFiles = (filesToDownload) => {
+    downloadFilesZip(filesToDownload)
+  };
+
+  const downloadFilesZip = async (filesToDownload) => {
+    try {
+        const createContentData = await downloadContent({ contents: filesToDownload });
+        if (createContentData.status !== StatusCodes.OK) {
+          throw new Error('Download content has failed:  Unexpected status code');
+        }
+        let data = createContentData.data;
+        getStatusFromZipTask(data.task_id)
+
+        return Promise.resolve('Download was successful');
+      } catch (error) {
+        return Promise.reject('An error has ocurred while downloading assets');
+      }
+  };
+
+  const getStatusFromZipTask = async (taskID) => {
+    const createContentData = await downloadStatus(taskID);
+    if (createContentData.status !== StatusCodes.OK) {
+        throw new Error('Fetching task status has failed:  Unexpected status code');
+    }
+    let data = createContentData.data;
+    if (data.status === 'SUCCESS') {
+        downloadFileHook(data.result, "download.zip", true)
+    } else if (data.status === 'ERROR') {
+        onError()
+    } else {
+        setTimeout(() => {
+            getStatusFromZipTask(taskID)
+        }, 1000)
+    }
+    return Promise.resolve('Fetching download was successful');
+  }
 
   const {
     fileMap,
@@ -99,7 +142,8 @@ const FileManager = (props) => {
     addFile,
     downloadFile,
     deleteFolders,
-    renameFolder
+    renameFolder,
+    downloadFiles
   );
 
   const { xblockId, isEditView } = xBlockContext;

@@ -1,9 +1,12 @@
 [run]
 branch = True
 data_file = .coverage
-source = filesmanager
+source=filesmanager
 omit =
-    tests
-    filesmanager/settings
-    filesmanager/locale/*
-    filesmanager/static
+    test_settings.py
+    */migrations/*
+    *admin.py
+    */static/*
+    */templates/*
+    */settings/*
+    */locale/*
