@@ -29,7 +29,7 @@ def create_zip_file_task(self, contents):
     Returns the url of the zip file in the storage.
     """
     task_id = self.request.id
-    temporary_file = tempfile.NamedTemporaryFile(delete=False, suffix=".zip")
+    temporary_file = tempfile.NamedTemporaryFile(delete=True, suffix=".zip")
     storage_path = f"{DOWNLOADS_FOLDER}/{task_id}.zip"
     with zipfile.ZipFile(temporary_file, "w") as ziph:
         folder_structure = get_folder_structure_from_content(contents)

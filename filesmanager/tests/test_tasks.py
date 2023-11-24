@@ -112,7 +112,6 @@ class CreateZipFileTask(TestCase):
         Test that the xblock returns an error when the request doesn't have the contents.
         """
         data = {}
-
         request = Mock()
         request.method = 'POST'
         request.body = json.dumps(data).encode('utf-8')
@@ -133,14 +132,13 @@ class CreateZipFileTask(TestCase):
         data = {
             "task_id": 'task_id',
         }
-
         request = Mock()
         request.method = 'POST'
         request.body = json.dumps(data).encode('utf-8')
 
         with patch('filesmanager.tasks.create_zip_file_task.AsyncResult') as AsyncResult:
             AsyncResult.return_value.status = 'SUCCESS'
-            AsyncResult.return_value.result = 'download/None.zip'
+            AsyncResult.return_value.result = 'download/task_id.zip'
 
             request = self.xblock.download_status(request)
 
@@ -148,7 +146,7 @@ class CreateZipFileTask(TestCase):
             body = json.loads(request.body)  # pylint: disable=no-member
             self.assertDictEqual(body, {
                 'status': 'SUCCESS',
-                'result': 'download/None.zip',
+                'result': 'download/task_id.zip',
             })
 
     def test_xblock_download_status_not_found(self):
@@ -158,7 +156,6 @@ class CreateZipFileTask(TestCase):
         data = {
             "task_id": 'task_id',
         }
-
         request = Mock()
         request.method = 'POST'
         request.body = json.dumps(data).encode('utf-8')
@@ -182,7 +179,6 @@ class CreateZipFileTask(TestCase):
         data = {
             "task_id": 'task_id',
         }
-
         request = Mock()
         request.method = 'POST'
         request.body = json.dumps(data).encode('utf-8')
@@ -205,7 +201,6 @@ class CreateZipFileTask(TestCase):
         Test that the xblock handler used to get tasks status returns an error when the task ID is not provided.
         """
         data = {}
-
         request = Mock()
         request.method = 'POST'
         request.body = json.dumps(data).encode('utf-8')
@@ -230,14 +225,14 @@ class CreateZipFileTask(TestCase):
         file_content = FileContent(b'dummy', 5)
         find_mock.return_value = file_content
         mock_from_string.return_value = 'asset_key'
-
         data = {
             "contents": [self.xblock.directories["children"][1]],
         }
+        task_id = 'task_id'
+        create_zip_file_task.push_request(id=task_id)
 
-        result = create_zip_file_task(contents=data["contents"])  # pylint: disable=no-value-for-parameter
+        result = create_zip_file_task.run(contents=data["contents"])
 
-        self.assertEqual(result, f"/{DOWNLOADS_FOLDER}/{None}.zip")
+        self.assertEqual(result, f"/{DOWNLOADS_FOLDER}/{task_id}.zip")
         mock_from_string.assert_called_once_with('asset_key')
-
-        os.unlink(f"./{DOWNLOADS_FOLDER}/{None}.zip")
+        os.unlink(f"{DOWNLOADS_FOLDER}/{task_id}.zip")
