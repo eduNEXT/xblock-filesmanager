@@ -61,17 +61,17 @@ const FileManager = (props) => {
   };
 
   const downloadFiles = (filesToDownload) => {
-    downloadFilesTemp(filesToDownload)
+    downloadFilesZip(filesToDownload)
   };
 
-  const downloadFilesTemp = async (filesToDownload) => {
+  const downloadFilesZip = async (filesToDownload) => {
     try {
         const createContentData = await downloadContent({ contents: filesToDownload });
         if (createContentData.status !== StatusCodes.OK) {
           throw new Error('Download content has failed:  Unexpected status code');
         }
         let data = createContentData.data;
-        getStatus(data.task_id)
+        getStatusFromZipTask(data.task_id)
 
         return Promise.resolve('Download was successful');
       } catch (error) {
@@ -79,7 +79,7 @@ const FileManager = (props) => {
       }
   };
 
-  const getStatus = async (taskID) => {
+  const getStatusFromZipTask = async (taskID) => {
     const createContentData = await downloadStatus(taskID);
     if (createContentData.status !== StatusCodes.OK) {
         throw new Error('Fetching task status has failed:  Unexpected status code');
@@ -91,10 +91,10 @@ const FileManager = (props) => {
         onError()
     } else {
         setTimeout(() => {
-            getStatus(taskID)
+            getStatusFromZipTask(taskID)
         }, 1000)
     }
-    return Promise.resolve('Fetching download was successfully');
+    return Promise.resolve('Fetching download was successful');
   }
 
   const {

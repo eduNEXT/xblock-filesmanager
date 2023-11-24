@@ -128,7 +128,7 @@ class CreateZipFileTask(TestCase):
 
     def test_xblock_download_status(self):
         """
-        Test that the xblock returns the correct status.
+        Test that the xblock handler used to get tasks status returns the correct information.
         """
         data = {
             "task_id": 'task_id',
@@ -152,6 +152,9 @@ class CreateZipFileTask(TestCase):
             })
 
     def test_xblock_download_status_not_found(self):
+        """
+        Test that the xblock handler used to get tasks status returns an error when the task is not found.
+        """
         data = {
             "task_id": 'task_id',
         }
@@ -173,6 +176,9 @@ class CreateZipFileTask(TestCase):
             })
 
     def test_xblock_download_status_with_exception(self):
+        """
+        Test that the xblock handler used to get tasks status returns an error when the task fails.
+        """
         data = {
             "task_id": 'task_id',
         }
@@ -191,10 +197,13 @@ class CreateZipFileTask(TestCase):
             body = json.loads(request.body)  # pylint: disable=no-member
             self.assertDictEqual(body, {
                 'status': 'ERROR',
-                'result': 'Something went wrong. Please try again the download.',
+                'result': 'Something went wrong. Please try again later.',
             })
 
     def test_xblock_download_status_without_task_id(self):
+        """
+        Test that the xblock handler used to get tasks status returns an error when the task ID is not provided.
+        """
         data = {}
 
         request = Mock()

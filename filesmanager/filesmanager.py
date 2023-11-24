@@ -1058,20 +1058,20 @@ class FilesManagerXBlock(XBlock):
         task_result = create_zip_file_task.delay(contents)
         return {
             "status": "success",
-            "task_id": task_result.id
+            "task_id": task_result.id,
         }
 
     @XBlock.json_handler
     def download_status(self, data, suffix=''):  # pylint: disable=unused-argument
         """
-        Get the status of the async task.
+        Get the status of the download zip async task.
 
         Arguments:
-            task_id: the task ID of the async task.
+            task_id: the task ID of  download zip async task.
 
         Returns:
-            status: the status of the async task.
-            result: the result of the async task.
+            status: the status of the download zip async task.
+            result: the result of the download zip async task.
         """
         task_id = data.get("task_id")
         if not task_id:
@@ -1092,11 +1092,11 @@ class FilesManagerXBlock(XBlock):
         except TypeError as e:
             log.exception(e)
             status = "ERROR"
-            result = "Something went wrong. Please try again the download."
+            result = "Something went wrong. Please try again later."
 
         return {
             "status": status,
-            "result": result
+            "result": result,
         }
 
     @staticmethod
