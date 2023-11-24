@@ -53,10 +53,15 @@ const FileManager = (props) => {
   const downloadFile = (fileData) => {
     const {
       metadata: { url },
-      name: name
+      name,
+      isDir,
     } = fileData;
     const { hostname, port, protocol } = window.location;
     const fullUrl = port ? `${protocol}//${hostname}:${port}${url}` : `${protocol}//${hostname}${url}`;
+    if (isDir){
+        downloadFiles([fileData])
+        return
+    }
     downloadFileHook(fullUrl, name, false);
   };
 
