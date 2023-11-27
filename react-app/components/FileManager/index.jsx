@@ -288,7 +288,7 @@ const FileManager = (props) => {
           thumbnailGenerator={thumbnailGenerator}
           defaultFileViewActionId={ChonkyActions.EnableListView.id}
           clearSelectionOnOutsideClick={false}
-          disableDragAndDropProvider={false}>
+          disableDragAndDropProvider={!isEditView}>
           <FileNavbar />
           <FileToolbar />
           <FileList />
