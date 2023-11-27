@@ -7,6 +7,31 @@
     margin: 16px;
   }
 
+  .instructions-description {
+    margin: 16px;
+    text-align: left;
+  }
+
+  .instructions-list {
+    text-align: left;
+    padding: 16px;
+    border-bottom: 1px solid #cdcdcd !important;
+    list-style-type: disc !important;
+  }
+
+  .instructions-title {
+    border-left: 3px solid #872bff !important;
+    padding: 16px;
+    margin: .25rem 0 0;
+    text-align: left;
+    font-family: "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+    background-color: #f8f9fa;
+    font-weight: 800;
+  }
+
+  .instructions-list li {
+    margin-bottom: 8px;
+  }
 }
 
 .remove-button {
