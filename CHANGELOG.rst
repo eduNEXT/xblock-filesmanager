@@ -14,6 +14,14 @@ Change Log
 Unreleased
 **********
 
+0.6.2 - 2023-11-28
+**********************************************
+
+Added
+=====
+
+* Delete a folder moves all files to the unpublished folder.
+
 0.6.1 - 2023-11-28
 **********************************************
 

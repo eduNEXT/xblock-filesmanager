@@ -243,6 +243,7 @@ export const useFolderChain = (fileMap, currentFolderId) => {
 };
 
 export const useFileActionHandler = (
+  fileMap,
   setCurrentFolderId,
   deleteFiles,
   moveFiles,
@@ -268,6 +269,9 @@ export const useFileActionHandler = (
         if (hasPublishFolder) {
           alert('You can not delete Unpublished folder');
         } else {
+          data.state.selectedFiles.forEach((folder) => {
+            moveFiles(folder.children, folder, fileMap.unpublished)
+          })
           deleteFolders(data.state.selectedFiles);
         }
       } else if (data.id === 'rename_folder') {
