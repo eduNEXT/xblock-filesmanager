@@ -1,18 +1,10 @@
-export const basicFeatures = ['View a list of folders and files', 'Navigate through folders', 'Download files', 'Preview files', 'Search files by name', 'Select files and/or folders'];
+export const basicDescriptionInstructionsCms = 'Use this component to upload and organize files that students can access directly in the unit.';
+export const basicDescriptionInstructionsLms = 'Use this component to view a file tree.';
+export const advancedDescriptionInstructions = `${basicDescriptionInstructionsCms} Any files you upload will be added to the "File & Uploads" or "Files" section. Extracting files from the "Unpublished" folder leaves them visible to students, returning them to the folder hides them.`;
+
 export const basicShortCuts = ['Open a file (Ctrl + O)', 'Select multiple files or folders (Ctrl + click)'];
 export const basicNotes = ['Preview is only allowed for image files (JPEG/JPG, PNG, SVG) and PDFs'];
 
-export const advancedFeatures = [
-  ...basicFeatures,
-  'Select files and/or folders',
-  'Upload files',
-  'Create folders',
-  'Rename folders',
-  'Delete folders',
-  'Delete files',
-  'Move files between folders',
-  'Move folders'
-];
 
 export const advancedShortCuts = [
   ...basicShortCuts,
