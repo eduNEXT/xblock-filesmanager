@@ -135,6 +135,7 @@ const FileManager = (props) => {
   const files = useFiles(fileMap, currentFolderId);
   const folderChain = useFolderChain(fileMap, currentFolderId);
   const handleFileAction = useFileActionHandler(
+    fileMap,
     setCurrentFolderId,
     deleteFiles,
     moveFiles,
