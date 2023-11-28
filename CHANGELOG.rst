@@ -14,6 +14,14 @@ Change Log
 Unreleased
 **********
 
+0.6.1 - 2023-11-28
+**********************************************
+
+Added
+=====
+
+* Update description and remove features for the instructions
+
 0.6.0 - 2023-11-28
 **********************************************
 

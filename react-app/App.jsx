@@ -8,10 +8,10 @@ import Collapse from '@components/Collapse';
 import xBlockContext from '@constants/xBlockContext';
 
 import {
-  basicFeatures,
+  basicDescriptionInstructions,
+  advancedDescriptionInstructions,
   basicShortCuts,
   basicNotes,
-  advancedFeatures,
   advancedShortCuts,
   advancedNotes
 } from './constants';
@@ -30,9 +30,9 @@ const App = () => {
   const directoryTree = contentHasId ? convertTreeToNewFileMapFormat(contents, true) : {};
   const rootFolderId = contentHasId ? contents.id : null;
   const errorHandlerDirectoriesMessage = gettext('There was an error while processing the directories tree');
-  const featuresList = isEditView ? addIdToItems(advancedFeatures) : addIdToItems(basicFeatures);
   const shortCutsList = isEditView ? addIdToItems(advancedShortCuts) : addIdToItems(basicShortCuts);
   const notesList = isEditView ? addIdToItems(advancedNotes) : addIdToItems(basicNotes);
+  const descriptionInstructions = isEditView ? advancedDescriptionInstructions : basicDescriptionInstructions;
 
   if (error) return <ErrorMessage message={errorHandlerDirectoriesMessage} />;
   if (isLoading) return <Spinner />;
@@ -41,16 +41,8 @@ const App = () => {
     <div className="filesmanager__app">
       <Collapse title={gettext('Instructions')}>
         <p className="instructions-description">
-          {gettext(
-            "Through this XBlock, you'll be able to see a tree structure of folders and files where you can perform the following actions:"
-          )}
+          {gettext(descriptionInstructions)}
         </p>
-        <h4 className="instructions-title">{gettext('Features')}</h4>
-        <ul className="instructions-list">
-          {featuresList.map(({ id, name }) => (
-            <li key={id}>{gettext(name)}</li>
-          ))}
-        </ul>
         <h4 className="instructions-title">{gettext('Shortcuts')}</h4>
         <ul className="instructions-list">
           {shortCutsList.map(({ id, name }) => (
