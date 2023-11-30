@@ -270,7 +270,10 @@ export const useFileActionHandler = (
           alert('You can not delete Unpublished folder');
         } else {
           data.state.selectedFiles.forEach((folder) => {
-            moveFiles(folder.children, folder, fileMap.unpublished)
+            if (folder.isSaved) {
+              const files = folder.childrenIds.map((fileId) => fileMap[fileId]);
+              moveFiles(files, folder, fileMap.unpublished)
+            }
           })
           deleteFolders(data.state.selectedFiles);
         }
