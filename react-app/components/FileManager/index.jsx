@@ -223,10 +223,11 @@ const FileManager = (props) => {
   const [fileSelection, setFileSelection] = useState(null);
   const [hasFilesSelected, setHasFilesSelected] = useState(false);
   const [hasOneFolderSelected, setHasOneFolderSelected] = useState(false);
+  const [hasMoreThanOneFolderSelected, setHasMoreThanOneFolderSelected] = useState(false);
   const [hasOneFileSelected, setHasOneFileSelected] = useState(false);
   const disabledActions = hasFilesSelected ? [ChonkyActions.DownloadFiles.id] : undefined;
-  const fileActionsList = hasOneFolderSelected || hasOneFileSelected
-    ? customFileActions(hasOneFolderSelected, hasOneFileSelected)
+  const fileActionsList = hasOneFolderSelected || hasOneFileSelected || hasMoreThanOneFolderSelected
+    ? customFileActions(hasOneFolderSelected, hasOneFileSelected, hasMoreThanOneFolderSelected)
     : defaultFileActions
 
   const defaultActions =  hasOneFileSelected ? [ChonkyActions.DownloadFiles, openFileAction] : [ChonkyActions.DownloadFiles];
@@ -238,13 +239,16 @@ const FileManager = (props) => {
       if (!_.isEqual(newFileSelection, fileSelection)) {
         const selections = Array.from(newFileSelection);
         const hasOneSelection = selections.length === 1;
+        const hasFoldersSelected = selections.length > 1;
         const hasFilesSelected = selections.some((fileId) => !fileMap[fileId].isDir);
         const hasOneFolderSelected = hasOneSelection && !hasFilesSelected;
+        const hasMoreThanOneFolderSelected = hasFoldersSelected && !hasFilesSelected;
         const hasOneFileSelected = hasOneSelection && hasFilesSelected;
         setHasOneFileSelected(hasOneFileSelected);
         setHasOneFolderSelected(hasOneFolderSelected);
         setHasFilesSelected(hasFilesSelected);
         setFileSelection(newFileSelection);
+        setHasMoreThanOneFolderSelected(hasMoreThanOneFolderSelected);
       }
     }
   };
@@ -258,7 +262,7 @@ const FileManager = (props) => {
 
     // Clean-up interval on unmount or changes to the fileSelection dependency
     return () => clearInterval(interval);
-  }, [fileSelection, fileBrowserRef, fileMap, hasOneFolderSelected, hasOneFileSelected]);
+  }, [fileSelection, fileBrowserRef, fileMap, hasOneFolderSelected, hasOneFileSelected, hasMoreThanOneFolderSelected]);
 
   const thumbnailGenerator = useCallback(
     ({ isSaved, metadata }) =>

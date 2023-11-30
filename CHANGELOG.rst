@@ -14,6 +14,15 @@ Change Log
 Unreleased
 **********
 
+0.6.3 - 2023-11-30
+**********************************************
+
+Added
+=====
+
+* Use fileMap as source of truth for deleting folders.
+* Allow to delete multiple folders
+
 0.6.2 - 2023-11-28
 **********************************************
 
