@@ -93,6 +93,10 @@ export const convertFileMapToTree = (rootId, parentPath = '', originalFileMapObj
     parentId: node.parentId || ''
   };
 
+  if (node.file) {
+    tree.file = node.file;
+  }
+
   if (isDirectory && node.childrenIds) {
     tree.children = [];
     node.childrenIds.forEach((childId) => {
@@ -111,7 +115,7 @@ export const convertFileMapToTree = (rootId, parentPath = '', originalFileMapObj
  * @param {string} id - The ID of the node to find.
  * @returns {Object|null} - The found node or null if not found.
  */
-export const  findNodeByIdInTree = (object, id) => {
+export const findNodeByIdInTree = (object, id) => {
   if (object.id === id) {
     return object;
   }
@@ -126,7 +130,7 @@ export const  findNodeByIdInTree = (object, id) => {
   }
 
   return null;
-}
+};
 
 /**
  * Recursively extracts asset keys from a tree structure of nodes.
@@ -148,4 +152,28 @@ export const extractAssetKeys = (node) => {
   }
 
   return assetKeys;
-}
+};
+
+/**
+ * Recursively retrieves files from a tree structure.
+ *
+ * @param {Object} node - The root node of the tree or subtree.
+ * @property {string} node.type - The type of the node ("directory" or "file").
+ * @property {Object[]} [node.children] - An array of child nodes.
+ * @returns {Object[]} An array of file nodes.
+ */
+export const getFilesFromATree = (node) => {
+  const files = [];
+
+  if (node.type === 'file') {
+    files.push(node);
+  }
+
+  if (node.children && node.children.length) {
+    node.children.forEach((child) => {
+      files.push(...getFilesFromATree(child));
+    });
+  }
+
+  return files;
+};

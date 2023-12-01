@@ -3,7 +3,7 @@ import { ChonkyActions, FileHelper } from 'chonky';
 import { v4 as uuidv4 } from 'uuid';
 import _ from 'lodash';
 
-import { convertFileMapToTree, findNodeByIdInTree, extractAssetKeys } from './utils';
+import { convertFileMapToTree, findNodeByIdInTree, extractAssetKeys, getFilesFromATree } from './utils';
 
 export const useCustomFileMap = (prepareCustomFileMap) => {
   const { baseFileMap, rootFolderId } = useMemo(prepareCustomFileMap, []);
@@ -269,13 +269,20 @@ export const useFileActionHandler = (
         if (hasPublishFolder) {
           alert('You can not delete Unpublished folder');
         } else {
-          data.state.selectedFiles.forEach((folder) => {
-            if (folder.isSaved) {
-              const files = folder.childrenIds.map((fileId) => fileMap[fileId]);
-              moveFiles(files, folder, fileMap.unpublished)
-            }
-          })
-          deleteFolders(data.state.selectedFiles);
+          const { selectedFiles } = data.state;
+
+          selectedFiles.forEach((folder) => {
+            const { id } = folder;
+            const folderToFileMapToTree = convertFileMapToTree('root', '', fileMap);
+            const nodeTree = findNodeByIdInTree(folderToFileMapToTree, id);
+            const files = getFilesFromATree(nodeTree);
+            const formatFiles = files.map(({ metadata, ...rest }) =>
+              'asset_key' in metadata ? { metadata, ...rest } : { ...rest, isDir: false }
+            );
+            moveFiles(formatFiles, folder, fileMap.unpublished);
+          });
+
+          deleteFolders(selectedFiles);
         }
       } else if (data.id === 'rename_folder') {
         if (hasPublishFolder) {
@@ -323,6 +330,6 @@ export const useFileActionHandler = (
         }
       }
     },
-    [createFolder, deleteFiles, moveFiles, setCurrentFolderId]
+    [createFolder, deleteFiles, moveFiles, setCurrentFolderId, fileMap]
   );
 };
