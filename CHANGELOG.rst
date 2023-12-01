@@ -14,6 +14,14 @@ Change Log
 Unreleased
 **********
 
+0.6.4 - 2023-12-01
+**********************************************
+
+Added
+=====
+
+* Allow to move files to unpublished folder when folders were deleted
+
 0.6.3 - 2023-11-30
 **********************************************
 
