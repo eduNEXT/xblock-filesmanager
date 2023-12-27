@@ -25,9 +25,11 @@ if (process.env.NODE_ENV === 'development') {
 function FilesManagerXBlock(runtime, _, context) {
   const xblockId = context.xblock_id;
   const elementSelector = document.querySelector(`[data-usage-id="${xblockId}"]`);
+  const typeRuntime = elementSelector.getAttribute('data-runtime-class');
   xBlockContext.runtime = runtime;
   xBlockContext.element = elementSelector;
   xBlockContext.context = context;
+  xBlockContext.isStudioView = elementSelector && typeRuntime !== 'LmsRuntime';
   xBlockContext.isEditView = context.is_edit_view;
   const rootElement = document.getElementById('files-manager-app-root');
   const root = ReactDOM.createRoot(rootElement);
