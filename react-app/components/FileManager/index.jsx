@@ -17,6 +17,7 @@ import useFileDownloader from '@hooks/useFileDownloader';
 import useAddErrorMessageToModal from '@hooks/useAddErrorMessageToModal';
 import { syncContent, downloadContent, downloadStatus } from '@services/directoriesService';
 import ErrorMessage from '@components/ErrorMessage';
+import { sendTrackingLogEvent } from '@services/analyticsService';
 
 import { useCustomFileMap, useFiles, useFolderChain, useFileActionHandler } from './hooks';
 import { convertFileMapToTree } from './utils';
@@ -34,7 +35,18 @@ const FileManager = (props) => {
   const [downloadFileErrorMessage, setDownloadFileErrorMessage] = useState(null);
   const [reloadPage, setReloadPage] = useState(false);
 
-  const onFileDownloaded = () => setDownloadFileErrorMessage(null);
+  const onFileDownloaded = () => {
+    setDownloadFileErrorMessage(null);
+    const { isStudioView } = xBlockContext;
+    if(!isStudioView) {
+      /* change this as you need it */
+      sendTrackingLogEvent('edx.course.tool.accessed', {
+        course_id: 'courseId',
+        is_staff: 'administrator',
+        tool_name: 'analyticsId',
+      });
+    }
+  }
 
   const onError = () => {
     const errorMessage = gettext('There was an error downloading the file');
