@@ -39,11 +39,9 @@ const FileManager = (props) => {
     setDownloadFileErrorMessage(null);
     const { isStudioView } = xBlockContext;
     if(!isStudioView) {
-      /* change this as you need it */
-      sendTrackingLogEvent('edx.course.tool.accessed', {
-        course_id: 'courseId',
-        is_staff: 'administrator',
-        tool_name: 'analyticsId',
+      sendTrackingLogEvent('edunext.xblock.filesmanager.files.downloaded', {
+        course_id: xBlockContext.context.course_id,
+        xblock_id: xBlockContext.context.xblock_id,
       });
     }
   }

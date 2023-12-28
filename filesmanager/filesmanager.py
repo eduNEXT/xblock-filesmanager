@@ -160,6 +160,13 @@ class FilesManagerXBlock(XBlock):
         return str(self.scope_ids.usage_id)
 
     @property
+    def course_id(self):
+        """
+        Return the course_id of the block.
+        """
+        return str(self.scope_ids.usage_id.context_key)
+
+    @property
     def block_id_parsed(self):
         """
         Return the usage_id of the block parsed which means all after '@' symbol.
@@ -234,7 +241,8 @@ class FilesManagerXBlock(XBlock):
 
         js_context = {
             "xblock_id": self.block_id,
-            "is_edit_view": False
+            "is_edit_view": False,
+            "course_id": self.course_id,
         }
 
         frag.add_javascript(js_content_parsed)
