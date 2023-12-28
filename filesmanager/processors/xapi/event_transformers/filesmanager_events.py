@@ -5,12 +5,9 @@ Classes:
     FilesDownloadedTransformer: Transformer for the event edunext.xblock.filesmanager.files.downloaded.
 """
 
-from tincan import LanguageMap, Verb, Activity, ActivityDefinition
+from tincan import Activity, ActivityDefinition, LanguageMap, Verb
 
-from filesmanager.edxapp_wrapper.event_routing_backends import (
-    XApiTransformer,
-    XApiTransformersRegistry,
-)
+from filesmanager.edxapp_wrapper.event_routing_backends import XApiTransformer, XApiTransformersRegistry
 from filesmanager.processors.xapi import constants
 
 

@@ -19,8 +19,9 @@ from xblock.fields import Dict, List, Scope
 from xblock.fragment import Fragment
 from xblockutils.resources import ResourceLoader
 
+from filesmanager.processors.xapi.event_transformers.filesmanager_events import \
+    FilesDownloadedTransformer  # pylint: disable=unused-import
 from filesmanager.tasks import create_zip_file_task
-from filesmanager.processors.xapi.event_transformers.filesmanager_events import FilesDownloadedTransformer
 
 try:
     from cms.djangoapps.contentstore.exceptions import AssetNotFoundException

@@ -3,8 +3,8 @@
 This is required since the library has explicit dependencies from openedx platform.
 https://github.com/openedx/event-routing-backends
 """
-from event_routing_backends.processors.xapi.registry import XApiTransformersRegistry
-from event_routing_backends.processors.xapi.transformer import XApiTransformer
+from event_routing_backends.processors.xapi.registry import XApiTransformersRegistry  # pylint: disable=import-error
+from event_routing_backends.processors.xapi.transformer import XApiTransformer  # pylint: disable=import-error
 
 
 def get_xapi_transformer_registry():
