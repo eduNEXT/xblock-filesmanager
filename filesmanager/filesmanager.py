@@ -20,6 +20,7 @@ from xblock.fragment import Fragment
 from xblockutils.resources import ResourceLoader
 
 from filesmanager.tasks import create_zip_file_task
+from filesmanager.processors.xapi.event_transformers.filesmanager_events import FilesDownloadedTransformer
 
 try:
     from cms.djangoapps.contentstore.exceptions import AssetNotFoundException
