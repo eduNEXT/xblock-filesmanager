@@ -42,6 +42,9 @@ const FileManager = (props) => {
       sendTrackingLogEvent('edunext.xblock.filesmanager.files.downloaded', {
         course_id: xBlockContext.context.course_id,
         xblock_id: xBlockContext.context.xblock_id,
+        user_id: xBlockContext.context.user_id,
+        username: xBlockContext.context.username,
+        created_at: new Date().toISOString(),
       });
     }
   }

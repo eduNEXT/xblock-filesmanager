@@ -19,8 +19,7 @@ from xblock.fields import Dict, List, Scope
 from xblock.fragment import Fragment
 from xblockutils.resources import ResourceLoader
 
-from filesmanager.processors.xapi.event_transformers.filesmanager_events import \
-    FilesDownloadedTransformer  # pylint: disable=unused-import
+from filesmanager.processors.xapi.event_transformers import FilesDownloadedTransformer  # pylint: disable=unused-import
 from filesmanager.tasks import create_zip_file_task
 
 try:
@@ -233,10 +232,14 @@ class FilesManagerXBlock(XBlock):
         if statici18n_js_url:
             frag.add_javascript_url(self.runtime.local_resource_url(self, statici18n_js_url))
 
+        user = self.get_current_user()
+
         js_context = {
             "xblock_id": self.block_id,
             "is_edit_view": False,
             "course_id": self.course_id,
+            "user_id": user.opt_attrs.get("edx-platform.user_id"),
+            "username": user.opt_attrs.get("edx-platform.username"),
         }
 
         frag.add_javascript(js_content_parsed)

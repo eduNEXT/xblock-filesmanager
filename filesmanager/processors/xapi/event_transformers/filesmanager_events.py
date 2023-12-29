@@ -14,7 +14,7 @@ from filesmanager.processors.xapi import constants
 @XApiTransformersRegistry.register("edunext.xblock.filesmanager.files.downloaded")
 class FilesDownloadedTransformer(XApiTransformer):
     """
-    Transformers for event generated when an student download files from xblock.
+    Transformers for event generated when a student download files from xblock.
     """
 
     _verb = Verb(
