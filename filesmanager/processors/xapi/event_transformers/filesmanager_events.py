@@ -22,8 +22,6 @@ class FilesDownloadedTransformer(XApiTransformer):
         display=LanguageMap({constants.EN: constants.DOWNLOADED}),
     )
 
-    additional_fields = ("result",)
-
     def get_object(self):
         """
         Get object for xAPI transformed event related to files download from xblock.
@@ -32,7 +30,7 @@ class FilesDownloadedTransformer(XApiTransformer):
             `Activity`
         """
         return Activity(
-            id=self.get_object_iri("xblock", self.get_data("data.block_id", True)),
+            id=self.get_object_iri("xblock", self.get_data("data.xblock_id", True)),
             definition=ActivityDefinition(
                 type=constants.XAPI_VERB_DOWNLOADED,
             ),
