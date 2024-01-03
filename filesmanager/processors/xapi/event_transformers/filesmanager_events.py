@@ -32,6 +32,6 @@ class FilesDownloadedTransformer(XApiTransformer):
         return Activity(
             id=self.get_object_iri("xblock", self.get_data("data.xblock_id", True)),
             definition=ActivityDefinition(
-                type=constants.XAPI_VERB_DOWNLOADED,
+                type=constants.XAPI_ACTIVITY_FILE,
             ),
         )
