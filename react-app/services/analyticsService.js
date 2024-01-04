@@ -20,6 +20,7 @@ export const sendTrackingLogEvent = (eventName, properties) => {
   const snakeEventData = decamelizeKeys(properties);
   const serverData = {
     event_type: eventName,
+    courserun_key: properties.course_id,
     event: JSON.stringify(snakeEventData),
     page: pageHref,
   };
