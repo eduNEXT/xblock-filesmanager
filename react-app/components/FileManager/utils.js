@@ -16,6 +16,7 @@ const convertTreeToNewFileMap = (node, parent = null, newFileMapObject, isSaved 
     id: node.id,
     name: node.name,
     isDir: isDirectory,
+    path: node.path || '',
     metadata: node.metadata || {},
     isSaved
   };
@@ -176,4 +177,26 @@ export const getFilesFromATree = (node) => {
   }
 
   return files;
+};
+
+export const getMetadataFiles = (node) => {
+  const assetKeys = [];
+
+  const { name, path, metadata } = node;
+  if (metadata && metadata.asset_key) {
+    assetKeys.push({
+      name: name || '',
+      path: path || '',
+      asset_key: metadata.asset_key || '',
+      url: metadata.external_url || ''
+    });
+  }
+
+  if (node.children && node.children.length) {
+    node.children.forEach((child) => {
+      assetKeys.push(...getMetadataFiles(child));
+    });
+  }
+
+  return assetKeys;
 };

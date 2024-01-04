@@ -20,7 +20,7 @@ import ErrorMessage from '@components/ErrorMessage';
 import { sendTrackingLogEvent } from '@services/analyticsService';
 
 import { useCustomFileMap, useFiles, useFolderChain, useFileActionHandler } from './hooks';
-import { convertFileMapToTree } from './utils';
+import { convertFileMapToTree, getMetadataFiles } from './utils';
 import { prepareCustomFileMap, defaultFileActions, customFileActions, openFileAction } from './constants';
 
 ChonkyActions.ToggleHiddenFiles.button.toolbar = false;
@@ -34,8 +34,11 @@ const FileManager = (props) => {
   const [, setIsFetchLoading] = useState(false);
   const [downloadFileErrorMessage, setDownloadFileErrorMessage] = useState(null);
   const [reloadPage, setReloadPage] = useState(false);
+  const downloadFilesData = useRef(null);
 
   const onFileDownloaded = () => {
+    const contents = downloadFilesData.current;
+    const objectData = getMetadataFiles(contents);
     setDownloadFileErrorMessage(null);
     const { isStudioView } = xBlockContext;
     if(!isStudioView) {
@@ -44,6 +47,7 @@ const FileManager = (props) => {
         xblock_id: xBlockContext.context.xblock_id,
         user_id: xBlockContext.context.user_id,
         username: xBlockContext.context.username,
+        files_downloaded_metadata: objectData,
         created_at: new Date().toISOString(),
       });
     }
@@ -70,6 +74,7 @@ const FileManager = (props) => {
       isDir,
     } = fileData;
     const { hostname, port, protocol } = window.location;
+    downloadFilesData.current = fileData;
     const fullUrl = port ? `${protocol}//${hostname}:${port}${url}` : `${protocol}//${hostname}${url}`;
     if (isDir){
         downloadFiles([fileData])
