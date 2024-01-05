@@ -12,6 +12,10 @@ amqp==5.2.0
     # via
     #   -r requirements/test.txt
     #   kombu
+aniso8601==9.0.1
+    # via
+    #   -r requirements/test.txt
+    #   tincan
 appdirs==1.4.4
     # via
     #   -r requirements/test.txt
@@ -20,7 +24,7 @@ asgiref==3.7.2
     # via
     #   -r requirements/test.txt
     #   django
-babel==2.13.1
+babel==2.14.0
     # via
     #   pydata-sphinx-theme
     #   sphinx
@@ -36,11 +40,11 @@ billiard==4.2.0
     # via
     #   -r requirements/test.txt
     #   celery
-boto3==1.29.6
+boto3==1.34.9
     # via
     #   -r requirements/test.txt
     #   fs-s3fs
-botocore==1.32.6
+botocore==1.34.9
     # via
     #   -r requirements/test.txt
     #   boto3
@@ -74,12 +78,12 @@ click-repl==0.3.0
     # via
     #   -r requirements/test.txt
     #   celery
-coverage[toml]==7.3.2
+coverage[toml]==7.4.0
     # via
     #   -r requirements/test.txt
     #   coverage
     #   pytest-cov
-cryptography==41.0.5
+cryptography==41.0.7
     # via secretstorage
 django==3.2.23
     # via
@@ -122,11 +126,11 @@ fs-s3fs==1.1.1
     # via
     #   -r requirements/test.txt
     #   openedx-django-pyfs
-idna==3.4
+idna==3.6
     # via requests
 imagesize==1.4.1
     # via sphinx
-importlib-metadata==6.8.0
+importlib-metadata==7.0.1
     # via
     #   build
     #   keyring
@@ -161,7 +165,7 @@ lazy==1.6
     # via
     #   -r requirements/test.txt
     #   xblock
-lxml==4.9.3
+lxml==4.9.4
     # via
     #   -r requirements/test.txt
     #   edx-i18n-tools
@@ -183,9 +187,9 @@ mdurl==0.1.2
     # via markdown-it-py
 more-itertools==10.1.0
     # via jaraco-classes
-nh3==0.2.14
+nh3==0.2.15
     # via readme-renderer
-openedx-django-pyfs==3.4.0
+openedx-django-pyfs==3.4.1
     # via
     #   -r requirements/test.txt
     #   xblock
@@ -196,7 +200,7 @@ packaging==23.2
     #   pydata-sphinx-theme
     #   pytest
     #   sphinx
-path==16.7.1
+path==16.9.0
     # via
     #   -r requirements/test.txt
     #   edx-i18n-tools
@@ -214,13 +218,13 @@ polib==1.2.0
     # via
     #   -r requirements/test.txt
     #   edx-i18n-tools
-prompt-toolkit==3.0.41
+prompt-toolkit==3.0.43
     # via
     #   -r requirements/test.txt
     #   click-repl
 pycparser==2.21
     # via cffi
-pydata-sphinx-theme==0.14.3
+pydata-sphinx-theme==0.14.4
     # via sphinx-book-theme
 pygments==2.17.2
     # via
@@ -256,6 +260,7 @@ pytz==2023.3.post1
     #   -r requirements/test.txt
     #   babel
     #   django
+    #   tincan
     #   xblock
 pyyaml==6.0.1
     # via
@@ -277,7 +282,7 @@ rfc3986==2.0.0
     # via twine
 rich==13.7.0
     # via twine
-s3transfer==0.7.0
+s3transfer==0.10.0
     # via
     #   -r requirements/test.txt
     #   boto3
@@ -326,6 +331,8 @@ stevedore==5.1.0
     #   -r requirements/test.txt
     #   doc8
     #   edx-opaque-keys
+tincan==1.0.0
+    # via -r requirements/test.txt
 tomli==2.0.1
     # via
     #   -r requirements/test.txt
@@ -336,7 +343,7 @@ tomli==2.0.1
     #   pytest
 twine==4.0.2
     # via -r requirements/doc.in
-typing-extensions==4.8.0
+typing-extensions==4.9.0
     # via
     #   -r requirements/test.txt
     #   asgiref
@@ -375,7 +382,7 @@ webob==1.8.7
     # via
     #   -r requirements/test.txt
     #   xblock
-xblock[django]==1.8.1
+xblock[django]==1.9.0
     # via
     #   -r requirements/test.txt
     #   xblock

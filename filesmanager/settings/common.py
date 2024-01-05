@@ -9,8 +9,9 @@ INSTALLED_APPS = [
 ]
 
 
-def plugin_settings(settings):  # pylint: disable=unused-argument
+def plugin_settings(settings):
     """
     Set of plugin settings used by the Open Edx platform.
     More info: https://github.com/edx/edx-platform/blob/master/openedx/core/djangoapps/plugins/README.rst
     """
+    settings.FILES_MANAGER_EVENT_ROUTING_BACKEND = 'filesmanager.edxapp_wrapper.backends.event_routing_backends_p_v1'

@@ -30,6 +30,10 @@ function FilesManagerXBlock(runtime, _, context) {
   xBlockContext.element = elementSelector;
   xBlockContext.context = context;
   xBlockContext.isStudioView = elementSelector && typeRuntime !== 'LmsRuntime';
+  xBlockContext.xblockId = context.xblock_id;
+  xBlockContext.courseId = context.course_id;
+  xBlockContext.userId = context.user_id;
+  xBlockContext.userName = context.username;
   xBlockContext.isEditView = context.is_edit_view;
   const rootElement = document.getElementById('files-manager-app-root');
   const root = ReactDOM.createRoot(rootElement);

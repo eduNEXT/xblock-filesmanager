@@ -57,3 +57,7 @@ TEMPLATES = [{
         ],
     },
 }]
+
+FILES_MANAGER_EVENT_ROUTING_BACKEND = (
+    "filesmanager.edxapp_wrapper.test_backends.event_routing_backends_p_v1"
+)

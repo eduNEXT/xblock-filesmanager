@@ -20,7 +20,7 @@ import ErrorMessage from '@components/ErrorMessage';
 import { sendTrackingLogEvent } from '@services/analyticsService';
 
 import { useCustomFileMap, useFiles, useFolderChain, useFileActionHandler } from './hooks';
-import { convertFileMapToTree } from './utils';
+import { convertFileMapToTree, getMetadataFiles } from './utils';
 import { prepareCustomFileMap, defaultFileActions, customFileActions, openFileAction } from './constants';
 
 ChonkyActions.ToggleHiddenFiles.button.toolbar = false;
@@ -34,19 +34,24 @@ const FileManager = (props) => {
   const [, setIsFetchLoading] = useState(false);
   const [downloadFileErrorMessage, setDownloadFileErrorMessage] = useState(null);
   const [reloadPage, setReloadPage] = useState(false);
+  const downloadFilesData = useRef(null);
 
   const onFileDownloaded = () => {
     setDownloadFileErrorMessage(null);
-    const { isStudioView } = xBlockContext;
-    if(!isStudioView) {
-      /* change this as you need it */
-      sendTrackingLogEvent('edx.course.tool.accessed', {
-        course_id: 'courseId',
-        is_staff: 'administrator',
-        tool_name: 'analyticsId',
+    const fileContents = downloadFilesData.current;
+    const filesMetadata = getMetadataFiles(fileContents);
+    const { isStudioView, xblockId, courseId, userId, userName } = xBlockContext;
+    if (!isStudioView) {
+      sendTrackingLogEvent('edunext.xblock.filesmanager.files.downloaded', {
+        course_id: courseId,
+        xblock_id: xblockId,
+        user_id: userId,
+        username: userName,
+        files_downloaded_metadata: filesMetadata,
+        created_at: new Date().toISOString()
       });
     }
-  }
+  };
 
   const onError = () => {
     const errorMessage = gettext('There was an error downloading the file');
@@ -69,6 +74,7 @@ const FileManager = (props) => {
       isDir,
     } = fileData;
     const { hostname, port, protocol } = window.location;
+    downloadFilesData.current = fileData;
     const fullUrl = port ? `${protocol}//${hostname}:${port}${url}` : `${protocol}//${hostname}${url}`;
     if (isDir){
         downloadFiles([fileData])

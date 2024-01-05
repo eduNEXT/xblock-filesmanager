@@ -16,6 +16,7 @@ const convertTreeToNewFileMap = (node, parent = null, newFileMapObject, isSaved 
     id: node.id,
     name: node.name,
     isDir: isDirectory,
+    path: node.path || '',
     metadata: node.metadata || {},
     isSaved
   };
@@ -176,4 +177,36 @@ export const getFilesFromATree = (node) => {
   }
 
   return files;
+};
+
+/**
+ * Recursively extracts asset keys from a node object and its children.
+ * @param {object} node - The node object containing asset information.
+ * @param {string} [node.name] - The name of the node.
+ * @param {string} [node.path] - The path of the node.
+ * @param {object} [node.metadata] - The metadata object containing asset_key and external_url.
+ * @param {string} [node.metadata.asset_key] - The asset key associated with the node.
+ * @param {string} [node.metadata.external_url] - The external URL associated with the node.
+ * @returns {Array<object>} - An array of objects containing asset keys and related information.
+ */
+export const getMetadataFiles = (node) => {
+  const assetKeys = [];
+
+  const { name, path, metadata } = node;
+  if (metadata && metadata.asset_key) {
+    assetKeys.push({
+      name: name || '',
+      path: path || '',
+      asset_key: metadata.asset_key || '',
+      url: metadata.external_url || ''
+    });
+  }
+
+  if (node.children && node.children.length) {
+    node.children.forEach((child) => {
+      assetKeys.push(...getMetadataFiles(child));
+    });
+  }
+
+  return assetKeys;
 };

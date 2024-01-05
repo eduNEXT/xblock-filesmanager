@@ -8,3 +8,4 @@ XBlock
 xblock-utils
 celery
 edx-opaque-keys
+tincan
