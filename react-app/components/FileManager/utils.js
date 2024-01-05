@@ -179,6 +179,16 @@ export const getFilesFromATree = (node) => {
   return files;
 };
 
+/**
+ * Recursively extracts asset keys from a node object and its children.
+ * @param {object} node - The node object containing asset information.
+ * @param {string} [node.name] - The name of the node.
+ * @param {string} [node.path] - The path of the node.
+ * @param {object} [node.metadata] - The metadata object containing asset_key and external_url.
+ * @param {string} [node.metadata.asset_key] - The asset key associated with the node.
+ * @param {string} [node.metadata.external_url] - The external URL associated with the node.
+ * @returns {Array<object>} - An array of objects containing asset keys and related information.
+ */
 export const getMetadataFiles = (node) => {
   const assetKeys = [];
 

@@ -37,21 +37,21 @@ const FileManager = (props) => {
   const downloadFilesData = useRef(null);
 
   const onFileDownloaded = () => {
-    const contents = downloadFilesData.current;
-    const objectData = getMetadataFiles(contents);
     setDownloadFileErrorMessage(null);
-    const { isStudioView } = xBlockContext;
-    if(!isStudioView) {
+    const fileContents = downloadFilesData.current;
+    const filesMetadata = getMetadataFiles(fileContents);
+    const { isStudioView, xblockId, courseId, userId, userName } = xBlockContext;
+    if (!isStudioView) {
       sendTrackingLogEvent('edunext.xblock.filesmanager.files.downloaded', {
-        course_id: xBlockContext.context.course_id,
-        xblock_id: xBlockContext.context.xblock_id,
-        user_id: xBlockContext.context.user_id,
-        username: xBlockContext.context.username,
-        files_downloaded_metadata: objectData,
-        created_at: new Date().toISOString(),
+        course_id: courseId,
+        xblock_id: xblockId,
+        user_id: userId,
+        username: userName,
+        files_downloaded_metadata: filesMetadata,
+        created_at: new Date().toISOString()
       });
     }
-  }
+  };
 
   const onError = () => {
     const errorMessage = gettext('There was an error downloading the file');
