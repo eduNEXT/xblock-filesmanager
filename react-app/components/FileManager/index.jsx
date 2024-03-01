@@ -210,9 +210,12 @@ const FileManager = (props) => {
         sizeFiles++;
       }
 
+      const oldMetadata = filesToSave[key].metadata || {};
+
       filesToSave[key] = {
         ...filesToSave[key],
         metadata: {
+          ...oldMetadata,
           test: 'Hello',
           person: {
             name: 'John',
