@@ -12,6 +12,10 @@ aniso8601==9.0.1
     # via
     #   -r requirements/quality.txt
     #   tincan
+apache-libcloud==3.8.0
+    # via
+    #   -r requirements/quality.txt
+    #   edx-event-routing-backends
 appdirs==1.4.4
     # via
     #   -r requirements/quality.txt
@@ -20,49 +24,60 @@ asgiref==3.7.2
     # via
     #   -r requirements/quality.txt
     #   django
-astroid==3.0.2
+astroid==3.1.0
     # via
     #   -r requirements/quality.txt
     #   pylint
     #   pylint-celery
+attrs==23.2.0
+    # via
+    #   -r requirements/quality.txt
+    #   openedx-events
 backports-zoneinfo[tzdata]==0.2.1
     # via
     #   -r requirements/quality.txt
-    #   backports-zoneinfo
     #   celery
+    #   django
     #   kombu
 billiard==4.2.0
     # via
     #   -r requirements/quality.txt
     #   celery
-boto3==1.34.9
+boto3==1.34.53
     # via
     #   -r requirements/quality.txt
     #   fs-s3fs
-botocore==1.34.9
+botocore==1.34.53
     # via
     #   -r requirements/quality.txt
     #   boto3
     #   s3transfer
-build==1.0.3
+build==1.1.1
     # via
     #   -r requirements/pip-tools.txt
     #   pip-tools
 celery==5.3.6
-    # via -r requirements/quality.txt
-certifi==2023.11.17
+    # via
+    #   -r requirements/quality.txt
+    #   edx-celeryutils
+    #   event-tracking
+certifi==2024.2.2
     # via
     #   -r requirements/ci.txt
+    #   -r requirements/quality.txt
     #   requests
 cffi==1.16.0
     # via
     #   -r requirements/ci.txt
+    #   -r requirements/quality.txt
     #   cryptography
+    #   pynacl
 chardet==5.2.0
     # via diff-cover
 charset-normalizer==3.3.2
     # via
     #   -r requirements/ci.txt
+    #   -r requirements/quality.txt
     #   requests
 click==8.1.7
     # via
@@ -74,6 +89,7 @@ click==8.1.7
     #   click-plugins
     #   click-repl
     #   code-annotations
+    #   edx-django-utils
     #   edx-lint
     #   pip-tools
 click-didyoumean==0.3.0
@@ -92,22 +108,24 @@ click-repl==0.3.0
     # via
     #   -r requirements/quality.txt
     #   celery
-code-annotations==1.5.0
+code-annotations==1.6.0
     # via
     #   -r requirements/quality.txt
     #   edx-lint
-coverage[toml]==7.4.0
+    #   edx-toggles
+coverage[toml]==7.4.3
     # via
     #   -r requirements/quality.txt
-    #   coverage
     #   pytest-cov
-cryptography==41.0.7
+cryptography==42.0.5
     # via
     #   -r requirements/ci.txt
+    #   -r requirements/quality.txt
+    #   django-fernet-fields-v2
     #   secretstorage
-diff-cover==8.0.2
+diff-cover==8.0.3
     # via -r requirements/dev.in
-dill==0.3.7
+dill==0.3.8
     # via
     #   -r requirements/quality.txt
     #   pylint
@@ -115,36 +133,108 @@ distlib==0.3.8
     # via
     #   -r requirements/ci.txt
     #   virtualenv
-django==3.2.23
+django==4.2.10
     # via
     #   -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
     #   -r requirements/quality.txt
     #   django-appconf
+    #   django-config-models
+    #   django-crum
+    #   django-fernet-fields-v2
+    #   django-model-utils
     #   django-statici18n
+    #   django-waffle
+    #   djangorestframework
+    #   edx-celeryutils
+    #   edx-django-utils
+    #   edx-event-routing-backends
     #   edx-i18n-tools
+    #   edx-toggles
+    #   event-tracking
+    #   jsonfield
     #   openedx-django-pyfs
+    #   openedx-events
+    #   openedx-filters
 django-appconf==1.0.6
     # via
     #   -r requirements/quality.txt
     #   django-statici18n
+django-config-models==2.5.1
+    # via
+    #   -r requirements/quality.txt
+    #   edx-event-routing-backends
+django-crum==0.7.9
+    # via
+    #   -r requirements/quality.txt
+    #   edx-django-utils
+    #   edx-toggles
+django-fernet-fields-v2==0.9
+    # via
+    #   -r requirements/quality.txt
+    #   edx-event-routing-backends
+django-model-utils==4.4.0
+    # via
+    #   -r requirements/quality.txt
+    #   edx-celeryutils
 django-statici18n==2.4.0
     # via -r requirements/quality.txt
+django-waffle==4.1.0
+    # via
+    #   -r requirements/quality.txt
+    #   edx-django-utils
+    #   edx-toggles
+djangorestframework==3.14.0
+    # via
+    #   -r requirements/quality.txt
+    #   django-config-models
 docutils==0.20.1
     # via
     #   -r requirements/ci.txt
     #   readme-renderer
+edx-celeryutils==1.2.5
+    # via
+    #   -r requirements/quality.txt
+    #   edx-event-routing-backends
+edx-django-utils==5.10.1
+    # via
+    #   -r requirements/quality.txt
+    #   django-config-models
+    #   edx-toggles
+    #   event-tracking
+    #   openedx-events
+edx-event-routing-backends==8.1.2
+    # via -r requirements/quality.txt
 edx-i18n-tools==1.3.0
     # via
     #   -r requirements/dev.in
     #   -r requirements/quality.txt
 edx-lint==5.3.6
     # via -r requirements/quality.txt
-edx-opaque-keys==2.5.1
-    # via -r requirements/quality.txt
+edx-opaque-keys[django]==2.5.1
+    # via
+    #   -r requirements/quality.txt
+    #   openedx-events
+edx-toggles==5.1.1
+    # via
+    #   -r requirements/quality.txt
+    #   edx-event-routing-backends
+    #   event-tracking
+event-tracking==2.3.0
+    # via
+    #   -r requirements/quality.txt
+    #   edx-event-routing-backends
 exceptiongroup==1.2.0
     # via
     #   -r requirements/quality.txt
     #   pytest
+fastavro==1.9.4
+    # via
+    #   -r requirements/quality.txt
+    #   openedx-events
+fasteners==0.19
+    # via
+    #   -r requirements/quality.txt
+    #   edx-event-routing-backends
 filelock==3.13.1
     # via
     #   -r requirements/ci.txt
@@ -163,6 +253,7 @@ fs-s3fs==1.1.1
 idna==3.6
     # via
     #   -r requirements/ci.txt
+    #   -r requirements/quality.txt
     #   requests
 importlib-metadata==7.0.1
     # via
@@ -171,7 +262,7 @@ importlib-metadata==7.0.1
     #   build
     #   keyring
     #   twine
-importlib-resources==6.1.1
+importlib-resources==6.1.2
     # via
     #   -r requirements/ci.txt
     #   keyring
@@ -179,11 +270,15 @@ iniconfig==2.0.0
     # via
     #   -r requirements/quality.txt
     #   pytest
+isodate==0.6.1
+    # via
+    #   -r requirements/quality.txt
+    #   edx-event-routing-backends
 isort==5.13.2
     # via
     #   -r requirements/quality.txt
     #   pylint
-jaraco-classes==3.3.0
+jaraco-classes==3.3.1
     # via
     #   -r requirements/ci.txt
     #   keyring
@@ -192,7 +287,7 @@ jeepney==0.8.0
     #   -r requirements/ci.txt
     #   keyring
     #   secretstorage
-jinja2==3.1.2
+jinja2==3.1.3
     # via
     #   -r requirements/quality.txt
     #   code-annotations
@@ -202,11 +297,16 @@ jmespath==1.0.1
     #   -r requirements/quality.txt
     #   boto3
     #   botocore
-keyring==24.3.0
+jsonfield==3.1.0
+    # via
+    #   -r requirements/quality.txt
+    #   edx-celeryutils
+    #   edx-event-routing-backends
+keyring==24.3.1
     # via
     #   -r requirements/ci.txt
     #   twine
-kombu==5.3.4
+kombu==5.3.5
     # via
     #   -r requirements/quality.txt
     #   celery
@@ -214,12 +314,12 @@ lazy==1.6
     # via
     #   -r requirements/quality.txt
     #   xblock
-lxml==4.9.4
+lxml==5.1.0
     # via
     #   -r requirements/quality.txt
     #   edx-i18n-tools
     #   xblock
-mako==1.3.0
+mako==1.3.2
     # via
     #   -r requirements/quality.txt
     #   xblock
@@ -228,7 +328,7 @@ markdown-it-py==3.0.0
     # via
     #   -r requirements/ci.txt
     #   rich
-markupsafe==2.1.3
+markupsafe==2.1.5
     # via
     #   -r requirements/quality.txt
     #   jinja2
@@ -242,18 +342,30 @@ mdurl==0.1.2
     # via
     #   -r requirements/ci.txt
     #   markdown-it-py
-more-itertools==10.1.0
+more-itertools==10.2.0
     # via
     #   -r requirements/ci.txt
     #   jaraco-classes
+newrelic==9.7.0
+    # via
+    #   -r requirements/quality.txt
+    #   edx-django-utils
 nh3==0.2.15
     # via
     #   -r requirements/ci.txt
     #   readme-renderer
-openedx-django-pyfs==3.4.1
+openedx-django-pyfs==3.5.0
     # via
     #   -r requirements/quality.txt
     #   xblock
+openedx-events==9.5.2
+    # via
+    #   -r requirements/quality.txt
+    #   event-tracking
+openedx-filters==1.6.0
+    # via
+    #   -r requirements/quality.txt
+    #   edx-event-routing-backends
 packaging==23.2
     # via
     #   -r requirements/ci.txt
@@ -262,7 +374,7 @@ packaging==23.2
     #   build
     #   pytest
     #   tox
-path==16.9.0
+path==16.10.0
     # via
     #   -r requirements/quality.txt
     #   edx-i18n-tools
@@ -270,19 +382,19 @@ pbr==6.0.0
     # via
     #   -r requirements/quality.txt
     #   stevedore
-pip-tools==7.3.0
+pip-tools==7.4.0
     # via -r requirements/pip-tools.txt
 pkginfo==1.9.6
     # via
     #   -r requirements/ci.txt
     #   twine
-platformdirs==4.1.0
+platformdirs==4.2.0
     # via
     #   -r requirements/ci.txt
     #   -r requirements/quality.txt
     #   pylint
     #   virtualenv
-pluggy==1.3.0
+pluggy==1.4.0
     # via
     #   -r requirements/ci.txt
     #   -r requirements/quality.txt
@@ -297,6 +409,10 @@ prompt-toolkit==3.0.43
     # via
     #   -r requirements/quality.txt
     #   click-repl
+psutil==5.9.8
+    # via
+    #   -r requirements/quality.txt
+    #   edx-django-utils
 py==1.11.0
     # via
     #   -r requirements/ci.txt
@@ -306,6 +422,7 @@ pycodestyle==2.11.1
 pycparser==2.21
     # via
     #   -r requirements/ci.txt
+    #   -r requirements/quality.txt
     #   cffi
 pydocstyle==6.3.0
     # via -r requirements/quality.txt
@@ -315,7 +432,7 @@ pygments==2.17.2
     #   diff-cover
     #   readme-renderer
     #   rich
-pylint==3.0.3
+pylint==3.1.0
     # via
     #   -r requirements/quality.txt
     #   edx-lint
@@ -339,33 +456,42 @@ pymongo==3.13.0
     # via
     #   -r requirements/quality.txt
     #   edx-opaque-keys
+    #   event-tracking
+pynacl==1.5.0
+    # via
+    #   -r requirements/quality.txt
+    #   edx-django-utils
 pyproject-hooks==1.0.0
     # via
     #   -r requirements/pip-tools.txt
     #   build
-pytest==7.4.3
+    #   pip-tools
+pytest==8.0.2
     # via
     #   -r requirements/quality.txt
     #   pytest-cov
     #   pytest-django
 pytest-cov==4.1.0
     # via -r requirements/quality.txt
-pytest-django==4.7.0
+pytest-django==4.8.0
     # via -r requirements/quality.txt
-python-dateutil==2.8.2
+python-dateutil==2.9.0
     # via
     #   -r requirements/quality.txt
     #   botocore
     #   celery
+    #   edx-event-routing-backends
     #   xblock
-python-slugify==8.0.1
+python-slugify==8.0.4
     # via
     #   -r requirements/quality.txt
     #   code-annotations
-pytz==2023.3.post1
+pytz==2024.1
     # via
     #   -r requirements/quality.txt
-    #   django
+    #   djangorestframework
+    #   edx-event-routing-backends
+    #   event-tracking
     #   tincan
     #   xblock
 pyyaml==6.0.1
@@ -374,13 +500,16 @@ pyyaml==6.0.1
     #   code-annotations
     #   edx-i18n-tools
     #   xblock
-readme-renderer==42.0
+readme-renderer==43.0
     # via
     #   -r requirements/ci.txt
     #   twine
 requests==2.31.0
     # via
     #   -r requirements/ci.txt
+    #   -r requirements/quality.txt
+    #   apache-libcloud
+    #   edx-event-routing-backends
     #   requests-toolbelt
     #   twine
 requests-toolbelt==1.0.0
@@ -391,7 +520,7 @@ rfc3986==2.0.0
     # via
     #   -r requirements/ci.txt
     #   twine
-rich==13.7.0
+rich==13.7.1
     # via
     #   -r requirements/ci.txt
     #   twine
@@ -413,8 +542,10 @@ six==1.16.0
     #   -r requirements/ci.txt
     #   -r requirements/quality.txt
     #   edx-lint
+    #   event-tracking
     #   fs
     #   fs-s3fs
+    #   isodate
     #   python-dateutil
     #   tox
 snowballstemmer==2.2.0
@@ -425,17 +556,20 @@ sqlparse==0.4.4
     # via
     #   -r requirements/quality.txt
     #   django
-stevedore==5.1.0
+stevedore==5.2.0
     # via
     #   -r requirements/quality.txt
     #   code-annotations
+    #   edx-django-utils
     #   edx-opaque-keys
 text-unidecode==1.3
     # via
     #   -r requirements/quality.txt
     #   python-slugify
 tincan==1.0.0
-    # via -r requirements/quality.txt
+    # via
+    #   -r requirements/quality.txt
+    #   edx-event-routing-backends
 tomli==2.0.1
     # via
     #   -r requirements/ci.txt
@@ -448,7 +582,7 @@ tomli==2.0.1
     #   pyproject-hooks
     #   pytest
     #   tox
-tomlkit==0.12.3
+tomlkit==0.12.4
     # via
     #   -r requirements/quality.txt
     #   pylint
@@ -458,9 +592,9 @@ tox==3.28.0
     #   tox-battery
 tox-battery==0.6.2
     # via -r requirements/ci.txt
-twine==4.0.2
+twine==5.0.0
     # via -r requirements/ci.txt
-typing-extensions==4.9.0
+typing-extensions==4.10.0
     # via
     #   -r requirements/ci.txt
     #   -r requirements/quality.txt
@@ -470,7 +604,7 @@ typing-extensions==4.9.0
     #   kombu
     #   pylint
     #   rich
-tzdata==2023.3
+tzdata==2024.1
     # via
     #   -r requirements/quality.txt
     #   backports-zoneinfo
@@ -489,11 +623,11 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==20.25.0
+virtualenv==20.25.1
     # via
     #   -r requirements/ci.txt
     #   tox
-wcwidth==0.2.12
+wcwidth==0.2.13
     # via
     #   -r requirements/quality.txt
     #   prompt-toolkit
@@ -510,10 +644,9 @@ wheel==0.42.0
     # via
     #   -r requirements/pip-tools.txt
     #   pip-tools
-xblock[django]==1.9.0
+xblock[django]==2.0.0
     # via
     #   -r requirements/quality.txt
-    #   xblock
     #   xblock-utils
 xblock-utils==4.0.0
     # via -r requirements/quality.txt
