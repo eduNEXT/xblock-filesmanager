@@ -16,7 +16,12 @@ from opaque_keys.edx.keys import AssetKey
 from webob.response import Response
 from xblock.core import XBlock
 from xblock.fields import Dict, List, Scope
-from xblock.fragment import Fragment
+
+try:
+    from xblock.fragment import Fragment
+except ModuleNotFoundError:
+    from web_fragments.fragment import Fragment
+
 from xblockutils.resources import ResourceLoader
 
 from filesmanager.processors.xapi.event_transformers import FilesDownloadedTransformer  # pylint: disable=unused-import
