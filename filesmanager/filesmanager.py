@@ -670,10 +670,11 @@ class FilesManagerXBlock(XBlock):
             from cms.djangoapps.contentstore.asset_storage_handler import \
                 update_course_run_asset  # pylint: disable=import-outside-toplevel
 
-        file_object = self.find_temporary_file(file)
-        file_path, name = file.get("path"), file.get("name")
         extra_metadata = self.get_extra_metadata(file.get("metadata", {}))
         metadata = self.get_metadata(file.get("metadata", {}))
+        file["metadata"] = metadata
+        file_object = self.find_temporary_file(file)
+        file_path, name = file.get("path"), file.get("name")
 
         if file_object and not metadata:
             # New file uploaded from the Files Manager
