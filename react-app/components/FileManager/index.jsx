@@ -195,11 +195,8 @@ const FileManager = (props) => {
   const handleSaveButton = async (_, rootFolderId, fileMap, filesToDelete, buttonSaveRef) => {
     const filesToSave = { ...fileMap };
     const filesKeys = Object.keys(filesToSave);
-    const contentFormat = convertFileMapToTree(rootFolderId, '', filesToSave);
-    const contentString = JSON.stringify({ rootFolderId, treeFolders: contentFormat });
     const formData = new FormData();
 
-    formData.append('contents', contentString);
     const hasAssetsKeyToDelete = filesToDelete.length > 0;
     let sizeFiles = 0;
 
@@ -212,7 +209,23 @@ const FileManager = (props) => {
         formData.append('files', file);
         sizeFiles++;
       }
+
+      filesToSave[key] = {
+        ...filesToSave[key],
+        metadata: {
+          test: 'Hello',
+          person: {
+            name: 'John',
+            anotherKey: 'test'
+          }
+        }
+      };
     });
+
+    const contentFormat = convertFileMapToTree(rootFolderId, '', filesToSave);
+    const contentString = JSON.stringify({ rootFolderId, treeFolders: contentFormat });
+    console.log('contentString', contentString);
+    formData.append('contents', contentString);
 
     buttonSaveRef.disabled = 'disabled';
     buttonSaveRef.classList.add('disabled-button');
