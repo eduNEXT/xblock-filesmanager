@@ -14,6 +14,23 @@ Change Log
 Unreleased
 **********
 
+0.7.1 - 2023-03-01
+**********************************************
+
+Added
+=====
+
+* Include edx-event-routing-backends to base requirements.
+* Upgraded requirements.
+
+0.7.0 - 2023-12-01
+**********************************************
+
+Added
+=====
+
+* Add files downloaded event.
+
 0.6.4 - 2023-12-01
 **********************************************
 
