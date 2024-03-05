@@ -12,7 +12,7 @@ import { useEffect, useRef } from 'react';
  * @returns {Object} - An object containing buttonRefs for each button element.
  */
 
-const useXBlockActionButtons = (buttons, loading, filesMap, pathsToDelete, rootFolderId, callbackFunction) => {
+const useXBlockActionButtons = (buttons, loading, filesMap, pathsToDelete, rootFolderId, filesDates, callbackFunction) => {
   const buttonRefs = useRef({});
   const clickHandlers = {};
 
@@ -48,7 +48,7 @@ const useXBlockActionButtons = (buttons, loading, filesMap, pathsToDelete, rootF
         if (!clickHandlers[id]) {
           clickHandlers[id] = (event) => {
             event.preventDefault();
-            callbackFunction(id, rootFolderId, filesMap, pathsToDelete, buttonRefs.current[id]);
+            callbackFunction(id, rootFolderId, filesMap, pathsToDelete, buttonRefs.current[id], filesDates);
           };
           buttonRefs.current[id].addEventListener('click', clickHandlers[id]);
         }

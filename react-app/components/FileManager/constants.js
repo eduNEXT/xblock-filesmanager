@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { ChonkyActions, ChonkyIconName, defineFileAction } from 'chonky';
+import { faCalendarDays, faCalendarXmark } from '@fortawesome/free-solid-svg-icons';
 
 export const prepareCustomFileMap = () => {
   const rootFolderId = uuidv4();
@@ -56,15 +57,44 @@ export const openFileAction = defineFileAction({
   }
 });
 
+// Custom action to add a date for a file/folder of visibility
+export const addDateVisibilityFiles = defineFileAction({
+  id: 'add_date_visibility_files',
+  //hotkeys: ['ctrl+o'],
+  button: {
+    name: 'Set file visibility with date',
+    toolbar: true,
+    contextMenu: false,
+    icon: faCalendarDays
+  }
+});
+
+// Custom action to remove a date set for a file/folder of visibility
+export const removeDateVisibilityFiles = defineFileAction({
+  id: 'remove_date_visibility_files',
+  //hotkeys: ['ctrl+o'],
+  button: {
+    name: 'Remove date visibility',
+    toolbar: true,
+    contextMenu: false,
+    icon: faCalendarXmark
+  }
+});
+
 export const defaultFileActions = [ChonkyActions.CreateFolder, ChonkyActions.UploadFiles, ChonkyActions.DownloadFiles];
 
-export const customFileActions = (
-  hasFolderSelected = false,
-  hasFileSelected = false,
-  hasMoreThanOneFolderSelected = false
-) => {
+export const customFileActions = ({
+  hasFolderSelected,
+  hasFileSelected,
+  hasMoreThanOneFolderSelected,
+  hasFileSelectedDate
+}) => {
   if (hasFolderSelected) {
-    return [deleteFolderAction, renameFolderAction, ...defaultFileActions];
+    const visibilityDates = hasFileSelectedDate
+      ? [addDateVisibilityFiles, removeDateVisibilityFiles]
+      : [addDateVisibilityFiles];
+
+    return [deleteFolderAction, renameFolderAction, ...visibilityDates, ...defaultFileActions];
   }
 
   if (hasMoreThanOneFolderSelected) {
@@ -72,7 +102,11 @@ export const customFileActions = (
   }
 
   if (hasFileSelected) {
-    return [...defaultFileActions, openFileAction];
+    const visibilityDates = hasFileSelectedDate
+      ? [addDateVisibilityFiles, removeDateVisibilityFiles]
+      : [addDateVisibilityFiles];
+
+    return [...defaultFileActions, ...visibilityDates, openFileAction];
   }
 
   return defaultFileActions;

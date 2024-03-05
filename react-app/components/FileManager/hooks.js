@@ -2,8 +2,13 @@ import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { ChonkyActions, FileHelper } from 'chonky';
 import { v4 as uuidv4 } from 'uuid';
 import _ from 'lodash';
+import { decamelizeKeys } from 'humps';
+import dayjs from 'dayjs';
+import isBetween from 'dayjs/plugin/isBetween';
 
 import { convertFileMapToTree, findNodeByIdInTree, extractAssetKeys, getFilesFromATree } from './utils';
+
+dayjs.extend(isBetween);
 
 export const useCustomFileMap = (prepareCustomFileMap) => {
   const { baseFileMap, rootFolderId } = useMemo(prepareCustomFileMap, []);
@@ -12,6 +17,8 @@ export const useCustomFileMap = (prepareCustomFileMap) => {
   const [fileMap, setFileMap] = useState(baseFileMap);
   const [currentFolderId, setCurrentFolderId] = useState(rootFolderId);
   const [assetsKeyToDelete, setAssetsKeyToDelete] = useState([]);
+  const [filesDates, setFilesDates] = useState({});
+  const [fileDateSelected, setFileDateSelected] = useState({ dateFrom: null, dateTo: null });
 
   const resetFileMap = useCallback(() => {
     setFileMap(baseFileMap);
@@ -199,6 +206,55 @@ export const useCustomFileMap = (prepareCustomFileMap) => {
     });
   }, []);
 
+  const addDateVisibityFiles = useCallback((filesSelected, dates) => {
+    const { dateFrom, dateTo } = dates;
+    const datesFormat = 'YYYY-MM-DD';
+    const formatDayFrom = dayjs(dateFrom).format(datesFormat);
+    const formatDayTo = dayjs(dateTo).format(datesFormat);
+    const dateFormat = decamelizeKeys({ dateRange: { dateFrom, dateTo } });
+    const currentDate = dayjs();
+
+    filesSelected.forEach((fileKey) => {
+      setFilesDates((prev) => ({ ...prev, [fileKey]: dateFormat }));
+      setFileMap((currentFileMap) => {
+        const newFileMap = _.cloneDeep(currentFileMap);
+        const { isHidden = null, ...fileSelected } = newFileMap[fileKey];
+        const fileMetadata = fileSelected?.metadata || {};
+        fileSelected.metadata = { ...fileMetadata, ...dateFormat };
+        const isFileNodeVisible = currentDate.isBetween(formatDayFrom, formatDayTo, 'day', '[]');
+        if (!isFileNodeVisible) {
+          fileSelected.isHidden = true;
+        }
+
+        newFileMap[fileKey] = fileSelected;
+
+        return newFileMap;
+      });
+    });
+  }, []);
+
+  const removeDateVisibityFiles = useCallback((filesSelected) => {
+    const currentDatesSelected = filesDates;
+    setFileDateSelected({ dateFrom: null, dateTo: null });
+
+    filesSelected.forEach((file) => {
+      const { id } = file;
+      const { [id]: omitKey, ...filesDatesNew } = currentDatesSelected;
+      setFilesDates(filesDatesNew);
+      setFileMap((currentFileMap) => {
+        const newFileMap = _.cloneDeep(currentFileMap);
+        const { isHidden = null, ...fileSelected } = file;
+        const fileMetadata = fileSelected?.metadata || {};
+        const { date_range = null, ...metadataFormat } = fileMetadata;
+        fileSelected.metadata = metadataFormat;
+
+        newFileMap[id] = fileSelected;
+
+        return newFileMap;
+      });
+    });
+  }, []);
+
   return {
     fileMap,
     currentFolderId,
@@ -211,7 +267,13 @@ export const useCustomFileMap = (prepareCustomFileMap) => {
     createFolder,
     createFile,
     deleteFolders,
-    renameFolder
+    renameFolder,
+    setFileMap,
+    filesDates,
+    fileDateSelected,
+    setFileDateSelected,
+    addDateVisibityFiles,
+    removeDateVisibityFiles
   };
 };
 
@@ -249,10 +311,13 @@ export const useFileActionHandler = (
   moveFiles,
   createFolder,
   addFile,
+  setDate,
   downloadFile,
   deleteFolders,
   renameFolder,
-  downloadFiles
+  downloadFiles,
+  removeDateVisibityFiles,
+  handleClearSelection
 ) => {
   return useCallback(
     (data) => {
@@ -328,6 +393,18 @@ export const useFileActionHandler = (
         if (selectedFiles.length > 1) {
           downloadFiles(selectedFiles);
         }
+      } else if (data.id === 'add_date_visibility_files') {
+        if (hasPublishFolder) {
+          alert('You can not set dates for Unpublished folder');
+        } else {
+          const [fileSelected] = data.state.selectedFiles;
+          const fileSelectedFormatted = decamelizeKeys(fileSelected);
+          setDate(fileSelected);
+        }
+      } else if (data.id === 'remove_date_visibility_files') {
+        const { selectedFiles } = data.state;
+        removeDateVisibityFiles(selectedFiles);
+        handleClearSelection();
       }
     },
     [createFolder, deleteFiles, moveFiles, setCurrentFolderId, fileMap]
