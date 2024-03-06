@@ -812,6 +812,7 @@ class FilesManagerXBlock(XBlock):
             target_directory: the target directory where the new directory will be created.
         """
         directory_path, name = self.generate_content_path(directory["path"], directory["name"])
+        metadata = directory.get('metadata', {})
         target_directory.append(
             {
                 "id": directory.get("id"),
@@ -819,7 +820,7 @@ class FilesManagerXBlock(XBlock):
                 "name": name,
                 "type": "directory",
                 "path": directory_path,
-                "metadata": {},
+                "metadata": metadata,
                 "children": [],
             }
         )

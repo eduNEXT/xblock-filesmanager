@@ -17,5 +17,7 @@ export const advancedNotes = [
   ...basicNotes,
   'The "Unpublished" folder contains course files that are not within the file tree.',
   'When a folder is deleted, the files contained within it move to the "Unpublished" folder.',
-  'Files deleted from the tree structure are moved to the "Unpublished" folder and are not permanently deleted.'
+  'Files deleted from the tree structure are moved to the "Unpublished" folder and are not permanently deleted.',
+  `To add visibility of folder/files with date you should set them by 'Set file visibility with date' button`,
+  `To remove visibility of folder/files with date you should set them by 'Remove date visibility' button`
 ];
