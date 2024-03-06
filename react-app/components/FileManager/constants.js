@@ -60,11 +60,10 @@ export const openFileAction = defineFileAction({
 // Custom action to add a date for a file/folder of visibility
 export const addDateVisibilityFiles = defineFileAction({
   id: 'add_date_visibility_files',
-  //hotkeys: ['ctrl+o'],
   button: {
     name: 'Set file visibility with date',
-    toolbar: true,
-    contextMenu: false,
+    toolbar: false,
+    contextMenu: true,
     icon: faCalendarDays
   }
 });
@@ -72,11 +71,10 @@ export const addDateVisibilityFiles = defineFileAction({
 // Custom action to remove a date set for a file/folder of visibility
 export const removeDateVisibilityFiles = defineFileAction({
   id: 'remove_date_visibility_files',
-  //hotkeys: ['ctrl+o'],
   button: {
     name: 'Remove date visibility',
-    toolbar: true,
-    contextMenu: false,
+    toolbar: false,
+    contextMenu: true,
     icon: faCalendarXmark
   }
 });

@@ -206,7 +206,7 @@ export const useCustomFileMap = (prepareCustomFileMap) => {
     });
   }, []);
 
-  const addDateVisibityFiles = useCallback((filesSelected, dates) => {
+  const addDateVisibilityFiles = useCallback((filesSelected, dates) => {
     const { dateFrom, dateTo } = dates;
     const datesFormat = 'YYYY-MM-DD';
     const formatDayFrom = dayjs(dateFrom).format(datesFormat);
@@ -233,7 +233,7 @@ export const useCustomFileMap = (prepareCustomFileMap) => {
     });
   }, []);
 
-  const removeDateVisibityFiles = useCallback((filesSelected) => {
+  const removeDateVisibilityFiles = useCallback((filesSelected) => {
     const currentDatesSelected = filesDates;
     setFileDateSelected({ dateFrom: null, dateTo: null });
 
@@ -272,8 +272,8 @@ export const useCustomFileMap = (prepareCustomFileMap) => {
     filesDates,
     fileDateSelected,
     setFileDateSelected,
-    addDateVisibityFiles,
-    removeDateVisibityFiles
+    addDateVisibilityFiles,
+    removeDateVisibilityFiles
   };
 };
 

@@ -139,8 +139,8 @@ const FileManager = (props) => {
     renameFolder,
     filesDates,
     setFileDateSelected,
-    addDateVisibityFiles,
-    removeDateVisibityFiles
+    addDateVisibilityFiles,
+    removeDateVisibilityFiles
   } = useCustomFileMap(rootFolderId ? fileMapData : prepareCustomFileMap);
 
   const handleFileChange = (event) => {
@@ -170,7 +170,7 @@ const FileManager = (props) => {
     if (dateFrom && dateTo && fileBrowserRef.current && dateInputRef.current) {
       const newFileSelection = fileBrowserRef.current.getFileSelection();
       const filesSelected = Array.from(newFileSelection);
-      addDateVisibityFiles(filesSelected, { dateFrom, dateTo });
+      addDateVisibilityFiles(filesSelected, { dateFrom, dateTo });
       handleClearSelection();
     }
   };
@@ -202,7 +202,7 @@ const FileManager = (props) => {
     deleteFolders,
     renameFolder,
     downloadFiles,
-    removeDateVisibityFiles,
+    removeDateVisibilityFiles,
     handleClearSelection
   );
 
