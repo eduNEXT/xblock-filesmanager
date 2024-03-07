@@ -28,7 +28,7 @@ const App = () => {
   const { data: xblockHandlerResponse } = data || {};
   const { contents } = xblockHandlerResponse || { contents: {} };
   const contentHasId = 'id' in contents && contents.id !== null;
-  const directoryTree = contentHasId ? convertTreeToNewFileMapFormat(contents, true) : {};
+  const directoryTree = contentHasId ? convertTreeToNewFileMapFormat(contents, true, isEditView) : {};
   const rootFolderId = contentHasId ? contents.id : null;
   const errorHandlerDirectoriesMessage = gettext('There was an error while processing the directories tree');
   const shortCutsList = isEditView ? addIdToItems(advancedShortCuts) : addIdToItems(basicShortCuts);

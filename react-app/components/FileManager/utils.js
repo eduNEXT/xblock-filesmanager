@@ -1,4 +1,8 @@
 import _ from 'lodash';
+import dayjs from 'dayjs';
+import isBetween from 'dayjs/plugin/isBetween';
+
+dayjs.extend(isBetween);
 
 /**
  * Converts a tree structure to a new file map format and stores it in an object.
@@ -9,15 +13,16 @@ import _ from 'lodash';
  * @param {boolean} isSaved - Indicates if the node is saved.
  * @returns {Object} - The file map entry for the current node.
  */
-const convertTreeToNewFileMap = (node, parent = null, newFileMapObject, isSaved = false) => {
+const convertTreeToNewFileMap = (node, parent = null, newFileMapObject, isSaved = false, isEditView) => {
   const isDirectory = node.type === 'directory';
+  const nodeMetadata = node.metadata || {};
 
   const fileMapEntry = {
     id: node.id,
     name: node.name,
     isDir: isDirectory,
     path: node.path || '',
-    metadata: node.metadata || {},
+    metadata: nodeMetadata,
     isSaved
   };
 
@@ -26,9 +31,11 @@ const convertTreeToNewFileMap = (node, parent = null, newFileMapObject, isSaved 
     fileMapEntry.children = [];
     if (node.children) {
       for (const childNode of node.children) {
-        const childEntry = convertTreeToNewFileMap(childNode, fileMapEntry, newFileMapObject, isSaved);
-        fileMapEntry.childrenIds.push(childEntry.id);
-        fileMapEntry.children.push(childEntry);
+        const childEntry = convertTreeToNewFileMap(childNode, fileMapEntry, newFileMapObject, isSaved, isEditView);
+        if (childEntry) {
+          fileMapEntry.childrenIds.push(childEntry.id);
+          fileMapEntry.children.push(childEntry);
+        }
       }
     }
   }
@@ -48,10 +55,21 @@ const convertTreeToNewFileMap = (node, parent = null, newFileMapObject, isSaved 
     }
   }
 
+  const rangeDate = nodeMetadata?.date_range ? nodeMetadata.date_range : null;
+  const currentDate = dayjs();
+  const isFileNodeVisible = rangeDate
+    ? currentDate.isBetween(rangeDate.date_from, rangeDate.date_to, 'day', '[]')
+    : true;
+  if (!isFileNodeVisible && isEditView) {
+    fileMapEntry.isHidden = true;
+  }
   // Store the fileMapEntry in the newFileMapObject
-  newFileMapObject[node.id] = fileMapEntry;
+  if (isFileNodeVisible || isEditView) {
+    newFileMapObject[node.id] = fileMapEntry;
+    return fileMapEntry;
+  }
 
-  return fileMapEntry;
+  return null;
 };
 
 /**
@@ -61,11 +79,11 @@ const convertTreeToNewFileMap = (node, parent = null, newFileMapObject, isSaved 
  * @param {boolean} isSaved - Indicates if the nodes are saved.
  * @returns {Object} - The new file map format.
  */
-export const convertTreeToNewFileMapFormat = (tree, isSaved = false) => {
+export const convertTreeToNewFileMapFormat = (tree, isSaved = false, isEditView) => {
   const newFileMapObject = {};
   const treeCloned = _.cloneDeep(tree);
 
-  convertTreeToNewFileMap(treeCloned, null, newFileMapObject, isSaved);
+  convertTreeToNewFileMap(treeCloned, null, newFileMapObject, isSaved, isEditView);
 
   return newFileMapObject;
 };

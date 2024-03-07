@@ -11,12 +11,14 @@ import _ from 'lodash';
 import { ChonkyIconFA } from 'chonky-icon-fontawesome';
 import { StatusCodes } from 'http-status-codes';
 import PropTypes from 'prop-types';
+import { camelizeKeys } from 'humps';
 import xBlockContext from '@constants/xBlockContext';
 import useXBlockActionButtons from '@hooks/useXBlockActionButtons';
 import useFileDownloader from '@hooks/useFileDownloader';
 import useAddErrorMessageToModal from '@hooks/useAddErrorMessageToModal';
 import { syncContent, downloadContent, downloadStatus } from '@services/directoriesService';
 import ErrorMessage from '@components/ErrorMessage';
+import DatePickerInput from '@components/DatePickerInput';
 import { sendTrackingLogEvent } from '@services/analyticsService';
 
 import { useCustomFileMap, useFiles, useFolderChain, useFileActionHandler } from './hooks';
@@ -35,6 +37,7 @@ const FileManager = (props) => {
   const [downloadFileErrorMessage, setDownloadFileErrorMessage] = useState(null);
   const [reloadPage, setReloadPage] = useState(false);
   const downloadFilesData = useRef(null);
+  const dateInputRef = useRef(null);
 
   const onFileDownloaded = () => {
     setDownloadFileErrorMessage(null);
@@ -125,14 +128,19 @@ const FileManager = (props) => {
     currentFolderId,
     assetsKeyToDelete,
     rootFolderIdFixed,
+    fileDateSelected,
     setCurrentFolderId,
-    resetFileMap,
+    setFileMap,
     deleteFiles,
     moveFiles,
     createFolder,
     createFile,
     deleteFolders,
-    renameFolder
+    renameFolder,
+    filesDates,
+    setFileDateSelected,
+    addDateVisibilityFiles,
+    removeDateVisibilityFiles
   } = useCustomFileMap(rootFolderId ? fileMapData : prepareCustomFileMap);
 
   const handleFileChange = (event) => {
@@ -150,6 +158,36 @@ const FileManager = (props) => {
     }
   };
 
+  const handleClearSelection = () => {
+    const fileBrowserRefObj =  fileBrowserRef.current;
+    if(fileBrowserRefObj){
+      fileBrowserRefObj.requestFileAction(ChonkyActions.ClearSelection);
+    }
+  }
+
+  const handleDatePickerChange = (dates) => {
+    const [dateFrom, dateTo] = dates;
+    if (dateFrom && dateTo && fileBrowserRef.current && dateInputRef.current) {
+      const newFileSelection = fileBrowserRef.current.getFileSelection();
+      const filesSelected = Array.from(newFileSelection);
+      addDateVisibilityFiles(filesSelected, { dateFrom, dateTo });
+      handleClearSelection();
+    }
+  };
+
+  const setDate = (fileSelected) => {
+    if (dateInputRef.current) {
+      const { id } = fileSelected;
+      const dateRangeMetadata =
+        id in filesDates ? filesDates[id].date_range: { dateFrom: null, dateTo: null };
+      const datesSelected = fileSelected?.metadata?.date_range || dateRangeMetadata;
+      const datesSelectedFormat = camelizeKeys(datesSelected);
+      setFileDateSelected(datesSelectedFormat);
+      dateInputRef.current.input.click();
+    }
+  };
+
+
   const files = useFiles(fileMap, currentFolderId);
   const folderChain = useFolderChain(fileMap, currentFolderId);
   const handleFileAction = useFileActionHandler(
@@ -159,10 +197,13 @@ const FileManager = (props) => {
     moveFiles,
     createFolder,
     addFile,
+    setDate,
     downloadFile,
     deleteFolders,
     renameFolder,
-    downloadFiles
+    downloadFiles,
+    removeDateVisibilityFiles,
+    handleClearSelection
   );
 
   const { xblockId, isEditView } = xBlockContext;
@@ -192,27 +233,39 @@ const FileManager = (props) => {
     ];
   }, [xblockId]);
 
-  const handleSaveButton = async (_, rootFolderId, fileMap, filesToDelete, buttonSaveRef) => {
+  const handleSaveButton = async (_, rootFolderId, fileMap, filesToDelete, buttonSaveRef, filesDates) => {
     const filesToSave = { ...fileMap };
     const filesKeys = Object.keys(filesToSave);
-    const contentFormat = convertFileMapToTree(rootFolderId, '', filesToSave);
-    const contentString = JSON.stringify({ rootFolderId, treeFolders: contentFormat });
     const formData = new FormData();
 
-    formData.append('contents', contentString);
     const hasAssetsKeyToDelete = filesToDelete.length > 0;
     let sizeFiles = 0;
 
     filesKeys.forEach((key) => {
       const isFile = filesToSave[key].isDir === false;
-      const isSavedFile = 'metadata' in filesToSave[key];
+      const isSavedFile = filesToSave[key]?.metadata?.asset_key ?? false;
       const hasFileLoaded = 'file' in filesToSave[key];
       if (isFile && hasFileLoaded && !isSavedFile) {
         const { file } = filesToSave[key];
         formData.append('files', file);
         sizeFiles++;
       }
+
+      const oldMetadata = filesToSave[key].metadata || {};
+      const datesMetadata = filesDates[key] || {};
+
+      filesToSave[key] = {
+        ...filesToSave[key],
+        metadata: {
+          ...oldMetadata,
+          ...datesMetadata
+        }
+      };
     });
+
+    const contentFormat = convertFileMapToTree(rootFolderId, '', filesToSave);
+    const contentString = JSON.stringify({ rootFolderId, treeFolders: contentFormat });
+    formData.append('contents', contentString);
 
     buttonSaveRef.disabled = 'disabled';
     buttonSaveRef.classList.add('disabled-button');
@@ -231,7 +284,7 @@ const FileManager = (props) => {
     }
   };
 
-  useXBlockActionButtons(xblockActionButtons, false, fileMap, assetsKeyToDelete, rootFolderIdFixed, handleSaveButton);
+  useXBlockActionButtons(xblockActionButtons, false, fileMap, assetsKeyToDelete, rootFolderIdFixed, filesDates, handleSaveButton);
 
   useAddErrorMessageToModal(
     saveSyncErrorMessage ? <ErrorMessage message={saveSyncErrorMessage} className="error-message-edit" /> : null
@@ -243,10 +296,16 @@ const FileManager = (props) => {
   const [hasOneFolderSelected, setHasOneFolderSelected] = useState(false);
   const [hasMoreThanOneFolderSelected, setHasMoreThanOneFolderSelected] = useState(false);
   const [hasOneFileSelected, setHasOneFileSelected] = useState(false);
+  const [hasFileSelectedDate, setHasFileSelectedDate] = useState(false);
   const disabledActions = hasFilesSelected ? [ChonkyActions.DownloadFiles.id] : undefined;
-  const fileActionsList = hasOneFolderSelected || hasOneFileSelected || hasMoreThanOneFolderSelected
-    ? customFileActions(hasOneFolderSelected, hasOneFileSelected, hasMoreThanOneFolderSelected)
-    : defaultFileActions
+  const fileActionsList = hasOneFolderSelected || hasOneFileSelected || hasMoreThanOneFolderSelected || hasFilesSelected
+    ? customFileActions({
+        hasFolderSelected: hasOneFolderSelected,
+        hasFileSelected: hasOneFileSelected,
+        hasMoreThanOneFolderSelected,
+        hasFileSelectedDate
+    })
+    : defaultFileActions;
 
   const defaultActions =  hasOneFileSelected ? [ChonkyActions.DownloadFiles, openFileAction] : [ChonkyActions.DownloadFiles];
   const fileActions = isEditView ? fileActionsList : defaultActions;
@@ -267,6 +326,12 @@ const FileManager = (props) => {
         setHasFilesSelected(hasFilesSelected);
         setFileSelection(newFileSelection);
         setHasMoreThanOneFolderSelected(hasMoreThanOneFolderSelected);
+        if(hasOneSelection) {
+          const [fileSelectedId] = selections;
+          const fileSelection = fileMap[fileSelectedId];
+          const hasDateSet = typeof fileSelection?.metadata?.date_range !== 'undefined';
+          setHasFileSelectedDate(hasDateSet);
+        }
       }
     }
   };
@@ -280,7 +345,7 @@ const FileManager = (props) => {
 
     // Clean-up interval on unmount or changes to the fileSelection dependency
     return () => clearInterval(interval);
-  }, [fileSelection, fileBrowserRef, fileMap, hasOneFolderSelected, hasOneFileSelected, hasMoreThanOneFolderSelected]);
+  }, [fileSelection, fileBrowserRef, fileMap, hasOneFolderSelected, hasOneFileSelected, hasMoreThanOneFolderSelected, hasFileSelectedDate]);
 
   const thumbnailGenerator = useCallback(
     ({ isSaved, metadata }) =>
@@ -296,8 +361,12 @@ const FileManager = (props) => {
 
   return (
     <>
-      <input type="file" ref={fileInputRef} style={{ display: 'none' }} onChange={handleFileChange} multiple />
-
+      {isEditView && (
+        <>
+          <input type="file" ref={fileInputRef} style={{ display: 'none' }} onChange={handleFileChange} multiple />
+          <DatePickerInput ref={dateInputRef} onChangePicker={handleDatePickerChange} {...fileDateSelected} />
+        </>
+      )}
       {downloadFileErrorMessage && <ErrorMessage message={downloadFileErrorMessage} />}
 
       <div className="filesmanager__content">

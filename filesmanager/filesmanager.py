@@ -41,6 +41,18 @@ except ImportError:
 log = logging.getLogger(__name__)
 COURSE_ASSETS_PAGE_SIZE = 100
 ATTR_KEY_ANONYMOUS_USER_ID = 'edx-platform.anonymous_user_id'
+ALLOWED_BASE_FILE_METADATA_FIELDS = [
+    "id",
+    "asset_key",
+    "display_name",
+    "url",
+    "content_type",
+    "file_size",
+    "external_url",
+    "thumbnail",
+    "uploaded_at",
+    "from",
+]
 
 
 class NameTooLong(Exception):
@@ -663,9 +675,11 @@ class FilesManagerXBlock(XBlock):
             from cms.djangoapps.contentstore.asset_storage_handler import \
                 update_course_run_asset  # pylint: disable=import-outside-toplevel
 
+        extra_metadata = self.get_extra_metadata(file.get("metadata", {}))
+        metadata = self.get_metadata(file.get("metadata", {}))
+        file["metadata"] = metadata
         file_object = self.find_temporary_file(file)
         file_path, name = file.get("path"), file.get("name")
-        metadata = file.get("metadata", {})
 
         if file_object and not metadata:
             # New file uploaded from the Files Manager
@@ -680,7 +694,7 @@ class FilesManagerXBlock(XBlock):
                 metadata["from"] = metadata.get("asset_key")
                 self.source_keys[metadata.get("asset_key")] = metadata.get("asset_key")
             else:
-                # If the file is bring back to the Unpublished folder and was not uploaded from the course assets
+                # If the file is brought back to the Unpublished folder and was not uploaded from the course assets
                 # mark the file as Unpublished again and do not upload it to the course assets
                 if self.delete_unpublished_asset(file_path, metadata):
                     return
@@ -704,6 +718,7 @@ class FilesManagerXBlock(XBlock):
         if not metadata:
             raise Exception("Metadata not found")
 
+        metadata.update(extra_metadata)
         target_directory.append(
             {
                 "id": file.get("id"),
@@ -715,6 +730,28 @@ class FilesManagerXBlock(XBlock):
             }
         )
         self.content_paths.append(file_path)
+
+    def get_metadata(self, metadata):
+        """
+        Get the metadata from the file metadata without the extra metadata.
+
+        Arguments:
+            metadata: the file metadata.
+
+        Returns: the metadata.
+        """
+        return {key: value for key, value in metadata.items() if key in ALLOWED_BASE_FILE_METADATA_FIELDS}
+
+    def get_extra_metadata(self, metadata):
+        """
+        Get the extra metadata from the file metadata.
+
+        Arguments:
+            metadata: the file metadata.
+
+        Returns: the extra metadata.
+        """
+        return {key: value for key, value in metadata.items() if key not in ALLOWED_BASE_FILE_METADATA_FIELDS}
 
     def delete_unpublished_asset(self, file_path, metadata):
         """Delete an unpublished asset if the file is being moved to the Unpublished folder."""
@@ -775,6 +812,7 @@ class FilesManagerXBlock(XBlock):
             target_directory: the target directory where the new directory will be created.
         """
         directory_path, name = self.generate_content_path(directory["path"], directory["name"])
+        metadata = directory.get('metadata', {})
         target_directory.append(
             {
                 "id": directory.get("id"),
@@ -782,7 +820,7 @@ class FilesManagerXBlock(XBlock):
                 "name": name,
                 "type": "directory",
                 "path": directory_path,
-                "metadata": {},
+                "metadata": metadata,
                 "children": [],
             }
         )
@@ -976,7 +1014,7 @@ class FilesManagerXBlock(XBlock):
             "file_size": int(content.length) if content.length else 0,
             "external_url": urljoin(configuration_helpers.get_value('LMS_ROOT_URL', settings.LMS_ROOT_URL), asset_url),
             "thumbnail": urljoin(configuration_helpers.get_value('LMS_ROOT_URL', settings.LMS_ROOT_URL), thumbnail_url),
-            "uploaded_at": datetime.now().isoformat()
+            "uploaded_at": datetime.now().isoformat(),
         }
 
     def get_asset_json_from_dict(self, asset):
