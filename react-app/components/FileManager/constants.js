@@ -62,8 +62,9 @@ export const addDateVisibilityFiles = defineFileAction({
   id: 'add_date_visibility_files',
   button: {
     name: 'Set file visibility with date',
-    toolbar: false,
+    toolbar: true,
     contextMenu: true,
+    group: 'Actions',
     icon: faCalendarDays
   }
 });
@@ -73,8 +74,9 @@ export const removeDateVisibilityFiles = defineFileAction({
   id: 'remove_date_visibility_files',
   button: {
     name: 'Remove date visibility',
-    toolbar: false,
+    toolbar: true,
     contextMenu: true,
+    group: 'Actions',
     icon: faCalendarXmark
   }
 });
