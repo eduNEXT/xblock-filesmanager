@@ -37,6 +37,12 @@ class FilesDownloadedTransformer(XApiTransformer):
         )
 
     def get_context_activities(self):
+        """
+        Add context with activities for each file downloaded from the xblock.
+
+        Returns:
+            `context_activities`
+        """
         context_activities = super().get_context_activities()
         context_activities.grouping = [
             Activity(
