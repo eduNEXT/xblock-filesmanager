@@ -220,8 +220,14 @@ export const getMetadataFiles = (node) => {
     });
   }
 
-  if (node.children && node.children.length) {
+  if (node.children && Array.isArray(node.children)) {
     node.children.forEach((child) => {
+      assetKeys.push(...getMetadataFiles(child));
+    });
+  }
+
+  if (Array.isArray(node)) {
+    node.forEach((child) => {
       assetKeys.push(...getMetadataFiles(child));
     });
   }

@@ -35,3 +35,17 @@ class FilesDownloadedTransformer(XApiTransformer):
                 type=constants.XAPI_ACTIVITY_FILE,
             ),
         )
+
+    def get_context_activities(self):
+        context_activities = super().get_context_activities()
+        context_activities.grouping = [
+            Activity(
+                id=file.get("asset_key"),
+                definition=ActivityDefinition(
+                    type=constants.XAPI_ACTIVITY_FILE,
+                    name=LanguageMap({constants.EN: file.get("path")}),
+                ),
+            )
+            for file in self.get_data("event.files_downloaded_metadata")
+        ]
+        return context_activities

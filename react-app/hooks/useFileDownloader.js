@@ -16,13 +16,17 @@ const useFileDownloader = ({ onError, onFileDownloaded}) => {
   const [, setBlobUrl] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const downloadFileHook = async (fileUrl, fileName, isZip) => {
+  const downloadFileHook = async (fileUrl, fileName, isZip, listOfFiles) => {
 
     setIsLoading(true);
 
     try {
       saveAs(fileUrl, fileName);
-      onFileDownloaded();
+      try {
+        onFileDownloaded(listOfFiles);
+      }catch (error) {
+        console.debug("FileManager Xblock: We could not log the download");
+      }
     } catch (error) {
       onError();
     }finally {

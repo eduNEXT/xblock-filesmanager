@@ -39,10 +39,14 @@ const FileManager = (props) => {
   const downloadFilesData = useRef(null);
   const dateInputRef = useRef(null);
 
-  const onFileDownloaded = () => {
+  const onFileDownloaded = (listOfFiles) => {
     setDownloadFileErrorMessage(null);
     const fileContents = downloadFilesData.current;
-    const filesMetadata = getMetadataFiles(fileContents);
+    if (listOfFiles !== null && fileContents === null) {
+      var filesMetadata = getMetadataFiles(listOfFiles);
+    }else{
+      var filesMetadata = getMetadataFiles(fileContents);
+    }
     const { isStudioView, xblockId, courseId, userId, userName } = xBlockContext;
     if (!isStudioView) {
       sendTrackingLogEvent('edunext.xblock.filesmanager.files.downloaded', {
@@ -83,7 +87,7 @@ const FileManager = (props) => {
         downloadFiles([fileData])
         return
     }
-    downloadFileHook(fullUrl, name, false);
+    downloadFileHook(fullUrl, name, false, null);
   };
 
   const downloadFiles = (filesToDownload) => {
@@ -97,7 +101,7 @@ const FileManager = (props) => {
           throw new Error('Download content has failed:  Unexpected status code');
         }
         let data = createContentData.data;
-        getStatusFromZipTask(data.task_id)
+        getStatusFromZipTask(data.task_id, filesToDownload)
 
         return Promise.resolve('Download was successful');
       } catch (error) {
@@ -105,14 +109,14 @@ const FileManager = (props) => {
       }
   };
 
-  const getStatusFromZipTask = async (taskID) => {
+  const getStatusFromZipTask = async (taskID, filesToDownload) => {
     const createContentData = await downloadStatus(taskID);
     if (createContentData.status !== StatusCodes.OK) {
         throw new Error('Fetching task status has failed:  Unexpected status code');
     }
     let data = createContentData.data;
     if (data.status === 'SUCCESS') {
-        downloadFileHook(data.result, "download.zip", true)
+        downloadFileHook(data.result, "download.zip", true, filesToDownload)
     } else if (data.status === 'ERROR') {
         onError()
     } else {
