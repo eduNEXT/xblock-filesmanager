@@ -14,6 +14,16 @@ Change Log
 Unreleased
 **********
 
+0.9.0 - 2024-04-25
+**********************************************
+
+Added
+=====
+
+* The tracking transformation to xAPI now contains the file path
+* Support for tracking event with when multiple files are downloaded in a zip
+
+
 0.8.1 - 2024-03-11
 **********************************************
 
