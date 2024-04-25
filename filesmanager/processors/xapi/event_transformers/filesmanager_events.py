@@ -52,6 +52,6 @@ class FilesDownloadedTransformer(XApiTransformer):
                     name=LanguageMap({constants.EN: file.get("path")}),
                 ),
             )
-            for file in self.get_data("event.files_downloaded_metadata")
+            for file in self.event.get('data', {}).get("files_downloaded_metadata", [])
         ]
         return context_activities
