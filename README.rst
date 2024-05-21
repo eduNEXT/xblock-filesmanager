@@ -21,6 +21,23 @@ platform and has been funded by Unidigital project from the Spanish Government
 
 .. _chonky component: https://github.com/TimboKZ/Chonky
 
+Compatibility Notes
+===================
+
++------------------+--------------+
+| Open edX Release | Version      |
++==================+==============+
+| Palm             | >= 0.7.0     |
++------------------+--------------+
+| Quince           | >= 0.7.0     |
++------------------+--------------+
+| Redwood          | >= 0.7.0     |
++------------------+--------------+
+
+The settings can be changed in ``filesmanager/settings/common.py`` or, for example, in tutor configurations.
+
+**NOTE**: the current ``common.py`` works with Open edX Palm, Quince and Redwood version.
+
 
 Enabling the XBlock in a course
 *******************************
