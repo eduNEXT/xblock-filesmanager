@@ -111,7 +111,7 @@ edx-django-utils==7.1.0
     #   edx-toggles
     #   event-tracking
     #   openedx-events
-edx-event-routing-backends==9.3.2
+edx-event-routing-backends==9.3.0
     # via -r requirements/base.in
 edx-i18n-tools==1.6.3
     # via -r requirements/base.in
