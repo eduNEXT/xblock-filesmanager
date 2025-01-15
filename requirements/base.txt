@@ -126,7 +126,7 @@ edx-toggles==5.2.0
     #   event-tracking
 event-tracking==3.0.0
     # via edx-event-routing-backends
-fastavro==1.10.0
+fastavro==1.9.7
     # via openedx-events
 fasteners==0.19
     # via edx-event-routing-backends

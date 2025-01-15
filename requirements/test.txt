@@ -185,7 +185,7 @@ event-tracking==3.0.0
     # via
     #   -r requirements/base.txt
     #   edx-event-routing-backends
-fastavro==1.10.0
+fastavro==1.9.7
     # via
     #   -r requirements/base.txt
     #   openedx-events
