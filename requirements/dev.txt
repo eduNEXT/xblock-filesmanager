@@ -356,7 +356,7 @@ mdurl==0.1.2
     # via
     #   -r requirements/ci.txt
     #   markdown-it-py
-more-itertools==10.6.0
+more-itertools==10.5.0
     # via
     #   -r requirements/ci.txt
     #   jaraco-classes

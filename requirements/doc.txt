@@ -306,7 +306,7 @@ markupsafe==3.0.2
     #   xblock
 mdurl==0.1.2
     # via markdown-it-py
-more-itertools==10.6.0
+more-itertools==10.5.0
     # via
     #   jaraco-classes
     #   jaraco-functools
