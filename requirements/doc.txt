@@ -514,7 +514,7 @@ tzdata==2024.2
     #   -r requirements/test.txt
     #   celery
     #   kombu
-urllib3==1.26.20
+urllib3==2.2.3
     # via
     #   -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
     #   -c requirements/constraints.txt
