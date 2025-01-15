@@ -459,7 +459,7 @@ pylint-celery==0.3
     # via
     #   -r requirements/quality.txt
     #   edx-lint
-pylint-django==2.6.1
+pylint-django==2.5.5
     # via
     #   -r requirements/quality.txt
     #   edx-lint
