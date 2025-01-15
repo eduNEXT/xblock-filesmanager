@@ -448,7 +448,7 @@ pygments==2.19.1
     #   diff-cover
     #   readme-renderer
     #   rich
-pylint==3.3.3
+pylint==3.2.7
     # via
     #   -r requirements/quality.txt
     #   edx-lint
