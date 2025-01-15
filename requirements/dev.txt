@@ -111,7 +111,7 @@ code-annotations==1.8.2
     #   -r requirements/quality.txt
     #   edx-lint
     #   edx-toggles
-coverage[toml]==7.6.10
+coverage[toml]==7.6.1
     # via
     #   -r requirements/quality.txt
     #   pytest-cov
