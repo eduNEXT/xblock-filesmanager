@@ -41,11 +41,11 @@ billiard==4.2.1
     # via
     #   -r requirements/quality.txt
     #   celery
-boto3==1.35.93
+boto3==1.34.101
     # via
     #   -r requirements/quality.txt
     #   fs-s3fs
-botocore==1.35.93
+botocore==1.34.101
     # via
     #   -r requirements/quality.txt
     #   boto3
@@ -610,7 +610,7 @@ tzdata==2024.2
     #   -r requirements/quality.txt
     #   celery
     #   kombu
-urllib3==2.2.3
+urllib3==1.26.18
     # via
     #   -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
     #   -c requirements/constraints.txt
