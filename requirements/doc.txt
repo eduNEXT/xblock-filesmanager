@@ -320,7 +320,7 @@ openedx-django-pyfs==3.7.0
     # via
     #   -r requirements/test.txt
     #   xblock
-openedx-events==9.15.1
+openedx-events==9.14.1
     # via
     #   -r requirements/test.txt
     #   event-tracking

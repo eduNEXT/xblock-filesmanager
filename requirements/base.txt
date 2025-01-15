@@ -176,7 +176,7 @@ newrelic==10.4.0
     # via edx-django-utils
 openedx-django-pyfs==3.7.0
     # via xblock
-openedx-events==9.15.1
+openedx-events==9.14.1
     # via event-tracking
 openedx-filters==1.12.0
     # via edx-event-routing-backends
