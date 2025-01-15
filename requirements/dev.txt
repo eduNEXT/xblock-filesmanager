@@ -24,7 +24,7 @@ asgiref==3.8.1
     # via
     #   -r requirements/quality.txt
     #   django
-astroid==3.3.8
+astroid==3.2.4
     # via
     #   -r requirements/quality.txt
     #   pylint
