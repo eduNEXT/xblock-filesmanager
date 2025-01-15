@@ -342,7 +342,7 @@ markdown-it-py==3.0.0
     # via
     #   -r requirements/ci.txt
     #   rich
-markupsafe==3.0.2
+markupsafe==2.1.5
     # via
     #   -r requirements/quality.txt
     #   jinja2
