@@ -18,7 +18,7 @@ async-timeout==5.0.1
     # via redis
 attrs==24.3.0
     # via openedx-events
-backports-zoneinfo[tzdata]==0.2.1 python_version < "3.9"
+backports-zoneinfo[tzdata]==0.2.1 ; python_version < "3.9"
     # via
     #   celery
     #   django
