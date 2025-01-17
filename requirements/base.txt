@@ -105,7 +105,7 @@ django-waffle==4.2.0
     # via
     #   edx-django-utils
     #   edx-toggles
-djangorestframework==3.15.2
+djangorestframework==3.15.1
     # via django-config-models
 dnspython==2.6.1
     # via pymongo
