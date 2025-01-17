@@ -159,6 +159,8 @@ setup(
     keywords='Python edx',
     classifiers=[
         'Development Status :: 3 - Alpha',
+        'Framework :: Django',
+        'Framework :: Django :: 3.2',
         'Framework :: Django :: 4.2',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)',
