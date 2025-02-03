@@ -9,9 +9,9 @@ from http import HTTPStatus
 from urllib.parse import urljoin
 
 try:
-    from importlib.resources import files
+    from importlib.resources import files as importlib_files
 except ImportError:
-    from importlib_resources import files
+    from importlib_resources import files as importlib_files
 from django.conf import settings
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.utils import translation
@@ -207,7 +207,7 @@ class FilesManagerXBlock(XBlock):
 
     def resource_string(self, path):
         """Handy helper for getting resources from our kit."""
-        return files(__package__).joinpath(path).read_text(encoding="utf-8")
+        return importlib_files(__package__).joinpath(path).read_text(encoding="utf-8")
 
     # TO-DO: change this view to display your data your own way.
     def student_view(self, context=None):
@@ -1161,7 +1161,7 @@ class FilesManagerXBlock(XBlock):
         text_js = 'public/js/translations/{locale_code}/text.js'
         lang_code = locale_code.split('-')[0]
         for code in (locale_code, lang_code, 'en'):
-            if files(__package__).joinpath(text_js.format(locale_code=code)).exists():
+            if importlib_files(__package__).joinpath(text_js.format(locale_code=code)).exists():
                 return text_js.format(locale_code=code)
         return None
 
