@@ -9,7 +9,7 @@ from http import HTTPStatus
 from urllib.parse import urljoin
 
 try:
-    from importlib.resources import files  # Disponible en Python 3.9+
+    from importlib.resources import files
 except ImportError:
     from importlib_resources import files
 from django.conf import settings
@@ -24,8 +24,6 @@ try:
     from xblock.fragment import Fragment
 except ModuleNotFoundError:
     from web_fragments.fragment import Fragment
-
-from xblockutils.resources import ResourceLoader
 
 from filesmanager.processors.xapi.event_transformers import FilesDownloadedTransformer  # pylint: disable=unused-import
 from filesmanager.tasks import create_zip_file_task
@@ -1163,7 +1161,6 @@ class FilesManagerXBlock(XBlock):
         text_js = 'public/js/translations/{locale_code}/text.js'
         lang_code = locale_code.split('-')[0]
         for code in (locale_code, lang_code, 'en'):
-            loader = ResourceLoader(__name__)
             if files(__package__).joinpath(text_js.format(locale_code=code)).exists():
                 return text_js.format(locale_code=code)
         return None
