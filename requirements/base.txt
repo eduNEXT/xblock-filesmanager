@@ -147,6 +147,8 @@ fs-s3fs==1.1.1
     # via openedx-django-pyfs
 idna==3.10
     # via requests
+importlib-resources==6.4.5; python_version < '3.9'
+    # via -r requirements/base.in
 isodate==0.7.2
     # via edx-event-routing-backends
 jinja2==3.1.5

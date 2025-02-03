@@ -11,3 +11,4 @@ edx-opaque-keys
 tincan
 edx-event-routing-backends
 web-fragments
+importlib-resources
