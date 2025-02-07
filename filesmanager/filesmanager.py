@@ -6,9 +6,9 @@ import tempfile
 from copy import deepcopy
 from datetime import datetime
 from http import HTTPStatus
+from importlib.resources import files as importlib_files
 from urllib.parse import urljoin
 
-from importlib.resources import files as importlib_files
 from django.conf import settings
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.utils import translation
