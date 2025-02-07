@@ -8,10 +8,7 @@ from datetime import datetime
 from http import HTTPStatus
 from urllib.parse import urljoin
 
-try:
-    from importlib.resources import files as importlib_files
-except ImportError:
-    from importlib_resources import files as importlib_files
+from importlib.resources import files as importlib_files
 from django.conf import settings
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.utils import translation
