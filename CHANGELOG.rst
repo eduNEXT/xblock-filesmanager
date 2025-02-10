@@ -14,6 +14,15 @@ Change Log
 Unreleased
 **********
 
+1.0.0 - 2025-02-05
+**********************************************
+
+Changed
+=======
+
+* Remove support for Python 3.8 and Django 3.2.
+* pkg_resources is deprecated, and its recommended replacement, importlib.resources, is only fully available in Python 3.9+.
+
 0.10.0 - 2025-01-17
 **********************************************
 
