@@ -6,9 +6,9 @@ import tempfile
 from copy import deepcopy
 from datetime import datetime
 from http import HTTPStatus
+from importlib.resources import files as importlib_files
 from urllib.parse import urljoin
 
-import pkg_resources
 from django.conf import settings
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.utils import translation
@@ -21,8 +21,6 @@ try:
     from xblock.fragment import Fragment
 except ModuleNotFoundError:
     from web_fragments.fragment import Fragment
-
-from xblockutils.resources import ResourceLoader
 
 from filesmanager.processors.xapi.event_transformers import FilesDownloadedTransformer  # pylint: disable=unused-import
 from filesmanager.tasks import create_zip_file_task
@@ -206,8 +204,7 @@ class FilesManagerXBlock(XBlock):
 
     def resource_string(self, path):
         """Handy helper for getting resources from our kit."""
-        data = pkg_resources.resource_string(__name__, path)
-        return data.decode("utf8")
+        return importlib_files(__package__).joinpath(path).read_text(encoding="utf-8")
 
     # TO-DO: change this view to display your data your own way.
     def student_view(self, context=None):
@@ -1161,9 +1158,7 @@ class FilesManagerXBlock(XBlock):
         text_js = 'public/js/translations/{locale_code}/text.js'
         lang_code = locale_code.split('-')[0]
         for code in (locale_code, lang_code, 'en'):
-            loader = ResourceLoader(__name__)
-            if pkg_resources.resource_exists(
-                    loader.module_name, text_js.format(locale_code=code)):
+            if importlib_files(__package__).joinpath(text_js.format(locale_code=code)).exists():
                 return text_js.format(locale_code=code)
         return None
 

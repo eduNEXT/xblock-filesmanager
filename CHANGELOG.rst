@@ -14,6 +14,16 @@ Change Log
 Unreleased
 **********
 
+1.0.0 - 2025-02-05
+**********************************************
+
+Changed
+=======
+
+* Removed support for Python 3.8 and Django 3.2.
+* Replaced deprecated `pkg_resources` with `importlib.resources` for better compatibility with newer Django and Python versions.
+* Starting with this version, this package is no longer compatible with releases older than Redwood.
+
 0.10.0 - 2025-01-17
 **********************************************
 
