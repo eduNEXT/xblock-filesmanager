@@ -20,7 +20,7 @@ Unreleased
 Changed
 =======
 
-* Remove support for Python 3.8 and Django 3.2.
+* Removed support for Python 3.8 and Django 3.2.
 * Replaced deprecated `pkg_resources` APIs with `importlib.resources` and `importlib.metadata` to ensure compatibility with newer Django and Python versions.
 * Starting with this version, this package is no longer compatible with releases older than Redwood.
 
