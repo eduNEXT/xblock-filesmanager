@@ -35,10 +35,12 @@ Compatibility Notes
 +------------------+--------------+
 | Sumac            | >= 0.10.0    |
 +------------------+--------------+
+| Teak             | >= 0.20.0    |
++------------------+--------------+
 
 The settings can be changed in ``filesmanager/settings/common.py`` or, for example, in tutor configurations.
 
-**NOTE**: the current ``common.py`` works with Open edX Palm, Quince, Redwood and Sumac versions.
+**NOTE**: the current ``common.py`` works with Open edX Palm, Quince, Redwood, Sumac and Teak versions.
 
 
 Enabling the XBlock in a course
