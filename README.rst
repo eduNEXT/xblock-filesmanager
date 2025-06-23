@@ -35,7 +35,7 @@ Compatibility Notes
 +------------------+--------------+
 | Sumac            | >= 0.10.0    |
 +------------------+--------------+
-| Teak             | >= 1.10.0    |
+| Teak             | >= 1.1.0     |
 +------------------+--------------+
 
 The settings can be changed in ``filesmanager/settings/common.py`` or, for example, in tutor configurations.
